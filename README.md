@@ -30,19 +30,24 @@
   - Tạo danh sách 8–10 bài hát theo mọi chủ đề, tâm trạng, ca sĩ, thể loại (Chill, Lofi, Gym, Nhạc Tết, Ballad, v.v.).
   - Phát liên tục tự động chuyển bài (Continuous Playlist Player) hoặc tải toàn bộ danh sách chỉ bằng 1 cú nhấp.
 
-### 3. 🎨 Giao diện UX/UI Hiện đại & Cá nhân hóa
-- **Chế độ Sáng / Tối (Light & Dark Theme)**: Chuyển đổi linh hoạt với nút bấm nhanh trên Navbar hoặc bảng tùy chỉnh.
-- **Tùy chỉnh ảnh nền toàn màn hình**:
-  - Tải ảnh cá nhân từ máy tính (lưu trữ trực tiếp và an toàn trong trình duyệt `localStorage`).
-  - Thanh trượt điều chỉnh **Độ mờ (Blur 0–35px)** và **Lớp phủ tối (Overlay Darkness 10%–90%)**.
-  - Bộ sưu tập 6 hình nền Preset Gradient: *Cyberpunk Deep, Nebula Purple, Emerald Night, Sunset Glow, Deep Ocean, Minimal Carbon*.
-- **Huy hiệu Thống kê Thời gian thực**: Hiển thị số người online cùng lúc (`🟢 X online`) và tổng số lượt xem (`• Y lượt xem`) ngay giữa thanh điều hướng.
+### 3. 🎨 Giao diện 3 Chế Độ (Tối / Sáng / Xám) Siêu Nét
+- **🌙 Tối (Dark Obsidian)**: Tông màu đen không gian sâu thẳm, huyền ảo và dịu mắt khi nghe nhạc ban đêm.
+- **☀️ Sáng (Light High-Contrast)**: Tông sáng hiện đại được tinh chỉnh độ tương phản cao, chữ đen đậm sắc nét (`#0f172a`), không bị mờ hay chói mắt, viền card rõ ràng.
+- **🌫️ Xám (Gray Slate)**: Tông xám than trung tính trang nhã, cân bằng hoàn hảo giữa sáng và tối.
+- **Huy hiệu Thống kê Thời gian thực**: Hiển thị số người online cùng lúc (`🟢 X online`) và tổng số lượt xem (`• Y lượt xem`) chính xác bằng Persistent Client ID.
 
-### 4. 🛡️ Bảo mật & Chống quá tải VPS
-- **Anti-Scanner & Bot Defense**: Tự động chặn các công cụ quét tự động (`sqlmap`, `nikto`, `nmap`, `dirbuster`, `gobuster`, `wpscan`,...) và chặn các đường dẫn tấn công nhạy cảm (`/.env`, `/.git`, `/wp-admin`, `/phpmyadmin`).
-- **Rate Limiting**: Giới hạn tần suất gọi API theo địa chỉ IP (hỗ trợ đọc IP thật qua Cloudflare `cf-connecting-ip` và Nginx `x-forwarded-for`).
-- **Download Concurrency Semaphore**: Giới hạn số luồng tải yt-dlp đồng thời (`MAX_CONCURRENT_DOWNLOADS=3`), ngăn chặn tình trạng nhiều người cùng bấm tải làm tràn RAM hoặc sập CPU máy chủ.
-- **Header bảo mật chuẩn**: Tích hợp sẵn `nosniff`, `SAMEORIGIN`, `strict-origin-when-cross-origin`, `Permissions-Policy`.
+### 4. 🛡️ Bảo mật, Chặn Bot & Giới hạn Địa lý (Chỉ cho phép Việt Nam)
+- **Chặn toàn bộ quốc tế truy cập (Vietnam Only)**:
+  - Tích hợp luật GeoIP tự động phát hiện mã quốc gia qua Cloudflare `CF-IPCountry` hoặc bộ phân giải GeoIP máy chủ.
+  - Tự động chặn ngay lập tức mọi truy vấn từ nước ngoài (trả về mã `403 Forbidden`).
+  - Cho phép cấu hình bật/tắt dễ dàng qua biến `ALLOW_ONLY_VN=true` trong `.env`.
+- **Anti-Bot & Anti-Crawler Hardening**:
+  - Chặn đứng các công cụ dò quét lỗ hổng (`sqlmap`, `nikto`, `nmap`, `masscan`, `wpscan`, `gobuster`, `censys`, `shodan`,...).
+  - Chặn các bot thu thập nội dung và AI scrapers (`Googlebot`, `Bingbot`, `Yandex`, `Baiduspider`, `AhrefsBot`, `SemrushBot`, `Bytespider`, `GPTBot`, `ClaudeBot`,...).
+  - Chặn các thư viện script tự động (`python-requests`, `aiohttp`, `scrapy`, `curl`, `wget`, `go-http-client`).
+- **Rate Limiting & Semaphore Concurrency**:
+  - Giới hạn tần suất gọi API theo IP chống spam.
+  - Giới hạn luồng tải yt-dlp đồng thời (`MAX_CONCURRENT_DOWNLOADS=3`), chống tràn RAM và sập CPU máy chủ khi đông người dùng.
 
 ---
 
@@ -149,6 +154,7 @@ sudo certbot --nginx -d music.yourdomain.com
 | `MAX_VIDEO_DURATION_S` | `1200` | Thời lượng video tối đa cho phép tải (giây) |
 | `FAST_MODE` | `true` | Tối ưu hóa tải luồng m4a trực tiếp không encode lại |
 | `PREFER_ABR_128` | `true` | Ưu tiên stream bitrate 128k để phản hồi tức thì |
+| `ALLOW_ONLY_VN` | `true` | Chỉ cho phép lưu lượng từ Việt Nam, chặn toàn bộ quốc tế |
 | `LOG_LEVEL` | `INFO` | Mức độ chi tiết log (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 
 ---

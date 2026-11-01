@@ -12,6 +12,8 @@ from typing import Optional
 from fastapi import HTTPException, Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+import requests as _requests
+
 logger = logging.getLogger("fasttube.security")
 
 # ---------------------------------------------------------------------------
@@ -19,6 +21,60 @@ logger = logging.getLogger("fasttube.security")
 # ---------------------------------------------------------------------------
 MAX_CONCURRENT_DOWNLOADS = int(os.getenv("MAX_CONCURRENT_DOWNLOADS", "3"))
 download_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DOWNLOADS)
+
+# ---------------------------------------------------------------------------
+# GeoIP: Allow Only Vietnam traffic (VN)
+# ---------------------------------------------------------------------------
+ALLOW_ONLY_VN = os.getenv("ALLOW_ONLY_VN", "true").lower() in ("true", "1", "yes")
+_GEO_CACHE: dict[str, str] = {}  # ip -> country_code
+
+
+def is_private_ip(ip: str) -> bool:
+    if ip in ("127.0.0.1", "::1", "localhost", "testclient"):
+        return True
+    if ip.startswith("10.") or ip.startswith("192.168."):
+        return True
+    if ip.startswith("172."):
+        parts = ip.split(".")
+        if len(parts) >= 2 and parts[1].isdigit() and 16 <= int(parts[1]) <= 31:
+            return True
+    return False
+
+
+def resolve_country_sync(ip: str) -> str:
+    """Resolve country code for public IP with local in-memory caching."""
+    if is_private_ip(ip):
+        return "VN"
+    if ip in _GEO_CACHE:
+        return _GEO_CACHE[ip]
+    try:
+        url = f"http://ip-api.com/json/{ip}?fields=countryCode"
+        resp = _requests.get(url, timeout=1.8)
+        if resp.status_code == 200:
+            code = resp.json().get("countryCode", "")
+            if code:
+                _GEO_CACHE[ip] = code.upper()
+                return code.upper()
+    except Exception:
+        pass
+    # Default fallback to VN if third-party resolver blips, to prevent dropping legitimate visitors
+    return "VN"
+
+
+async def get_ip_country(req: Request) -> str:
+    # 1. Cloudflare header (highest priority and 0 latency)
+    cf_country = req.headers.get("cf-ipcountry")
+    if cf_country:
+        return cf_country.strip().upper()
+    # 2. Reverse proxy / Nginx GeoIP header
+    x_country = req.headers.get("x-country-code") or req.headers.get("geoip-country-code")
+    if x_country:
+        return x_country.strip().upper()
+    # 3. Direct public IP check (cached)
+    ip = get_client_ip(req)
+    if is_private_ip(ip):
+        return "VN"
+    return await asyncio.to_thread(resolve_country_sync, ip)
 
 
 # ---------------------------------------------------------------------------
@@ -40,9 +96,10 @@ def get_client_ip(req: Request) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Anti-Scanner & Bad Bot List
+# Comprehensive Anti-Scanner, Bad Bot & Scraper List
 # ---------------------------------------------------------------------------
 _BLOCKED_SCANNER_UAS = (
+    # Vulnerability Scanners & Probes
     "sqlmap",
     "nikto",
     "dirbuster",
@@ -56,6 +113,36 @@ _BLOCKED_SCANNER_UAS = (
     "havij",
     "shodan",
     "censys",
+    "nuclei",
+    "openvas",
+    # Aggressive Bots, Crawlers & Scrapers
+    "googlebot",
+    "bingbot",
+    "yandex",
+    "baiduspider",
+    "ahrefsbot",
+    "semrushbot",
+    "mj12bot",
+    "dotbot",
+    "petalbot",
+    "bytespider",
+    "sogou",
+    "exabot",
+    "seznambot",
+    "turnitin",
+    "ccbot",
+    "gptbot",
+    "claudebot",
+    # Automated HTTP libraries
+    "python-requests",
+    "aiohttp",
+    "scrapy",
+    "go-http-client",
+    "java/",
+    "libwww-perl",
+    "httpclient",
+    "wget",
+    "curl",
 )
 
 _BLOCKED_PATHS = (
@@ -73,6 +160,8 @@ _BLOCKED_PATHS = (
     "/setup.php",
     "/.ds_store",
     "/telescope",
+    "/.well-known/security.txt",
+    "/cgi-bin",
 )
 
 
@@ -84,17 +173,35 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # 1. Block known scanner probes
         for probe in _BLOCKED_PATHS:
             if path_lower.startswith(probe) or probe in path_lower:
-                return Response(content="Forbidden", status_code=403, media_type="text/plain")
+                return Response(
+                    content="Truy cập bị từ chối: Đường dẫn bị chặn (Forbidden path).",
+                    status_code=403,
+                    media_type="text/plain; charset=utf-8",
+                )
 
-        # 2. Block known malicious scanner User-Agents
+        # 2. Block malicious scanner User-Agents and automated scraping bots
         for bad_ua in _BLOCKED_SCANNER_UAS:
             if bad_ua in ua_lower:
-                return Response(content="Access Denied", status_code=403, media_type="text/plain")
+                return Response(
+                    content="Truy cập bị từ chối: Đã chặn bot/công cụ tự động (Access Denied: Automated bots and crawlers are blocked).",
+                    status_code=403,
+                    media_type="text/plain; charset=utf-8",
+                )
 
-        # 3. Process request
+        # 3. GeoIP Rule: Only allow Vietnam traffic if enabled
+        if ALLOW_ONLY_VN and path_lower != "/health":
+            country = await get_ip_country(request)
+            if country and country not in ("VN", "VNM", "XX"):
+                return Response(
+                    content=f"Truy cập bị từ chối: FastTube chỉ phục vụ người dùng tại Việt Nam [Quốc gia phát hiện: {country}] (Access Denied: Vietnam only).",
+                    status_code=403,
+                    media_type="text/plain; charset=utf-8",
+                )
+
+        # 4. Process request
         response: Response = await call_next(request)
 
-        # 4. Attach standard production security headers
+        # 5. Attach standard production security headers
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["X-XSS-Protection"] = "1; mode=block"

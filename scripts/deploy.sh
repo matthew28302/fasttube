@@ -83,9 +83,14 @@ server {
 
     client_max_body_size 100M;
 
-    # Anti-Scanner direct drop at Nginx level
-    if ($http_user_agent ~* (sqlmap|nikto|dirbuster|nmap|masscan|wpscan|gobuster|censys)) {
+    # Anti-Scanner, Scraping Bots & Automated tools direct drop at Nginx level
+    if ($http_user_agent ~* (sqlmap|nikto|dirbuster|nmap|masscan|wpscan|gobuster|censys|googlebot|bingbot|yandex|baiduspider|ahrefsbot|semrushbot|mj12bot|dotbot|petalbot|bytespider|python-requests|aiohttp|scrapy|go-http-client|curl|wget)) {
         return 403;
+    }
+
+    # Cloudflare GeoIP Rule: Allow only Vietnam (VN) traffic
+    if ($http_cf_ipcountry ~* ^(?!VN$).+) {
+        return 403 "Access restricted to Vietnam only.";
     }
 
     location ~ /\.(env|git|aws) {
