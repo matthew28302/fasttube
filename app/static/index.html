@@ -134,7 +134,8 @@
     }
 
     /* Hero section in Light Mode */
-    [data-theme="light"] .hero h1 {
+    [data-theme="light"] .hero h1,
+    [data-theme="light"] .hero-clean-title {
       background: linear-gradient(135deg, #090d16 0%, #1e293b 100%) !important;
       -webkit-background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
@@ -250,6 +251,9 @@
       border: 1.5px solid #94a3b8 !important;
       font-weight: 700 !important;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 10px center !important;
     }
     [data-theme="light"] select:focus,
     [data-theme="light"] select:hover,
@@ -471,7 +475,8 @@
       -webkit-background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
     }
-    [data-theme="gray"] .hero h1 {
+    [data-theme="gray"] .hero h1,
+    [data-theme="gray"] .hero-clean-title {
       background: linear-gradient(135deg, #ffffff 30%, #e2e8f0 70%, #94a3b8 100%) !important;
       -webkit-background-clip: text !important;
       -webkit-text-fill-color: transparent !important;
@@ -794,12 +799,13 @@
       margin-bottom: 16px;
       box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
     }
-    .hero h1 {
-      font-size: 2.75rem;
+    .hero h1,
+    .hero-clean-title {
+      font-size: 2.35rem;
       font-weight: 800;
       letter-spacing: -0.035em;
       line-height: 1.15;
-      margin-bottom: 12px;
+      margin-bottom: 22px;
       background: linear-gradient(135deg, #ffffff 30%, #cbd5e1 70%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -904,31 +910,15 @@
     .format-selector-panel {
       max-width: 820px;
       margin: 0 auto;
-      background: rgba(20, 25, 38, 0.7);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-subtle);
-      border-radius: 16px;
-      padding: 10px 16px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .format-panel-title {
-      font-size: 0.82rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      justify-content: center;
     }
     .format-group-chips {
       display: flex;
-      gap: 7px;
+      gap: 8px;
       flex-wrap: wrap;
+      justify-content: center;
     }
     .format-pill {
       background: var(--bg-surface);
@@ -1176,19 +1166,24 @@
     /* Format dropdown within card */
     .card-format-select {
       width: 100%;
-      background: var(--bg-surface);
+      background-color: var(--bg-surface);
       color: var(--text-main);
       border: 1px solid var(--border-subtle);
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 0.8rem;
+      border-radius: 11px;
+      padding: 9px 32px 9px 12px;
+      font-size: 0.81rem;
       font-weight: 700;
       outline: none;
       margin-bottom: 14px;
       cursor: pointer;
-      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .card-format-select:focus {
+    .card-format-select:focus, .card-format-select:hover {
       border-color: var(--primary);
     }
     .card-format-select option, .card-format-select optgroup {
@@ -1573,16 +1568,21 @@
       min-width: 240px;
     }
     .prompt-select {
-      background: var(--bg-surface);
+      background-color: var(--bg-surface);
       color: var(--text-main);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
-      padding: 9px 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
+      padding: 9px 34px 9px 13px;
+      font-size: 0.82rem;
+      font-weight: 700;
       outline: none;
       cursor: pointer;
-      transition: all 0.2s ease;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       white-space: nowrap;
     }
     .prompt-select:focus, .prompt-select:hover {
@@ -1775,7 +1775,7 @@
       .brand-tag { display: none; }
       .nav-btn span { display: none; }
       .nav-btn { padding: 8px 12px; }
-      .hero h1 { font-size: 2rem; }
+      .hero h1, .hero-clean-title { font-size: 1.85rem; }
       .hero p { font-size: 0.95rem; }
       .player-info { width: 50%; }
       .player-extra { display: none; }
@@ -1800,10 +1800,6 @@
         </div>
         <div>
           <div class="brand-title">FastTube</div>
-          <div class="brand-tag">
-            <span class="live-dot"></span>
-            <span>Studio Audio & Video Engine</span>
-          </div>
         </div>
       </a>
 
@@ -1846,11 +1842,7 @@
     <!-- SEARCH TAB -->
     <section id="view-search">
       <div class="hero">
-        <div class="hero-pill-badge">
-          <span>⚡ Tải siêu tốc 2-3s • Innertube API Engine</span>
-        </div>
-        <h1>Tìm Kiếm & Tải Đa Định Dạng</h1>
-        <p>Hỗ trợ trích xuất Audio M4A, MP3 320k, FLAC Lossless và Video MP4 từ 360p đến 1080p FHD</p>
+        <h1 class="hero-clean-title">Tìm kiếm & Tải nhạc</h1>
 
         <!-- Search Input Bar -->
         <div class="search-wrapper">
@@ -1877,10 +1869,6 @@
 
         <!-- Format Selector Panel -->
         <div class="format-selector-panel">
-          <div class="format-panel-title">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-            Định dạng tải mặc định
-          </div>
           <div class="format-group-chips">
             <button class="format-pill active" data-fmt="m4a" onclick="setFormat('m4a')">
               <span>🎧 M4A</span>
@@ -1936,11 +1924,7 @@
     <!-- PLAYLIST TAB -->
     <section id="view-playlist" style="display: none;">
       <div class="hero">
-        <div class="hero-pill-badge">
-          <span>✨ Groq LLM Music Curator</span>
-        </div>
-        <h1>Sáng Tạo Playlist Bằng AI</h1>
-        <p>Mô tả tâm trạng, thể loại hoặc chủ đề yêu thích — AI sẽ tự động tuyển chọn và tải toàn bộ về máy chủ</p>
+        <h1 class="hero-clean-title">Tạo Playlist AI</h1>
 
         <div class="playlist-preset-chips">
           <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Top 10 bài nhạc UK Drill sôi động mới nhất')">🔥 UK Drill sôi động</span>
