@@ -1,0 +1,18 @@
+[Unit]
+Description=Music API (FastAPI + yt-dlp, user service)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# KHONG CAN SUA GI trong file nay: %h tu lay home cua user dang chay service.
+# Dat project o ~/new_music, copy file nay vao ~/.config/systemd/user/music-api.service roi chay:
+#   systemctl --user daemon-reload && systemctl --user enable --now music-api
+WorkingDirectory=%h/new_music
+Environment=PATH=%h/new_music/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/new_music/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop uvloop --http httptools
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

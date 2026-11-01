@@ -1,0 +1,22 @@
+# Local music and downloaded media
+music/*
+!music/.gitkeep
+test_music/
+
+# Environment variables and secrets
+.env
+*.env
+cookies/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+cache/
+logs/
+*.log
+
+# Local user playlists
+playlists.json

@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastTube - Studio Tải Nhạc & Video YouTube Siêu Tốc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #07090e;
+      --bg-surface: #0e121c;
+      --bg-card: #141926;
+      --bg-card-hover: #1a2133;
+      --bg-glass: rgba(14, 18, 28, 0.78);
+      --bg-glass-heavy: rgba(10, 13, 22, 0.92);
+      
+      --border-subtle: rgba(255, 255, 255, 0.07);
+      --border-card: rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(99, 102, 241, 0.45);
+      --border-focus: #6366f1;
+      
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-glow: rgba(99, 102, 241, 0.3);
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      
+      --text-main: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #64748b;
+      --text-dim: #475569;
+      
+      --player-height: 90px;
+      --header-height: 72px;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 35px rgba(99, 102, 241, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(var(--player-height) + 36px);
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent 70%),
+        radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.06), transparent 40%),
+        radial-gradient(circle at 90% 40%, rgba(139, 92, 246, 0.06), transparent 40%);
+      background-attachment: fixed;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: #262f45; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4665; }
+
+    /* Header */
+    header {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      height: var(--header-height);
+    }
+    .header-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      height: 100%;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+      user-select: none;
+    }
+    .brand-icon-wrap {
+      position: relative;
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #6366f1 0%, #3b82f6 50%, #06b6d4 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .brand:hover .brand-icon {
+      transform: scale(1.05) rotate(-3deg);
+    }
+    .brand-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(110deg, #ffffff 40%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+    }
+    .brand-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 3px;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Segmented Nav */
+    .nav-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-segmented {
+      display: flex;
+      background: rgba(14, 18, 28, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      padding: 4px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 18px;
+      border-radius: var(--radius-full);
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .nav-btn:hover {
+      color: var(--text-main);
+    }
+    .nav-btn.active {
+      color: #fff;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(59, 130, 246, 0.95));
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+    .nav-count {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      font-size: 0.72rem;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-btn:not(.active) .nav-count {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    .btn-icon-setting {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-full);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-icon-setting:hover {
+      color: var(--text-main);
+      border-color: var(--border-hover);
+      transform: rotate(45deg);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 36px 24px;
+      width: 100%;
+      flex: 1;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      margin-bottom: 34px;
+      position: relative;
+    }
+    .hero-pill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: var(--primary-light);
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1);
+    }
+    .hero h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 30%, #cbd5e1 70%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 1.08rem;
+      max-width: 680px;
+      margin: 0 auto 28px;
+      line-height: 1.55;
+    }
+
+    /* Search Box */
+    .search-wrapper {
+      max-width: 820px;
+      margin: 0 auto 20px;
+      position: relative;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-card);
+      border-radius: 20px;
+      padding: 7px 9px 7px 20px;
+      box-shadow: var(--shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .search-box:focus-within {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-glow), 0 16px 40px rgba(0, 0, 0, 0.5);
+      background: #171d2b;
+      transform: translateY(-2px);
+    }
+    .search-icon {
+      color: var(--text-muted);
+      margin-right: 14px;
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+    .search-box:focus-within .search-icon {
+      color: var(--primary-light);
+    }
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 1.05rem;
+      font-weight: 500;
+      outline: none;
+      min-width: 0;
+    }
+    .search-input::placeholder {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+    .search-clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-right: 8px;
+      transition: all 0.15s;
+    }
+    .search-clear-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .search-btn {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+      color: #ffffff;
+      border: none;
+      padding: 13px 26px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+    }
+    .search-btn:hover {
+      background: linear-gradient(135deg, #7175f5 0%, #5850ec 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+    }
+    .search-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Format Bar Control */
+    .format-selector-panel {
+      max-width: 820px;
+      margin: 0 auto;
+      background: rgba(20, 25, 38, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .format-panel-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .format-group-chips {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .format-pill {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 7px 13px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .format-pill:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: #192033;
+      transform: translateY(-1px);
+    }
+    .format-pill.active {
+      background: rgba(99, 102, 241, 0.16);
+      color: #a5b4fc;
+      border-color: rgba(99, 102, 241, 0.45);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.15);
+    }
+    .format-pill.active .pill-tag {
+      background: #6366f1;
+      color: #fff;
+    }
+    .pill-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Trending Quick Chips */
+    .quick-chips-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 860px;
+      margin: 18px auto 0;
+    }
+    .quick-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-right: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chip {
+      background: rgba(20, 25, 38, 0.6);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 5px 13px;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover {
+      color: #fff;
+      border-color: rgba(99, 102, 241, 0.4);
+      background: rgba(99, 102, 241, 0.12);
+      transform: translateY(-1px);
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 36px 0 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-badge {
+      font-size: 0.78rem;
+      padding: 3px 12px;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      color: var(--primary-light);
+      border-radius: var(--radius-full);
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Cards Grid */
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 22px;
+    }
+
+    /* Modern Media Card */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: var(--border-hover);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.12);
+      background: var(--bg-card-hover);
+    }
+
+    .card-thumb-wrap {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #090c14;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .card-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card:hover .card-thumb {
+      transform: scale(1.06);
+    }
+    
+    /* Play Overlay on Thumbnail */
+    .thumb-play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      backdrop-filter: blur(2px);
+      transition: opacity 0.22s;
+    }
+    .card:hover .thumb-play-overlay {
+      opacity: 1;
+    }
+    .thumb-play-circle {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(99, 102, 241, 0.95);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.6);
+      transform: scale(0.85);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .card:hover .thumb-play-circle {
+      transform: scale(1);
+    }
+
+    .card-duration {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(7, 9, 14, 0.85);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .card-badge-local {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(16, 185, 129, 0.9);
+      backdrop-filter: blur(6px);
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .card-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+    .card-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      line-height: 1.45;
+      margin-bottom: 6px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      color: var(--text-main);
+      transition: color 0.2s;
+    }
+    .card:hover .card-title {
+      color: #a5b4fc;
+    }
+    .card-channel {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Format dropdown within card */
+    .card-format-select {
+      width: 100%;
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      margin-bottom: 14px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .card-format-select:focus {
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .card-actions {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    
+    /* Buttons */
+    .btn {
+      border: none;
+      padding: 9px 14px;
+      border-radius: 11px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+      user-select: none;
+    }
+    .btn:active {
+      transform: scale(0.97);
+    }
+    .btn-play {
+      background: rgba(99, 102, 241, 0.14);
+      color: var(--primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    .btn-play:hover {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+    .btn-download {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+    }
+    .btn-download:hover {
+      background: linear-gradient(135deg, #18c58c 0%, #08a374 100%);
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn-delete {
+      background: rgba(244, 63, 94, 0.1);
+      color: var(--accent-rose);
+      border: 1px solid rgba(244, 63, 94, 0.22);
+    }
+    .btn-delete:hover {
+      background: var(--accent-rose);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
+    }
+
+    /* Skeleton Loading */
+    .skeleton-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .skeleton-thumb {
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(90deg, #131826 25%, #1e263d 50%, #131826 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-body {
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .skeleton-line {
+      height: 14px;
+      background: #192033;
+      border-radius: 6px;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    /* Bottom Player Bar */
+    .player-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--player-height);
+      background: var(--bg-glass-heavy);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border-card);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.7);
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .player-bar.active {
+      transform: translateY(0);
+    }
+
+    .player-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 28%;
+      min-width: 200px;
+    }
+    .player-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      object-fit: cover;
+      background: #192033;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .player-meta {
+      overflow: hidden;
+    }
+    .player-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-main);
+    }
+    .player-channel {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .player-tag {
+      background: rgba(99, 102, 241, 0.18);
+      color: var(--primary-light);
+      font-size: 0.68rem;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .player-controls {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .control-btns {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .control-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      border-radius: 50%;
+      padding: 6px;
+    }
+    .control-btn:hover {
+      color: #fff;
+      transform: scale(1.1);
+    }
+    .control-btn-main {
+      width: 44px;
+      height: 44px;
+      background: #ffffff;
+      color: #090c14;
+      border-radius: 50%;
+      box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+    }
+    .control-btn-main:hover {
+      transform: scale(1.08);
+      background: #f1f5f9;
+      color: #000;
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.35);
+    }
+
+    .progress-wrap {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-variant-numeric: tabular-nums;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .progress-bar-container {
+      flex: 1;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-full);
+      position: relative;
+      cursor: pointer;
+      transition: height 0.15s;
+    }
+    .progress-bar-container:hover {
+      height: 8px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #38bdf8);
+      border-radius: var(--radius-full);
+      width: 0%;
+      position: relative;
+    }
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      right: -5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .progress-bar-container:hover .progress-bar-fill::after {
+      opacity: 1;
+    }
+
+    .player-extra {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      width: 28%;
+      min-width: 180px;
+    }
+    .volume-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+    }
+    .volume-slider {
+      width: 85px;
+      accent-color: var(--primary-light);
+      cursor: pointer;
+      height: 4px;
+    }
+
+    /* Modal dialogs */
+    .video-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .video-modal.active {
+      display: flex;
+    }
+    .video-modal-content {
+      width: 100%;
+      max-width: 980px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85);
+      animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalScaleUp {
+      from { transform: scale(0.95); }
+      to { transform: scale(1); }
+    }
+    .video-modal-header {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(14, 18, 28, 0.6);
+    }
+    .video-modal-title {
+      font-weight: 700;
+      font-size: 1.05rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 80%;
+      color: var(--text-main);
+    }
+    .close-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: none;
+      color: var(--text-muted);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+    .video-player-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      display: block;
+    }
+
+    /* AI Playlist View */
+    .playlist-prompt-box {
+      max-width: 1040px;
+      margin: 0 auto 24px;
+      background: var(--bg-card);
+      border: 1.5px solid var(--border-card);
+      border-radius: 20px;
+      padding: 10px 14px 10px 18px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .playlist-prompt-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.96rem;
+      font-weight: 500;
+      outline: none;
+      min-width: 240px;
+    }
+    .prompt-select {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .prompt-select:focus, .prompt-select:hover {
+      border-color: var(--border-hover);
+      color: #fff;
+    }
+    .websearch-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 13px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .websearch-toggle-btn:hover {
+      border-color: var(--border-hover);
+      color: var(--text-main);
+      transform: translateY(-1px);
+    }
+    .websearch-toggle-btn.active {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #34d399;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    }
+    .websearch-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: all 0.2s;
+    }
+    .websearch-toggle-btn.active .websearch-indicator {
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .playlist-preset-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .playlist-preset-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .playlist-preset-chip:hover {
+      border-color: var(--primary-light);
+      background: rgba(99, 102, 241, 0.15);
+      color: #fff;
+    }
+    .playlist-control-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    /* Saved Playlists Drawer */
+    #saved-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 390px;
+      max-width: 92vw;
+      height: 100vh;
+      background: var(--bg-glass-heavy);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-left: 1px solid var(--border-card);
+      z-index: 200;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -15px 0 45px rgba(0, 0, 0, 0.6);
+    }
+    .drawer-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .drawer-header h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .saved-list-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .saved-list-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+    .toast {
+      background: rgba(18, 24, 38, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 12px 18px;
+      border-radius: 14px;
+      color: var(--text-main);
+      font-size: 0.88rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: auto;
+      max-width: 380px;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(110%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Spinner */
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 70px 24px;
+      color: var(--text-muted);
+    }
+    .empty-icon {
+      font-size: 3.2rem;
+      margin-bottom: 16px;
+      opacity: 0.7;
+    }
+    .empty-state h3 {
+      color: var(--text-main);
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .header-container { padding: 0 16px; }
+      .brand-tag { display: none; }
+      .nav-btn span { display: none; }
+      .nav-btn { padding: 8px 12px; }
+      .hero h1 { font-size: 2rem; }
+      .hero p { font-size: 0.95rem; }
+      .player-info { width: 50%; }
+      .player-extra { display: none; }
+      .control-btns { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Navigation -->
+  <header>
+    <div class="header-container">
+      <a href="/" class="brand" title="FastTube Studio">
+        <div class="brand-icon-wrap">
+          <div class="brand-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+        </div>
+        <div>
+          <div class="brand-title">FastTube</div>
+          <div class="brand-tag">
+            <span class="live-dot"></span>
+            <span>Studio Audio & Video Engine</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="nav-container">
+        <nav class="nav-segmented">
+          <button class="nav-btn active" id="tab-search" onclick="switchTab('search')">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Tìm kiếm & Tải</span>
+          </button>
+          <button class="nav-btn" id="tab-library" onclick="switchTab('library')">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <span>Thư viện máy chủ</span>
+            <span class="nav-count" id="library-count">0</span>
+          </button>
+          <button class="nav-btn" id="tab-playlist" onclick="switchTab('playlist')">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+            <span>AI Playlist</span>
+          </button>
+        </nav>
+
+        <button class="btn-icon-setting" id="btn-settings" onclick="openSettings()" title="Cài đặt hệ thống">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main>
+    <!-- SEARCH TAB -->
+    <section id="view-search">
+      <div class="hero">
+        <div class="hero-pill-badge">
+          <span>⚡ Tải siêu tốc 2-3s • Innertube API Engine</span>
+        </div>
+        <h1>Tìm Kiếm & Tải Đa Định Dạng</h1>
+        <p>Hỗ trợ trích xuất Audio M4A, MP3 320k, FLAC Lossless và Video MP4 từ 360p đến 1080p FHD</p>
+
+        <!-- Search Input Bar -->
+        <div class="search-wrapper">
+          <div class="search-box">
+            <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input 
+              type="text" 
+              id="search-input" 
+              class="search-input" 
+              placeholder="Dán link YouTube (https://...) hoặc nhập tên bài hát, video..."
+              autocomplete="off"
+              oninput="handleSearchInput(event)"
+              onkeydown="if(event.key==='Enter') doSearch()"
+            >
+            <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="Xóa nội dung">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <button class="search-btn" id="search-btn" onclick="doSearch()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Tìm kiếm</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Format Selector Panel -->
+        <div class="format-selector-panel">
+          <div class="format-panel-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            Định dạng tải mặc định
+          </div>
+          <div class="format-group-chips">
+            <button class="format-pill active" data-fmt="m4a" onclick="setFormat('m4a')">
+              <span>🎧 M4A</span>
+              <span class="pill-tag">128k</span>
+            </button>
+            <button class="format-pill" data-fmt="mp3_320" onclick="setFormat('mp3_320')">
+              <span>🎵 MP3</span>
+              <span class="pill-tag">320k</span>
+            </button>
+            <button class="format-pill" data-fmt="flac" onclick="setFormat('flac')">
+              <span>🎼 FLAC</span>
+              <span class="pill-tag">Lossless</span>
+            </button>
+            <button class="format-pill" data-fmt="mp4_1080" onclick="setFormat('mp4_1080')">
+              <span>🎬 MP4</span>
+              <span class="pill-tag">1080p FHD</span>
+            </button>
+            <button class="format-pill" data-fmt="mp4_720" onclick="setFormat('mp4_720')">
+              <span>🎬 MP4</span>
+              <span class="pill-tag">720p HD</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Trending Suggestions -->
+        <div class="quick-chips-wrap">
+          <span class="quick-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
+            Gợi ý:
+          </span>
+          <span class="chip" onclick="quickSearch('Em của ngày hôm qua')">Em của ngày hôm qua</span>
+          <span class="chip" onclick="quickSearch('Nơi này có anh')">Nơi này có anh</span>
+          <span class="chip" onclick="quickSearch('Waiting for you mono')">Waiting for you</span>
+          <span class="chip" onclick="quickSearch('Cắt đôi nỗi sầu')">Cắt đôi nỗi sầu</span>
+          <span class="chip" onclick="quickSearch('See tình')">See tình</span>
+          <span class="chip" onclick="quickSearch('Shape of you')">Shape of you</span>
+          <span class="chip" onclick="quickSearch('Lofi chill tiktok')">Lofi chill tiktok</span>
+        </div>
+      </div>
+
+      <!-- Search Results Area -->
+      <div id="results-area" style="display: none;">
+        <div class="section-header">
+          <div class="section-title">
+            Kết quả tìm kiếm
+            <span class="section-badge" id="results-count">0 video</span>
+          </div>
+        </div>
+        <div class="results-grid" id="results-grid"></div>
+      </div>
+    </section>
+
+    <!-- LIBRARY TAB -->
+    <section id="view-library" style="display: none;">
+      <div class="section-header">
+        <div class="section-title">
+          Kho Nhạc & Video Máy Chủ
+          <span class="section-badge" id="library-total-badge">0 file</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <div style="position: relative;">
+            <input 
+              type="text" 
+              id="lib-filter-input" 
+              placeholder="Lọc bài hát trong kho..." 
+              oninput="filterLibrary(this.value)"
+              style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 8px 16px; font-size: 0.86rem; outline: none; width: 220px;"
+            >
+          </div>
+          <button class="btn btn-play" onclick="loadLibrary()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+            <span>Làm mới</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="results-grid" id="library-grid"></div>
+    </section>
+
+    <!-- PLAYLIST TAB -->
+    <section id="view-playlist" style="display: none;">
+      <div class="hero">
+        <div class="hero-pill-badge">
+          <span>✨ Groq LLM Music Curator</span>
+        </div>
+        <h1>Sáng Tạo Playlist Bằng AI</h1>
+        <p>Mô tả tâm trạng, thể loại hoặc chủ đề yêu thích — AI sẽ tự động tuyển chọn và tải toàn bộ về máy chủ</p>
+
+        <div class="playlist-preset-chips">
+          <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Top 10 bài nhạc UK Drill sôi động mới nhất')">🔥 UK Drill sôi động</span>
+          <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Nhạc lofi acoustic chill mưa rơi đêm muộn')">🌧️ Lofi chill đêm muộn</span>
+          <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Top 10 bài hát của ca sĩ Thanh Hưng hay nhất')">🎤 Thanh Hưng Top Hits</span>
+          <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Nhạc Pop ballad tâm trạng buồn sâu lắng')">💔 Pop ballad tâm trạng</span>
+        </div>
+
+        <div class="playlist-prompt-box">
+          <input id="playlist-prompt" class="playlist-prompt-input" placeholder="Ví dụ: list nhạc drill 2026, top 10 bài hát của Thanh Hưng, top 10 US-UK hits..." autocomplete="off">
+          
+          <select id="playlist-model" class="prompt-select" onchange="onPlaylistModelChange()" title="Chọn mô hình AI tạo playlist">
+            <option value="groq/compound" selected>⚡ groq/compound (Web)</option>
+            <option value="openai/gpt-oss-20b">🚀 openai/gpt-oss-20b</option>
+            <option value="openai/gpt-oss-120b">🧠 openai/gpt-oss-120b</option>
+            <option value="qwen/qwen3.8-27b">🌐 qwen/qwen3.8-27b</option>
+          </select>
+
+          <button type="button" id="btn-websearch-toggle" class="websearch-toggle-btn active" onclick="toggleWebSearch()" title="Bật/Tắt tìm kiếm dữ liệu Web mới nhất qua Groq">
+            <span class="websearch-indicator"></span>
+            <span class="websearch-icon">🌐</span>
+            <span id="websearch-status-text">Web Search: BẬT</span>
+          </button>
+
+          <select id="playlist-format" class="prompt-select" title="Định dạng tải về">
+            <option value="m4a">M4A 128k (Siêu tốc)</option>
+            <option value="mp3_320">MP3 320k (Cực nét)</option>
+            <option value="flac">FLAC Lossless</option>
+            <option value="wav">WAV Uncompressed</option>
+            <option value="mp4_720">MP4 720p HD</option>
+            <option value="mp4_1080">MP4 1080p FHD</option>
+          </select>
+
+          <button class="search-btn" id="btn-gen-playlist" onclick="generatePlaylist()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+            <span>Tạo Playlist</span>
+          </button>
+        </div>
+      </div>
+
+        <div class="playlist-header-bar" style="display: flex; justify-content: space-between; align-items: center; margin: 28px 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div id="playlist-current-heading" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Danh sách bài hát</div>
+            <span class="section-badge" id="playlist-badge" style="display:none;">0 bài</span>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-play" onclick="toggleSavedDrawer()" style="padding: 9px 18px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+              <span>Xem Playlist Đã Lưu</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="playlist-status" style="text-align:center; color:var(--text-secondary); margin:14px 0; font-weight:600;"></div>
+        
+        <div id="playlist-controls" class="playlist-control-bar" style="display:none;">
+          <!-- Nút Tải toàn bộ playlist duy nhất trên đầu -->
+          <button class="btn btn-download" id="btn-dl-all-playlist" style="display:none; padding:11px 24px; font-size:0.95rem;" onclick="triggerDownloadAllPlaylist()">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span id="btn-dl-all-label">Tải toàn bộ playlist này</span>
+          </button>
+
+          <!-- Các nút phát nhạc khi playlist đã sẵn sàng -->
+          <div id="playlist-play-controls" style="display:none; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-play" onclick="playPlaylist(false)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Phát tất cả</span>
+            </button>
+            <button class="btn btn-play" onclick="playPlaylist(true)">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              <span>Xáo trộn</span>
+            </button>
+            <button class="btn btn-play" onclick="prevPlaylist()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+              <span>Trước</span>
+            </button>
+            <button class="btn btn-play" onclick="nextPlaylist()">
+              <span>Tiếp</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="results-grid" id="playlist-grid"></div>
+      </section>
+
+    <!-- Saved Playlists Drawer -->
+    <div id="saved-drawer">
+      <div class="drawer-header">
+        <h3>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          Danh sách đã lưu
+        </h3>
+        <button class="close-btn" onclick="toggleSavedDrawer()">&times;</button>
+      </div>
+      <div id="saved-drawer-list" style="flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; gap:12px;"></div>
+      <div id="saved-drawer-detail" style="border-top:1px solid var(--border-subtle); padding:14px; display:none; max-height:50vh; overflow:auto;"></div>
+    </div>
+  </main>
+
+  <!-- Sticky Bottom Media Player -->
+  <div class="player-bar" id="player-bar">
+    <div class="player-info">
+      <img id="player-thumb" class="player-thumb" src="" alt="Thumbnail">
+      <div class="player-meta">
+        <div class="player-title" id="player-title">Chưa chọn bài hát</div>
+        <div class="player-channel">
+          <span id="player-channel">YouTube</span>
+          <span class="player-tag" id="player-format-tag">M4A</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <div class="control-btns">
+        <button class="control-btn" title="Lùi 10s" onclick="seekRelative(-10)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+        </button>
+        <button class="control-btn control-btn-main" id="player-play-btn" onclick="togglePlay()">
+          <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg id="icon-pause" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button class="control-btn" title="Tiến 10s" onclick="seekRelative(10)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+        </button>
+        <button class="control-btn" id="player-loop-btn" title="Lặp lại" onclick="toggleLoop()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        </button>
+      </div>
+
+      <div class="progress-wrap">
+        <span id="player-cur-time">0:00</span>
+        <div class="progress-bar-container" id="progress-container" onclick="seekAbsolute(event)">
+          <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <span id="player-dur-time">0:00</span>
+      </div>
+    </div>
+
+    <div class="player-extra">
+      <button class="control-btn" id="btn-video-popout" title="Xem Video" onclick="openVideoModal()" style="display:none;">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+      </button>
+      <button class="control-btn" title="Sao chép link Stream" onclick="copyStreamUrl()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      </button>
+      <button class="control-btn" title="Tải file về máy" onclick="downloadCurrent()">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      </button>
+      <div class="volume-container">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.05" value="1" oninput="changeVolume(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div class="video-modal" id="settings-modal">
+    <div class="video-modal-content" style="max-width:520px;">
+      <div class="video-modal-header">
+        <div class="video-modal-title">Cài đặt hệ thống</div>
+        <button class="close-btn" onclick="closeSettings()">&times;</button>
+      </div>
+      <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+        <div>
+          <label style="font-weight:700; font-size:0.9rem; margin-bottom:8px; display:block;">Groq API Key (Dùng cho AI Playlist)</label>
+          <input id="settings-groq-key" type="password" class="search-input" style="width:100%; border:1px solid var(--border-subtle); border-radius:12px; padding:12px; background:var(--bg-surface);" placeholder="gsk_...">
+        </div>
+        <button class="btn btn-download" onclick="saveSettings()" style="padding:12px;">Lưu cấu hình</button>
+        <div id="settings-status" style="color:var(--text-muted); font-size:0.86rem; text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Video Modal -->
+  <div class="video-modal" id="video-modal">
+    <div class="video-modal-content">
+      <div class="video-modal-header">
+        <div class="video-modal-title" id="video-modal-title">Xem Video</div>
+        <button class="close-btn" onclick="closeVideoModal()">&times;</button>
+      </div>
+      <video id="modal-video-element" class="video-player-frame" controls playsinline></video>
+    </div>
+  </div>
+
+  <!-- Hidden Native Audio Element -->
+  <audio id="native-audio" preload="auto"></audio>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script>
+    // State
+    let selectedFormat = 'm4a';
+    let currentTrack = null;
+    let isLooping = false;
+    let searchDebounceTimer = null;
+    let libraryItems = [];
+
+    const audio = document.getElementById('native-audio');
+    const modalVideo = document.getElementById('modal-video-element');
+
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('ended', onTrackEnded);
+    audio.addEventListener('play', () => updatePlayIcons(true));
+    audio.addEventListener('pause', () => updatePlayIcons(false));
+
+    modalVideo.addEventListener('timeupdate', updateProgress);
+    modalVideo.addEventListener('ended', onTrackEnded);
+    modalVideo.addEventListener('play', () => updatePlayIcons(true));
+    modalVideo.addEventListener('pause', () => updatePlayIcons(false));
+
+    function setFormat(fmt) {
+      selectedFormat = fmt;
+      document.querySelectorAll('.format-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.fmt === fmt);
+      });
+      showToast(`⚡ Đã chọn định dạng mặc định: ${fmt.toUpperCase()}`);
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('view-search').style.display = tab === 'search' ? 'block' : 'none';
+      document.getElementById('view-library').style.display = tab === 'library' ? 'block' : 'none';
+      const vp = document.getElementById('view-playlist');
+      if (vp) vp.style.display = tab === 'playlist' ? 'block' : 'none';
+      if (tab === 'playlist') loadSavedPlaylists();
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      if (tab === 'library') loadLibrary();
+    }
+
+    function handleSearchInput(e) {
+      clearTimeout(searchDebounceTimer);
+      const val = e.target.value.trim();
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+
+      // If it looks like a URL, execute search immediately
+      if (val.includes('youtube.com/') || val.includes('youtu.be/')) {
+        searchDebounceTimer = setTimeout(doSearch, 200);
+      } else if (val.length >= 3) {
+        searchDebounceTimer = setTimeout(doSearch, 400);
+      }
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      document.getElementById('search-clear-btn').style.display = 'none';
+      input.focus();
+    }
+
+    function quickSearch(q) {
+      const input = document.getElementById('search-input');
+      input.value = q;
+      document.getElementById('search-clear-btn').style.display = 'flex';
+      doSearch();
+    }
+
+    function quickPlaylistPrompt(text) {
+      const input = document.getElementById('playlist-prompt');
+      input.value = text;
+      input.focus();
+    }
+
+    async function doSearch() {
+      const q = document.getElementById('search-input').value.trim();
+      if (!q) return;
+
+      const area = document.getElementById('results-area');
+      const grid = document.getElementById('results-grid');
+      const count = document.getElementById('results-count');
+      const btn = document.getElementById('search-btn');
+
+      area.style.display = 'block';
+      count.textContent = 'Đang tìm kiếm...';
+
+      // Shimmering Skeleton Cards
+      grid.innerHTML = Array(6).fill(0).map(() => `
+        <div class="skeleton-card">
+          <div class="skeleton-thumb"></div>
+          <div class="skeleton-body">
+            <div class="skeleton-line" style="width: 85%;"></div>
+            <div class="skeleton-line" style="width: 50%;"></div>
+            <div class="skeleton-line" style="width: 100%; height: 28px; margin-top: 6px;"></div>
+          </div>
+        </div>
+      `).join('');
+
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&limit=30`);
+        const data = await res.json();
+        renderResults(data);
+      } catch (err) {
+        showToast(`❌ Lỗi tìm kiếm: ${err.message}`);
+        grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Không thể tải kết quả. Vui lòng thử lại.</div>`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function renderResults(items) {
+      const area = document.getElementById('results-area');
+      const grid = document.getElementById('results-grid');
+      const count = document.getElementById('results-count');
+
+      area.style.display = 'block';
+      count.textContent = `${items.length} kết quả`;
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">🔍</div>
+            <h3>Không tìm thấy kết quả phù hợp</h3>
+            <p>Vui lòng thử từ khóa khác hoặc dán link YouTube chính xác</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = items.map(it => `
+        <div class="card" id="card-${it.id}">
+          <div class="card-thumb-wrap" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded})">
+            <img class="card-thumb" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
+            <div class="thumb-play-overlay">
+              <div class="thumb-play-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              </div>
+            </div>
+            <span class="card-duration">${it.duration || 'Video'}</span>
+            ${it.is_downloaded ? `<span class="card-badge-local">✓ Có sẵn</span>` : ''}
+          </div>
+          <div class="card-body">
+            <h3 class="card-title" title="${it.title}">${it.title}</h3>
+            <div class="card-channel">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+              <span>${it.channel || 'YouTube'}</span>
+            </div>
+            
+            <select class="card-format-select" id="fmt-${it.id}">
+              <optgroup label="🎧 Âm thanh (Audio)">
+                <option value="m4a" ${selectedFormat==='m4a'?'selected':''}>⚡ M4A 128k (Tải nhanh 2s)</option>
+                <option value="mp3_320" ${selectedFormat==='mp3_320'?'selected':''}>🎵 MP3 320kbps (Chất lượng cao)</option>
+                <option value="mp3_128" ${selectedFormat==='mp3_128'?'selected':''}>🎵 MP3 128kbps (Tiết kiệm)</option>
+                <option value="flac" ${selectedFormat==='flac'?'selected':''}>🎼 FLAC Lossless</option>
+                <option value="wav" ${selectedFormat==='wav'?'selected':''}>🎼 WAV Uncompressed</option>
+                <option value="opus" ${selectedFormat==='opus'?'selected':''}>⚡ Opus (160k - WebM)</option>
+              </optgroup>
+              <optgroup label="🎬 Video (MP4 chuẩn)">
+                <option value="mp4_1080" ${selectedFormat==='mp4_1080'?'selected':''}>🎬 MP4 1080p Full HD</option>
+                <option value="mp4_720" ${selectedFormat==='mp4_720'?'selected':''}>🎬 MP4 720p HD</option>
+                <option value="mp4_480" ${selectedFormat==='mp4_480'?'selected':''}>🎬 MP4 480p SD</option>
+                <option value="mp4_360" ${selectedFormat==='mp4_360'?'selected':''}>🎬 MP4 360p Low</option>
+              </optgroup>
+            </select>
+
+            <div class="card-actions">
+              <button class="btn btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded})">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>${it.is_downloaded ? 'Phát ngay' : 'Xem / Nghe'}</span>
+              </button>
+              <button class="btn btn-download" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Tải về</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function escapeQuotes(str) {
+      return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    async function actionPlay(id, title, channel, thumb, isDownloaded) {
+      const fmtSelect = document.getElementById(`fmt-${id}`);
+      const fmt = fmtSelect ? fmtSelect.value : selectedFormat;
+
+      const btn = document.getElementById(`btn-play-${id}`);
+      const orig = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = `<div class="spinner"></div><span>Đang tải...</span>`;
+        btn.disabled = true;
+      }
+
+      const t0 = performance.now();
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, format: fmt })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.detail || 'Không thể tải');
+
+        const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+        showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
+        startStreamingTrack({ id: data.file_id, title: data.title, channel, thumb, fmt });
+        updateLocalBadge(id);
+      } catch (err) {
+        showToast(`❌ Lỗi phát: ${err.message}`);
+      } finally {
+        if (btn) {
+          btn.innerHTML = orig;
+          btn.disabled = false;
+        }
+      }
+    }
+
+    async function actionDownload(id, title) {
+      const fmtSelect = document.getElementById(`fmt-${id}`);
+      const fmt = fmtSelect ? fmtSelect.value : selectedFormat;
+      const btn = document.getElementById(`btn-dl-${id}`);
+      const orig = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = `<div class="spinner"></div><span>Đang tải...</span>`;
+        btn.disabled = true;
+      }
+
+      const t0 = performance.now();
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, format: fmt })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.detail || 'Lỗi tải');
+
+        const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+        showToast(`✅ Đã tải xong '${title}' [${data.format.toUpperCase()} • ${data.size_mb} MB] trong ${elapsed}s!`);
+        updateLocalBadge(id);
+
+        // Trigger native browser download
+        const a = document.createElement('a');
+        a.href = data.download_url;
+        a.download = '';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      } catch (err) {
+        showToast(`❌ Lỗi tải: ${err.message}`);
+      } finally {
+        if (btn) {
+          btn.innerHTML = orig;
+          btn.disabled = false;
+        }
+      }
+    }
+
+    function updateLocalBadge(id) {
+      const card = document.getElementById(`card-${id}`);
+      if (card) {
+        const wrap = card.querySelector('.card-thumb-wrap');
+        if (wrap && !wrap.querySelector('.card-badge-local')) {
+          const badge = document.createElement('span');
+          badge.className = 'card-badge-local';
+          badge.innerHTML = '✓ Có sẵn';
+          wrap.appendChild(badge);
+        }
+      }
+      loadLibraryCount();
+    }
+
+    // Media Player Logic
+    function startStreamingTrack(track) {
+      currentTrack = track;
+      const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : '';
+      let streamUrl = track.stream_url || `/stream/${track.id}${cleanExt ? '?ext=' + cleanExt : ''}`;
+      // Cache-bust so a re-downloaded (different quality) file is not served stale.
+      streamUrl += (streamUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+
+      document.getElementById('player-thumb').src = track.thumb || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
+      document.getElementById('player-title').textContent = track.title;
+      document.getElementById('player-channel').textContent = track.channel || 'YouTube';
+      document.getElementById('player-format-tag').textContent = (cleanExt || track.fmt || 'M4A').toUpperCase();
+      document.getElementById('player-bar').classList.add('active');
+
+      const isVideo = (track.fmt || '').startsWith('mp4') || (track.fmt || '').includes('video');
+      const popoutBtn = document.getElementById('btn-video-popout');
+      popoutBtn.style.display = isVideo ? 'flex' : 'none';
+
+      if (isVideo) {
+        audio.pause();
+        modalVideo.src = streamUrl;
+        openVideoModal();
+        modalVideo.play().catch(e => console.log('Autoplay:', e));
+      } else {
+        closeVideoModal();
+        audio.src = streamUrl;
+        audio.play().catch(e => console.log('Autoplay:', e));
+      }
+    }
+
+    function togglePlay() {
+      const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+      const activeMedia = isVideo ? modalVideo : audio;
+      if (activeMedia.paused) {
+        activeMedia.play();
+      } else {
+        activeMedia.pause();
+      }
+    }
+
+    function updatePlayIcons(isPlaying) {
+      document.getElementById('icon-play').style.display = isPlaying ? 'none' : 'block';
+      document.getElementById('icon-pause').style.display = isPlaying ? 'block' : 'none';
+    }
+
+    function seekRelative(sec) {
+      const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+      const activeMedia = isVideo ? modalVideo : audio;
+      activeMedia.currentTime = Math.max(0, Math.min(activeMedia.duration || 0, activeMedia.currentTime + sec));
+    }
+
+    function seekAbsolute(e) {
+      const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+      const activeMedia = isVideo ? modalVideo : audio;
+      if (!activeMedia.duration) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pos = (e.clientX - rect.left) / rect.width;
+      activeMedia.currentTime = pos * activeMedia.duration;
+    }
+
+    function updateProgress() {
+      const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+      const activeMedia = isVideo ? modalVideo : audio;
+      const cur = activeMedia.currentTime || 0;
+      const dur = activeMedia.duration || 0;
+      const pct = dur > 0 ? (cur / dur) * 100 : 0;
+
+      document.getElementById('progress-fill').style.width = `${pct}%`;
+      document.getElementById('player-cur-time').textContent = formatTime(cur);
+      document.getElementById('player-dur-time').textContent = formatTime(dur);
+    }
+
+    function onTrackEnded() {
+      if (isLooping) {
+        const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+        const activeMedia = isVideo ? modalVideo : audio;
+        activeMedia.currentTime = 0;
+        activeMedia.play();
+      } else {
+        updatePlayIcons(false);
+      }
+    }
+
+    function toggleLoop() {
+      isLooping = !isLooping;
+      const btn = document.getElementById('player-loop-btn');
+      btn.style.color = isLooping ? 'var(--primary-light)' : 'var(--text-secondary)';
+      showToast(isLooping ? '🔁 Đã bật chế độ lặp lại' : 'Tắt chế độ lặp lại');
+    }
+
+    function changeVolume(val) {
+      audio.volume = val;
+      modalVideo.volume = val;
+    }
+
+    function copyStreamUrl() {
+      if (!currentTrack) return;
+      const fullUrl = currentTrack.stream_url 
+        ? (currentTrack.stream_url.startsWith('http') ? currentTrack.stream_url : `${window.location.origin}${currentTrack.stream_url}`)
+        : `${window.location.origin}/stream/${currentTrack.id}`;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        showToast(`📋 Đã chép link stream vào bộ nhớ tạm!`);
+      });
+    }
+
+    function downloadCurrent() {
+      if (!currentTrack) return;
+      window.location.href = `/stream/${currentTrack.id}?download=1`;
+    }
+
+    function openVideoModal() {
+      if (!currentTrack) return;
+      document.getElementById('video-modal-title').textContent = currentTrack.title;
+      document.getElementById('video-modal').classList.add('active');
+    }
+
+    function closeVideoModal() {
+      document.getElementById('video-modal').classList.remove('active');
+      modalVideo.pause();
+    }
+
+    function formatTime(s) {
+      if (!s || isNaN(s)) return '0:00';
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    // Library Tab Functions
+    async function loadLibrary() {
+      const grid = document.getElementById('library-grid');
+      grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><div class="spinner" style="margin: 0 auto 14px; width:22px; height:22px;"></div>Đang tải kho nhạc & video...</div>`;
+
+      try {
+        const res = await fetch('/api/library');
+        libraryItems = await res.json();
+        renderLibraryGrid(libraryItems);
+      } catch (err) {
+        showToast(`❌ Lỗi tải thư viện: ${err.message}`);
+      }
+    }
+
+    function renderLibraryGrid(items) {
+      const grid = document.getElementById('library-grid');
+      document.getElementById('library-total-badge').textContent = `${items.length} file`;
+      document.getElementById('library-count').textContent = items.length;
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">📂</div>
+            <h3>Kho máy chủ chưa có bài hát nào</h3>
+            <p>Hãy tìm kiếm và tải các bài hát yêu thích để lưu trữ vào máy</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = items.map(it => `
+        <div class="card" id="lib-card-${it.file_id}">
+          <div class="card-thumb-wrap" onclick="startStreamingTrack({ id: '${it.file_id}', title: '${escapeQuotes(it.title)}', channel: '${it.format.toUpperCase()}', thumb: 'https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg', fmt: '${it.format}' })">
+            <img class="card-thumb" src="https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg" onerror="this.src='/static/placeholder.png'" alt="${it.title}">
+            <div class="thumb-play-overlay">
+              <div class="thumb-play-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              </div>
+            </div>
+            <span class="card-duration">${(it.format||'').toUpperCase()} • ${it.size_mb} MB</span>
+            <span class="card-badge-local">✓ Máy chủ</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title" title="${it.title}">${it.title}</h3>
+            <div class="card-channel">${it.filename}</div>
+
+            <div class="card-actions" style="grid-template-columns: 1fr 1fr 42px;">
+              <button class="btn btn-play" onclick="startStreamingTrack({ id: '${it.file_id}', title: '${escapeQuotes(it.title)}', channel: '${it.format.toUpperCase()}', thumb: 'https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg', fmt: '${it.format}' })">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Phát</span>
+              </button>
+              <a class="btn btn-download" style="text-decoration:none;" href="/stream/${it.file_id}?download=1" download>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Tải</span>
+              </a>
+              <button class="btn btn-delete" title="Xóa file khỏi máy chủ" onclick="deleteFile('${it.file_id}')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterLibrary(q) {
+      q = q.trim().toLowerCase();
+      if (!q) {
+        renderLibraryGrid(libraryItems);
+        return;
+      }
+      const filtered = libraryItems.filter(it => 
+        (it.title || '').toLowerCase().includes(q) || 
+        (it.filename || '').toLowerCase().includes(q) ||
+        (it.format || '').toLowerCase().includes(q)
+      );
+      renderLibraryGrid(filtered);
+    }
+
+    async function loadLibraryCount() {
+      try {
+        const res = await fetch('/api/library');
+        libraryItems = await res.json();
+        document.getElementById('library-count').textContent = libraryItems.length;
+      } catch (e) {}
+    }
+
+    async function deleteFile(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa bài này khỏi máy chủ?')) return;
+      try {
+        const res = await fetch(`/api/library/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast('🗑️ Đã xóa file khỏi máy chủ');
+          loadLibrary();
+        }
+      } catch (err) {
+        showToast(`❌ Lỗi xóa: ${err.message}`);
+      }
+    }
+
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Playlist AI state
+    let playlistItems = [];
+    let playlistQueue = [];
+    let playlistIndex = 0;
+    let activePreviewPlaylistId = null;
+
+    function triggerDownloadAllPlaylist() {
+      if (activePreviewPlaylistId) {
+        loadSavedPlaylist(activePreviewPlaylistId);
+      }
+    }
+
+    async function openSettings() {
+      document.getElementById('settings-modal').classList.add('active');
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        document.getElementById('settings-groq-key').value = data.groq_api_key || '';
+      } catch (e) {}
+    }
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.remove('active');
+    }
+    async function saveSettings() {
+      const key = document.getElementById('settings-groq-key').value.trim();
+      try {
+        await fetch('/api/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ groq_api_key: key }) });
+        document.getElementById('settings-status').textContent = '✅ Đã lưu cấu hình thành công';
+        setTimeout(closeSettings, 1000);
+      } catch (e) {
+        document.getElementById('settings-status').textContent = '❌ Lỗi khi lưu cấu hình';
+      }
+    }
+
+    let isWebSearchEnabled = true;
+
+    function toggleWebSearch() {
+      isWebSearchEnabled = !isWebSearchEnabled;
+      updateWebSearchUI();
+    }
+
+    function updateWebSearchUI() {
+      const btn = document.getElementById('btn-websearch-toggle');
+      const text = document.getElementById('websearch-status-text');
+      if (!btn || !text) return;
+      if (isWebSearchEnabled) {
+        btn.classList.add('active');
+        text.textContent = 'Web Search: BẬT';
+      } else {
+        btn.classList.remove('active');
+        text.textContent = 'Web Search: TẮT';
+      }
+    }
+
+    function onPlaylistModelChange() {
+      const model = document.getElementById('playlist-model').value;
+      if (model === 'groq/compound') {
+        isWebSearchEnabled = true;
+        updateWebSearchUI();
+      }
+    }
+
+    async function generatePlaylist() {
+      const prompt = document.getElementById('playlist-prompt').value.trim();
+      if (!prompt) { showToast('Vui lòng nhập yêu cầu playlist'); return; }
+      const fmt = document.getElementById('playlist-format').value;
+      const model = document.getElementById('playlist-model') ? document.getElementById('playlist-model').value : 'groq/compound';
+      const webSearch = isWebSearchEnabled;
+      const btn = document.getElementById('btn-gen-playlist');
+      const status = document.getElementById('playlist-status');
+      const grid = document.getElementById('playlist-grid');
+      btn.disabled = true;
+      const modeLabel = webSearch ? '🌐 Web Search' : '⚡ Nhanh';
+      status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> Đang dùng AI (${model} | ${modeLabel}) tuyển chọn bài hát...`;
+      grid.innerHTML = '';
+      document.getElementById('playlist-controls').style.display = 'none';
+      try {
+        const res = await fetch('/api/playlist/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, limit: 10, format: fmt, model: model, web_search: webSearch })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Lỗi tạo playlist');
+        playlistItems = (data.results || []).filter(r => r.file_id);
+        document.getElementById('playlist-current-heading').textContent = `Playlist: ${prompt}`;
+        const b = document.getElementById('playlist-badge');
+        b.style.display = 'inline-block';
+        b.textContent = `${playlistItems.length} bài`;
+        document.getElementById('btn-dl-all-playlist').style.display = 'none';
+        document.getElementById('playlist-play-controls').style.display = 'flex';
+        renderPlaylist(playlistItems);
+        status.textContent = `✨ Đã hoàn thành tải ${playlistItems.length}/${(data.results||[]).length} bài hát`;
+        if (playlistItems.length > 0) {
+          document.getElementById('playlist-controls').style.display = 'flex';
+          // Save playlist for later replay
+          const songs = (data.songs || []).filter(Boolean);
+          const items = (data.results || []).filter(r => r.file_id).map(r => ({
+            title: r.title,
+            query: r.source_query || r.title,
+            file_id: r.file_id,
+            thumbnail: `https://i.ytimg.com/vi/${r.file_id}/hqdefault.jpg`
+          }));
+          if (songs.length) {
+            await fetch('/api/playlists', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: prompt, songs, items })
+            });
+            loadSavedPlaylists();
+          }
+        }
+      } catch (err) {
+        status.textContent = `❌ ${err.message}`;
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    async function loadSavedPlaylists() {
+      try {
+        const res = await fetch('/api/playlists');
+        const data = await res.json();
+        const list = document.getElementById('saved-drawer-list');
+        if (!list) return;
+        const pls = data.playlists || [];
+        if (!pls.length) { 
+          list.innerHTML = '<div style="color:var(--text-muted); font-size:0.88rem; text-align:center; padding:30px 0;">Chưa có playlist nào được lưu.</div>'; 
+          return; 
+        }
+        list.innerHTML = pls.map(p => `
+          <div class="saved-list-card" onclick="showSavedPlaylistDetail('${p.id}')">
+            <div style="font-weight:700; word-break:break-word; font-size:0.95rem; color:var(--text-main); margin-bottom:4px;">${p.name}</div>
+            <div style="font-size:0.78rem; color:var(--text-muted); font-family:'JetBrains Mono', monospace;">${(p.songs||p.items||[]).length} bài hát</div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+              <button class="btn btn-play" style="padding:6px 12px; font-size:0.78rem;" onclick="event.stopPropagation(); loadSavedPlaylist('${p.id}')">Tải toàn bộ</button>
+              <button class="btn btn-delete" style="padding:6px 12px; font-size:0.78rem;" onclick="event.stopPropagation(); deleteSavedPlaylist('${p.id}')">Xóa</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function showSavedPlaylistDetail(pid) {
+      try {
+        const res = await fetch('/api/playlists');
+        const data = await res.json();
+        const pl = (data.playlists || []).find(p => String(p.id) === String(pid));
+        if (!pl) return;
+        activePreviewPlaylistId = pid;
+
+        // Auto close drawer to show playlist
+        const d = document.getElementById('saved-drawer');
+        if (d) d.style.transform = 'translateX(100%)';
+
+        const items = pl.items && pl.items.length ? pl.items : (pl.songs || []).map(s => ({ title: s, query: s, file_id: null, thumbnail: '' }));
+        const grid = document.getElementById('playlist-grid');
+        const status = document.getElementById('playlist-status');
+        
+        // Update top heading & badge
+        document.getElementById('playlist-current-heading').textContent = `Playlist: ${pl.name}`;
+        const b = document.getElementById('playlist-badge');
+        b.style.display = 'inline-block';
+        b.textContent = `${items.length} bài`;
+
+        // Update single top button
+        document.getElementById('playlist-controls').style.display = 'flex';
+        document.getElementById('btn-dl-all-playlist').style.display = 'inline-flex';
+        document.getElementById('btn-dl-all-label').textContent = `Tải toàn bộ playlist này (${items.length} bài)`;
+        document.getElementById('playlist-play-controls').style.display = 'none';
+
+        status.innerHTML = `📋 Đang xem danh sách "<b>${pl.name}</b>" (${items.length} bài). Bấm <b>Tải toàn bộ playlist này</b> ở trên để tải tất cả, hoặc tải lẻ từng bài bên dưới:`;
+
+        grid.innerHTML = items.map((it, idx) => `
+          <div class="card" id="pl-preview-${idx}">
+            <div class="card-thumb-wrap" id="pl-thumb-${idx}">
+              <img class="card-thumb" src="${it.thumbnail || (it.file_id ? 'https://i.ytimg.com/vi/'+it.file_id+'/hqdefault.jpg' : '')}" alt="${it.title || it.query}" onerror="this.src='/static/placeholder.png'">
+              <span class="card-duration">#${idx + 1}</span>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title" title="${it.title || it.query}">${it.title || it.query}</h3>
+              <div class="card-channel" style="color:var(--text-muted); font-size:0.78rem; display:flex; align-items:center; gap:5px;" title="Từ khóa AI gợi ý ban đầu">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>${it.query ? 'Gợi ý AI: ' + it.query : 'Chưa tải'}</span>
+              </div>
+              <div class="card-actions">
+                <button class="btn btn-play" id="btn-single-dl-${idx}" style="grid-column:1/-1;" onclick="downloadSingleFromPlaylist(${idx}, '${escapeQuotes(it.query || it.title)}')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Tải bài này</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    async function downloadSingleFromPlaylist(idx, query) {
+      const btn = document.getElementById(`btn-single-dl-${idx}`);
+      const orig = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = `<div class="spinner"></div><span>Đang tải...</span>`;
+        btn.disabled = true;
+      }
+      const fmt = document.getElementById('playlist-format').value || selectedFormat;
+      try {
+        const res = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: query, format: fmt })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.detail || 'Lỗi tải bài');
+        showToast(`✅ Đã tải thành công: ${data.title}`);
+
+        const card = document.getElementById(`pl-preview-${idx}`);
+        if (card) {
+          const act = card.querySelector('.card-actions');
+          if (act) {
+            act.innerHTML = `
+              <button class="btn btn-play" onclick="startStreamingTrack({ id: '${data.file_id}', title: '${escapeQuotes(data.title)}', channel: 'Playlist', thumb: 'https://i.ytimg.com/vi/${data.file_id}/hqdefault.jpg', fmt: '${data.format}' })">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Phát</span>
+              </button>
+              <a class="btn btn-download" style="text-decoration:none;" href="/stream/${data.file_id}?download=1" download>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Lưu</span>
+              </a>
+            `;
+          }
+          const thumbWrap = document.getElementById(`pl-thumb-${idx}`);
+          if (thumbWrap) {
+            thumbWrap.onclick = () => startStreamingTrack({ id: data.file_id, title: data.title, channel: 'Playlist', thumb: `https://i.ytimg.com/vi/${data.file_id}/hqdefault.jpg`, fmt: data.format });
+            if (!thumbWrap.querySelector('.thumb-play-overlay')) {
+              const ov = document.createElement('div');
+              ov.className = 'thumb-play-overlay';
+              ov.innerHTML = '<div class="thumb-play-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></div>';
+              thumbWrap.appendChild(ov);
+            }
+          }
+        }
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+        if (btn) {
+          btn.innerHTML = orig;
+          btn.disabled = false;
+        }
+      }
+    }
+
+    function toggleSavedDrawer() {
+      const d = document.getElementById('saved-drawer');
+      if (!d) return;
+      const open = d.style.transform === 'translateX(0px)' || d.style.transform === 'translateX(0)';
+      d.style.transform = open ? 'translateX(100%)' : 'translateX(0)';
+      if (!open) loadSavedPlaylists();
+    }
+
+    async function loadSavedPlaylist(pid) {
+      try {
+        const res = await fetch('/api/playlists');
+        const data = await res.json();
+        const pl = (data.playlists || []).find(p => String(p.id) === String(pid));
+        if (!pl) { showToast('Không tìm thấy playlist'); return; }
+        const fmt = document.getElementById('playlist-format').value;
+        const status = document.getElementById('playlist-status');
+        const grid = document.getElementById('playlist-grid');
+        
+        // Auto close drawer if open
+        const d = document.getElementById('saved-drawer');
+        if (d) d.style.transform = 'translateX(100%)';
+
+        document.getElementById('playlist-current-heading').textContent = `Playlist: ${pl.name}`;
+        status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> Đang tải toàn bộ bài hát trong danh sách...`;
+        grid.innerHTML = '';
+        document.getElementById('playlist-controls').style.display = 'none';
+
+        const r = await fetch('/api/playlist/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ songs: pl.songs, format: fmt })
+        });
+        const dat = await r.json();
+        if (!r.ok) throw new Error(dat.detail || 'Lỗi khi tải');
+        playlistItems = (dat.results || []).filter(x => x.file_id);
+        
+        // Update top controls to playback controls
+        document.getElementById('playlist-controls').style.display = 'flex';
+        document.getElementById('btn-dl-all-playlist').style.display = 'none';
+        document.getElementById('playlist-play-controls').style.display = 'flex';
+        const b = document.getElementById('playlist-badge');
+        b.style.display = 'inline-block';
+        b.textContent = `${playlistItems.length} bài`;
+
+        renderPlaylist(playlistItems);
+        status.textContent = `✨ Đã nạp xong ${playlistItems.length}/${(dat.results||[]).length} bài từ "${pl.name}"`;
+        showToast(`✅ Đã tải thành công ${playlistItems.length} bài hát!`);
+      } catch (err) {
+        showToast(`❌ ${err.message}`);
+      }
+    }
+
+    async function deleteSavedPlaylist(pid) {
+      if (!confirm('Bạn có chắc muốn xóa playlist này?')) return;
+      try {
+        await fetch(`/api/playlists/${pid}`, { method: 'DELETE' });
+        loadSavedPlaylists();
+      } catch (e) {}
+    }
+
+    function renderPlaylist(items) {
+      const grid = document.getElementById('playlist-grid');
+      if (!items.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Không có bài nào được tải.</div>`;
+        return;
+      }
+      grid.innerHTML = items.map((it, idx) => `
+        <div class="card" id="pl-card-${it.file_id}">
+          <div class="card-thumb-wrap" onclick="playPlaylistIndex(${idx})">
+            <img class="card-thumb" src="https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg" alt="${it.title}">
+            <div class="thumb-play-overlay">
+              <div class="thumb-play-circle">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              </div>
+            </div>
+            <span class="card-duration">#${idx + 1}</span>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title" title="${it.title}">${it.title}</h3>
+            <div class="card-channel" style="color:var(--text-muted); font-size:0.78rem; display:flex; align-items:center; gap:5px;" title="Từ khóa AI gợi ý ban đầu">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <span>${it.source_query ? 'Gợi ý AI: ' + it.source_query : 'YouTube Music'}</span>
+            </div>
+            <div class="card-actions" style="grid-template-columns: 1fr 44px;">
+              <button class="btn btn-play" onclick="playPlaylistIndex(${idx})">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Phát bài này</span>
+              </button>
+              <a class="btn btn-download" style="text-decoration:none;" href="/stream/${it.file_id}?download=1" download title="Lưu về máy">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function playPlaylistIndex(idx) {
+      if (!playlistItems.length) return;
+      playlistQueue = [...playlistItems];
+      playlistIndex = idx;
+      playCurrentPlaylist();
+    }
+
+    function playPlaylist(shuffle) {
+      if (!playlistItems.length) return;
+      playlistQueue = shuffle ? [...playlistItems].sort(() => Math.random() - 0.5) : [...playlistItems];
+      playlistIndex = 0;
+      playCurrentPlaylist();
+    }
+
+    function _playlistEndedHandler() {
+      playlistIndex++;
+      playCurrentPlaylist();
+    }
+    function playCurrentPlaylist() {
+      if (playlistIndex >= playlistQueue.length) {
+        showToast('✅ Đã phát hết danh sách playlist');
+        playlistQueue = [];
+        return;
+      }
+      const it = playlistQueue[playlistIndex];
+      const audioEl = document.getElementById('native-audio');
+      const modalEl = document.getElementById('modal-video-element');
+      audioEl.removeEventListener('ended', _playlistEndedHandler);
+      modalEl.removeEventListener('ended', _playlistEndedHandler);
+      startStreamingTrack({ id: it.file_id, title: it.title, channel: 'Playlist AI', thumb: `https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg`, fmt: 'm4a' });
+      audioEl.addEventListener('ended', _playlistEndedHandler);
+      modalEl.addEventListener('ended', _playlistEndedHandler);
+    }
+    function nextPlaylist() {
+      if (!playlistQueue.length) return;
+      playlistIndex++;
+      if (playlistIndex >= playlistQueue.length) playlistIndex = 0;
+      playCurrentPlaylist();
+    }
+    function prevPlaylist() {
+      if (!playlistQueue.length) return;
+      playlistIndex--;
+      if (playlistIndex < 0) playlistIndex = playlistQueue.length - 1;
+      playCurrentPlaylist();
+    }
+
+    // Initialize
+    loadLibraryCount();
+  </script>
+</body>
+</html>

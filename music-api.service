@@ -1,0 +1,19 @@
+[Unit]
+Description=Music API (FastAPI + yt-dlp)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Chi can sua dong User= nay thanh ten user tren VPS. Cac duong dan duoi day
+# dung %h (home cua user do) nen khong can sua tay tung duong dan nua.
+# Neu khong muon sua gi ca, dung file music-api-user.service thay the (xem DEPLOY_VPS.md).
+User=<user>
+WorkingDirectory=%h/new_music
+Environment=PATH=%h/new_music/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/new_music/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --loop uvloop --http httptools
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
