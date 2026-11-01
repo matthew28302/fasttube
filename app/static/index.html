@@ -245,6 +245,7 @@
     [data-theme="light"] select,
     [data-theme="light"] .card-format-select,
     [data-theme="light"] .prompt-select {
+      color-scheme: light !important;
       background-color: #ffffff !important;
       color: #090d16 !important;
       -webkit-text-fill-color: #090d16 !important;
@@ -271,17 +272,20 @@
     [data-theme="light"] .card-format-select option,
     [data-theme="light"] .card-format-select optgroup,
     [data-theme="light"] .prompt-select option,
-    [data-theme="light"] .prompt-select optgroup {
+    [data-theme="light"] .prompt-select optgroup,
+    [data-theme="light"] option,
+    [data-theme="light"] optgroup {
+      color-scheme: light !important;
       background-color: #ffffff !important;
       color: #090d16 !important;
-      -webkit-text-fill-color: #090d16 !important;
       font-weight: 600 !important;
     }
     [data-theme="light"] select optgroup,
     [data-theme="light"] .card-format-select optgroup,
-    [data-theme="light"] .prompt-select optgroup {
-      color: #3730a3 !important;
-      -webkit-text-fill-color: #3730a3 !important;
+    [data-theme="light"] .prompt-select optgroup,
+    [data-theme="light"] optgroup {
+      color-scheme: light !important;
+      color: #1e1b4b !important;
       font-weight: 800 !important;
       background-color: #f1f5f9 !important;
     }
@@ -500,6 +504,31 @@
     [data-theme="gray"] .player-bar {
       background: rgba(30, 41, 59, 0.96);
       border-top-color: #334155;
+    }
+    [data-theme="gray"] select,
+    [data-theme="gray"] .card-format-select,
+    [data-theme="gray"] .prompt-select {
+      color-scheme: dark !important;
+      background-color: #1e293b !important;
+      color: #f1f5f9 !important;
+      border-color: #475569 !important;
+    }
+    [data-theme="gray"] select option,
+    [data-theme="gray"] select optgroup,
+    [data-theme="gray"] .card-format-select option,
+    [data-theme="gray"] .card-format-select optgroup,
+    [data-theme="gray"] .prompt-select option,
+    [data-theme="gray"] .prompt-select optgroup {
+      color-scheme: dark !important;
+      background-color: #1e293b !important;
+      color: #f1f5f9 !important;
+    }
+    [data-theme="gray"] select optgroup,
+    [data-theme="gray"] .card-format-select optgroup,
+    [data-theme="gray"] .prompt-select optgroup {
+      color-scheme: dark !important;
+      background-color: #0f172a !important;
+      color: #a5b4fc !important;
     }
 
     /* Real-Time Visitor Stats Badge (In the middle of Navbar) */
@@ -1166,7 +1195,8 @@
     /* Format dropdown within card */
     .card-format-select {
       width: 100%;
-      background-color: var(--bg-surface);
+      color-scheme: dark;
+      background-color: #0e121c;
       color: var(--text-main);
       border: 1px solid var(--border-subtle);
       border-radius: 11px;
@@ -1187,8 +1217,14 @@
       border-color: var(--primary);
     }
     .card-format-select option, .card-format-select optgroup {
-      background: var(--bg-surface);
-      color: var(--text-main);
+      color-scheme: dark;
+      background-color: #0e121c;
+      color: #f8fafc;
+    }
+    .card-format-select optgroup {
+      background-color: #141926;
+      color: #818cf8;
+      font-weight: 800;
     }
 
     .card-actions {
@@ -1605,7 +1641,8 @@
       min-width: 240px;
     }
     .prompt-select {
-      background-color: var(--bg-surface);
+      color-scheme: dark;
+      background-color: #0e121c;
       color: var(--text-main);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
@@ -1626,8 +1663,14 @@
       border-color: var(--border-hover);
     }
     .prompt-select option, .prompt-select optgroup {
-      background: var(--bg-surface);
-      color: var(--text-main);
+      color-scheme: dark;
+      background-color: #0e121c;
+      color: #f8fafc;
+    }
+    .prompt-select optgroup {
+      background-color: #141926;
+      color: #818cf8;
+      font-weight: 800;
     }
     .websearch-toggle-btn {
       display: inline-flex;
@@ -1974,10 +2017,9 @@
           <input id="playlist-prompt" class="playlist-prompt-input" placeholder="Ví dụ: list nhạc drill 2026, top 10 bài hát của Thanh Hưng, top 10 US-UK hits..." autocomplete="off">
           
           <select id="playlist-model" class="prompt-select" onchange="onPlaylistModelChange()" title="Chọn mô hình AI tạo playlist">
-            <option value="groq/compound" selected>⚡ groq/compound (Web)</option>
-            <option value="openai/gpt-oss-20b">🚀 openai/gpt-oss-20b</option>
-            <option value="openai/gpt-oss-120b">🧠 openai/gpt-oss-120b</option>
-            <option value="qwen/qwen3.8-27b">🌐 qwen/qwen3.8-27b</option>
+            <option value="openai/gpt-oss-20b" selected>🚀 openai/gpt-oss-20b (Nhanh)</option>
+            <option value="qwen/qwen3.8-27b">⚡ qwen/qwen3.8-27b (Siêu tốc 0.3s)</option>
+            <option value="openai/gpt-oss-120b">🧠 openai/gpt-oss-120b (Sâu rộng)</option>
           </select>
 
           <button type="button" id="btn-websearch-toggle" class="websearch-toggle-btn active" onclick="toggleWebSearch()" title="Bật/Tắt tìm kiếm dữ liệu Web mới nhất qua Groq">
@@ -2662,32 +2704,66 @@
     }
 
     function onPlaylistModelChange() {
-      const model = document.getElementById('playlist-model').value;
-      if (model === 'groq/compound') {
-        isWebSearchEnabled = true;
-        updateWebSearchUI();
+      // Model selected
+    }
+
+    let currentPlaylistGenController = null;
+
+    function cancelPlaylistGeneration() {
+      if (currentPlaylistGenController) {
+        try { currentPlaylistGenController.abort(); } catch (e) {}
       }
+      fetch('/api/playlist/cancel', { method: 'POST' }).catch(() => {});
+      const btn = document.getElementById('btn-gen-playlist');
+      if (btn) {
+        btn.classList.remove('btn-loading-cancel');
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg><span>Tạo Playlist</span>`;
+        btn.title = '';
+        btn.disabled = false;
+      }
+      const status = document.getElementById('playlist-status');
+      if (status) {
+        status.innerHTML = `<span style="color:var(--accent-amber); font-weight:700;">⏹️ Đã dừng tạo playlist theo yêu cầu</span>`;
+      }
+      currentPlaylistGenController = null;
+      showToast('⏹️ Đã dừng tạo playlist');
     }
 
     async function generatePlaylist() {
+      // If generation is already active, clicking button triggers cancellation
+      if (currentPlaylistGenController) {
+        cancelPlaylistGeneration();
+        return;
+      }
+
       const prompt = document.getElementById('playlist-prompt').value.trim();
       if (!prompt) { showToast('Vui lòng nhập yêu cầu playlist'); return; }
       const fmt = document.getElementById('playlist-format').value;
-      const model = document.getElementById('playlist-model') ? document.getElementById('playlist-model').value : 'groq/compound';
+      const model = document.getElementById('playlist-model') ? document.getElementById('playlist-model').value : 'openai/gpt-oss-20b';
       const webSearch = isWebSearchEnabled;
       const btn = document.getElementById('btn-gen-playlist');
       const status = document.getElementById('playlist-status');
       const grid = document.getElementById('playlist-grid');
-      btn.disabled = true;
+
+      const controller = new AbortController();
+      currentPlaylistGenController = controller;
+
+      btn.classList.add('btn-loading-cancel');
+      btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0 6px 0 0;"></div><span>Dừng tạo</span>`;
+      btn.title = 'Bấm để dừng quá trình tạo playlist';
+      btn.disabled = false;
+
       const modeLabel = webSearch ? '🌐 Web Search' : '⚡ Nhanh';
       status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> Đang dùng AI (${model} | ${modeLabel}) tuyển chọn bài hát...`;
       grid.innerHTML = '';
       document.getElementById('playlist-controls').style.display = 'none';
+
       try {
         const res = await fetch('/api/playlist/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt, limit: 10, format: fmt, model: model, web_search: webSearch })
+          body: JSON.stringify({ prompt, limit: 10, format: fmt, model: model, web_search: webSearch }),
+          signal: controller.signal
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Lỗi tạo playlist');
@@ -2699,7 +2775,14 @@
         document.getElementById('btn-dl-all-playlist').style.display = 'none';
         document.getElementById('playlist-play-controls').style.display = 'flex';
         renderPlaylist(playlistItems);
-        status.textContent = `✨ Đã hoàn thành tải ${playlistItems.length}/${(data.results||[]).length} bài hát`;
+
+        if (data.cancelled) {
+          status.innerHTML = `<span style="color:var(--accent-amber); font-weight:700;">⏹️ Đã dừng tạo playlist (thu thập được ${playlistItems.length} bài)</span>`;
+          showToast(`⏹️ Đã dừng tạo playlist (${playlistItems.length} bài)`);
+        } else {
+          status.textContent = `✨ Đã hoàn thành tải ${playlistItems.length}/${(data.results||[]).length} bài hát`;
+        }
+
         if (playlistItems.length > 0) {
           document.getElementById('playlist-controls').style.display = 'flex';
           // Save playlist for later replay
@@ -2720,9 +2803,19 @@
           }
         }
       } catch (err) {
+        if (err.name === 'AbortError') {
+          status.innerHTML = `<span style="color:var(--accent-amber); font-weight:700;">⏹️ Đã dừng tạo playlist theo yêu cầu</span>`;
+          return;
+        }
         status.textContent = `❌ ${err.message}`;
       } finally {
+        if (currentPlaylistGenController === controller) {
+          currentPlaylistGenController = null;
+        }
+        btn.classList.remove('btn-loading-cancel');
+        btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg><span>Tạo Playlist</span>`;
         btn.disabled = false;
+        btn.title = '';
       }
     }
 

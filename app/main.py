@@ -10,7 +10,9 @@ import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 import re
+import threading
 from typing import Optional
+import uuid
 
 import psutil
 from fastapi import FastAPI, HTTPException, Request
@@ -696,11 +698,25 @@ def _parse_songs_json(text: str) -> list[str]:
     return clean
 
 
+_ACTIVE_PLAYLIST_CANCEL_EVENTS: dict[str, threading.Event] = {}
+
+
+@app.post("/api/playlist/cancel")
+def api_playlist_cancel():
+    """Cancel any active AI playlist generation and associated downloads immediately."""
+    cancelled = 0
+    for ev in list(_ACTIVE_PLAYLIST_CANCEL_EVENTS.values()):
+        ev.set()
+        cancelled += 1
+    logger.info("api_playlist_cancel: signaled %d active playlist events to stop", cancelled)
+    return {"success": True, "cancelled": cancelled}
+
+
 class PlaylistPayload(BaseModel):
     prompt: str
     limit: int = 10
     format: str = "m4a"
-    model: str = "groq/compound"
+    model: str = "openai/gpt-oss-20b"
     web_search: bool = True
 
 
@@ -715,135 +731,155 @@ async def api_playlist_generate(payload: PlaylistPayload, request: Request):
         raise HTTPException(status_code=400, detail="Nhập yêu cầu playlist")
     limit = max(1, min(int(payload.limit or 10), 25))
 
-    req_model = (payload.model or "groq/compound").strip()
+    req_model = (payload.model or "openai/gpt-oss-20b").strip()
     use_web_search = bool(payload.web_search)
 
-    # Determine candidate models to try
-    if req_model == "groq/compound":
-        use_web_search = True
-        model_candidates = ["groq/compound", "openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"]
-    elif req_model == "openai/gpt-oss-20b":
-        model_candidates = ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"]
+    # Determine candidate models to try (groq/compound removed completely due to slowness/timeouts)
+    if req_model == "qwen/qwen3.8-27b":
+        model_candidates = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
+    elif req_model == "openai/gpt-oss-120b":
+        model_candidates = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
     else:
-        model_candidates = [req_model, "openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.8-27b"]
+        model_candidates = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b", "openai/gpt-oss-120b"]
 
-    # Ground the LLM with real search catalog hints to prevent hallucinations
-    catalog_hints = ""
+    cancel_ev = threading.Event()
+    req_token = str(uuid.uuid4())
+    _ACTIVE_PLAYLIST_CANCEL_EVENTS[req_token] = cancel_ev
+
     try:
-        hints = await asyncio.to_thread(fast_search_youtube_list, prompt, limit=20)
-        valid_hint_titles = [h["title"] for h in hints if h.get("title")][:15]
-        if valid_hint_titles:
-            catalog_hints = "\n\nVERIFIED TRACK HINTS FROM MUSIC CATALOG:\n" + "\n".join(f"- {t}" for t in valid_hint_titles)
-    except Exception:
+        # Check early cancellation before contacting Groq
+        if cancel_ev.is_set() or await request.is_disconnected():
+            return {"songs": [], "results": [], "cancelled": True}
+
+        # Ground the LLM with real search catalog hints to prevent hallucinations
         catalog_hints = ""
-
-    # Ask Groq for a strictly verified JSON list of genuine song titles.
-    system_msg = (
-        "You are an expert music curator and discography specialist. "
-        "The user will describe a genre, mood, era, artist, or theme. "
-        "CRITICAL ACCURACY GUIDELINES:\n"
-        "1. You MUST ONLY suggest 100% REAL, GENUINE, OFFICIALLY RELEASED songs that actually exist in reality. NEVER hallucinate, guess, or make up fake song titles.\n"
-        "2. If an artist is specified (e.g. Thanh Hưng, Sơn Tùng M-TP, Vũ, Mỹ Tâm, Taylor Swift, etc.), you MUST ONLY list genuine hits actually performed or composed by that EXACT artist. NEVER assign songs by other artists to them.\n"
-        "3. Provide the clean, exact title: remove 'Official MV', 'Lyrics Video', '4K', etc.\n"
-        "4. Return STRICTLY a valid JSON array of strings in format: [\"Song Title - Artist Name\", ...].\n"
-        f"5. Return EXACTLY {limit} items. No markdown backticks, no commentary, just the raw JSON array."
-        + catalog_hints
-    )
-    last_err = None
-    songs = []
-    for model_name in model_candidates:
-        req_body = {
-            "model": model_name,
-            "messages": [
-                {"role": "system", "content": system_msg},
-                {"role": "user", "content": f"{prompt}. Return exactly {limit} songs as a JSON array."},
-            ],
-            "temperature": 0.15,
-            "max_tokens": 1024,
-        }
-        if use_web_search and model_name in ("groq/compound", "openai/gpt-oss-20b", "openai/gpt-oss-120b"):
-            req_body["tools"] = [{"type": "browser_search"}]
-
         try:
-            r = _requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-                json=req_body,
-                timeout=45 if use_web_search else 30,
-            )
-            # If 404 (model not found on groq/compound), skip to next candidate
-            if r.status_code == 404:
-                last_err = f"Groq model {model_name} not available: {r.text[:200]}"
-                continue
-            # If 400 with tool error, retry without tools
-            if r.status_code == 400 and "tools" in req_body:
-                del req_body["tools"]
+            hints = await asyncio.to_thread(fast_search_youtube_list, prompt, limit=20)
+            valid_hint_titles = [h["title"] for h in hints if h.get("title")][:15]
+            if valid_hint_titles:
+                catalog_hints = "\n\nVERIFIED TRACK HINTS FROM MUSIC CATALOG:\n" + "\n".join(f"- {t}" for t in valid_hint_titles)
+        except Exception:
+            catalog_hints = ""
+
+        # Ask Groq for a strictly verified JSON list of genuine song titles.
+        system_msg = (
+            "You are an expert music curator and discography specialist. "
+            "The user will describe a genre, mood, era, artist, or theme. "
+            "CRITICAL ACCURACY GUIDELINES:\n"
+            "1. You MUST ONLY suggest 100% REAL, GENUINE, OFFICIALLY RELEASED songs that actually exist in reality. NEVER hallucinate, guess, or make up fake song titles.\n"
+            "2. If an artist is specified (e.g. Thanh Hưng, Sơn Tùng M-TP, Vũ, Mỹ Tâm, Taylor Swift, etc.), you MUST ONLY list genuine hits actually performed or composed by that EXACT artist. NEVER assign songs by other artists to them.\n"
+            "3. Provide the clean, exact title: remove 'Official MV', 'Lyrics Video', '4K', etc.\n"
+            "4. Return STRICTLY a valid JSON array of strings in format: [\"Song Title - Artist Name\", ...].\n"
+            f"5. Return EXACTLY {limit} items. No markdown backticks, no commentary, just the raw JSON array."
+            + catalog_hints
+        )
+        last_err = None
+        songs = []
+        for model_name in model_candidates:
+            if cancel_ev.is_set() or await request.is_disconnected():
+                break
+
+            req_body = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": f"{prompt}. Return exactly {limit} songs as a JSON array."},
+                ],
+                "temperature": 0.15,
+                "max_tokens": 1024,
+            }
+            if use_web_search and model_name in ("openai/gpt-oss-20b", "openai/gpt-oss-120b"):
+                req_body["tools"] = [{"type": "browser_search"}]
+
+            try:
                 r = _requests.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
                     json=req_body,
-                    timeout=30,
+                    timeout=25 if use_web_search else 15,
                 )
-            if r.status_code != 200:
-                last_err = f"Groq error ({model_name}) {r.status_code}: {r.text[:250]}"
+                if r.status_code == 404:
+                    last_err = f"Groq model {model_name} not available: {r.text[:200]}"
+                    continue
+                # If 400 with tool error, retry without tools immediately
+                if r.status_code == 400 and "tools" in req_body:
+                    del req_body["tools"]
+                    r = _requests.post(
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                        json=req_body,
+                        timeout=15,
+                    )
+                if r.status_code != 200:
+                    last_err = f"Groq error ({model_name}) {r.status_code}: {r.text[:250]}"
+                    continue
+                data = r.json()
+                content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                parsed = _parse_songs_json(content)
+                if parsed and len(parsed) >= min(3, limit):
+                    songs = parsed[:limit]
+                    logger.info("Playlist generated via model=%s web_search=%s count=%d", model_name, use_web_search, len(songs))
+                    break
+                else:
+                    last_err = f"Model {model_name} returned unparseable content: {content[:150]}"
+            except Exception as e:
+                last_err = f"Groq request failed ({model_name}): {e}"
                 continue
-            data = r.json()
-            content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-            parsed = _parse_songs_json(content)
-            if parsed and len(parsed) >= min(3, limit):
-                songs = parsed[:limit]
-                logger.info("Playlist generated via model=%s web_search=%s count=%d", model_name, use_web_search, len(songs))
+
+        if cancel_ev.is_set() or await request.is_disconnected():
+            logger.info("Playlist request cancelled by user after LLM call")
+            return {"songs": songs, "results": [], "cancelled": True}
+
+        if not songs:
+            raise HTTPException(status_code=502, detail=last_err or "Không thể tạo danh sách bài hát từ AI")
+
+        audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(payload.format or "m4a")
+
+        # Download each song with cancellation support and deduplication
+        results = []
+        seen_ids: set[str] = set()
+        for song in songs:
+            if cancel_ev.is_set() or await request.is_disconnected():
+                logger.info("Playlist generation stopped early by user request")
                 break
-            else:
-                last_err = f"Model {model_name} returned unparseable content: {content[:150]}"
-        except Exception as e:
-            last_err = f"Groq request failed ({model_name}): {e}"
-            continue
-
-    if not songs:
-        raise HTTPException(status_code=502, detail=last_err or "Không thể tạo danh sách bài hát từ AI")
-
-    audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(payload.format or "m4a")
-
-    # Download each song with title scoring validation and deduplication
-    results = []
-    seen_ids: set[str] = set()
-    for song in songs:
-        try:
-            async with download_semaphore:
-                res = await asyncio.to_thread(
-                    download_from_youtube,
-                    music_dir=settings.music_dir,
-                    cookies_dir=settings.cookies_dir,
-                    query_or_url=song,
-                    concurrent_fragments=settings.ytdlp_concurrent_fragments,
-                    max_duration_s=min(settings.max_video_duration_s, 600),
-                    search_mode="score",
-                    audio_bitrate=audio_bitrate,
-                    ytdlp_verbose=settings.ytdlp_verbose,
-                    audio_mode=audio_mode,
-                    prefer_abr_128=prefer_abr_128,
-                    ytdlp_js_runtimes=settings.ytdlp_js_runtimes,
-                    ytdlp_js_runtimes_path=settings.ytdlp_js_runtimes_path,
-                    fast_mode=settings.fast_mode,
-                    prefer_itag_140=settings.prefer_itag_140,
-                    ytdlp_player_client=settings.ytdlp_player_client,
-                    ytdlp_debug_list_formats=settings.ytdlp_debug_list_formats,
-                    max_abr_kbps=settings.max_abr_kbps,
-                    exclude_ids=seen_ids,
-                )
-            if res.file_id:
-                seen_ids.add(res.file_id)
-            enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
-            results.append({
-                "title": res.title,
-                "file_id": res.file_id,
-                "source_query": song,
-                "stream_url": f"/stream/{res.file_id}?ext={target_ext}",
-            })
-        except Exception as e:
-            results.append({"title": song, "file_id": None, "error": str(e)[:200]})
-    return {"songs": songs, "results": results}
+            try:
+                async with download_semaphore:
+                    res = await asyncio.to_thread(
+                        download_from_youtube,
+                        music_dir=settings.music_dir,
+                        cookies_dir=settings.cookies_dir,
+                        query_or_url=song,
+                        concurrent_fragments=settings.ytdlp_concurrent_fragments,
+                        max_duration_s=min(settings.max_video_duration_s, 600),
+                        search_mode="score",
+                        audio_bitrate=audio_bitrate,
+                        ytdlp_verbose=settings.ytdlp_verbose,
+                        audio_mode=audio_mode,
+                        prefer_abr_128=prefer_abr_128,
+                        ytdlp_js_runtimes=settings.ytdlp_js_runtimes,
+                        ytdlp_js_runtimes_path=settings.ytdlp_js_runtimes_path,
+                        fast_mode=settings.fast_mode,
+                        prefer_itag_140=settings.prefer_itag_140,
+                        ytdlp_player_client=settings.ytdlp_player_client,
+                        ytdlp_debug_list_formats=settings.ytdlp_debug_list_formats,
+                        max_abr_kbps=settings.max_abr_kbps,
+                        exclude_ids=seen_ids,
+                        cancel_event=cancel_ev,
+                    )
+                if res.file_id:
+                    seen_ids.add(res.file_id)
+                enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
+                results.append({
+                    "title": res.title,
+                    "file_id": res.file_id,
+                    "source_query": song,
+                    "stream_url": f"/stream/{res.file_id}?ext={target_ext}",
+                })
+            except Exception as e:
+                results.append({"title": song, "file_id": None, "error": str(e)[:200]})
+        return {"songs": songs, "results": results, "cancelled": cancel_ev.is_set()}
+    finally:
+        _ACTIVE_PLAYLIST_CANCEL_EVENTS.pop(req_token, None)
 
 
 # ---------------------------------------------------------------------------
