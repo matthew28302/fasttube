@@ -33,6 +33,13 @@ from app.library import (
 from app.logging_setup import setup_logging
 from app.search_cache import SearchCache
 from app.telegram_notify import send_telegram_message_async
+from app.security import (
+    SecurityMiddleware,
+    rate_limiter,
+    download_semaphore,
+    visitor_tracker,
+    get_client_ip,
+)
 import requests as _requests
 
 logger = logging.getLogger("music_api")
@@ -115,10 +122,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Music Local Search + YouTube Downloader API",
-    version="1.0.0",
+    title="FastTube Studio Audio & Video Engine",
+    version="2.0.0",
     lifespan=lifespan,
 )
+
+# Production security & anti-scanner middleware
+app.add_middleware(SecurityMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -134,17 +144,28 @@ app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
-def index_page():
+async def index_page(request: Request):
+    await visitor_tracker.record_visit(request)
     index_file = _STATIC_DIR / "index.html"
     if index_file.is_file():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
-    return HTMLResponse(content="<h1>FastTube Downloader API</h1><p>Visit /health</p>")
+    return HTMLResponse(content="<h1>FastTube Studio API</h1><p>Visit /health</p>")
+
+
+@app.get("/api/stats")
+async def api_stats(request: Request):
+    """Real-time visitor and view counter for public navbar display."""
+    return await visitor_tracker.record_visit(request)
 
 
 def _base_url(req: Request) -> str:
+    """Robust base URL resolution behind reverse proxies (Nginx, Cloudflare, Traefik)."""
     if settings.base_url:
         return settings.base_url.rstrip("/")
-    # infer from request host
+    proto = req.headers.get("x-forwarded-proto") or req.url.scheme or "http"
+    host = req.headers.get("x-forwarded-host") or req.headers.get("host") or req.url.netloc
+    if host:
+        return f"{proto}://{host}".rstrip("/")
     return str(req.base_url).rstrip("/")
 
 
@@ -179,6 +200,7 @@ _SEARCH_CACHE: dict[str, tuple[float, list[dict]]] = {}
 
 @app.get("/api/search")
 async def api_search(q: str, request: Request, limit: int = 30):
+    await rate_limiter.check(request, "search", max_requests=45, window_s=60)
     q = (q or "").strip()
     if not q:
         return []
@@ -242,6 +264,7 @@ def _resolve_format(fmt: str) -> tuple[str, str, bool, str]:
 
 @app.post("/api/download")
 async def api_download(payload: DownloadPayload, request: Request):
+    await rate_limiter.check(request, "download", max_requests=15, window_s=60)
     t0 = time.perf_counter()
     target_id = (payload.id or "").strip()
     target_url = (payload.url or "").strip()
@@ -281,22 +304,23 @@ async def api_download(payload: DownloadPayload, request: Request):
             pass
 
     try:
-        res = await asyncio.to_thread(
-            download_from_youtube,
-            music_dir=settings.music_dir,
-            cookies_dir=settings.cookies_dir,
-            query_or_url=target,
-            concurrent_fragments=settings.ytdlp_concurrent_fragments,
-            max_duration_s=settings.max_video_duration_s,
-            search_mode="first",
-            audio_bitrate=audio_bitrate,
-            ytdlp_verbose=settings.ytdlp_verbose,
-            audio_mode=audio_mode,
-            prefer_abr_128=prefer_abr_128,
-            ytdlp_player_client=settings.ytdlp_player_client,
-            fast_mode=settings.fast_mode,
-            max_abr_kbps=320,
-        )
+        async with download_semaphore:
+            res = await asyncio.to_thread(
+                download_from_youtube,
+                music_dir=settings.music_dir,
+                cookies_dir=settings.cookies_dir,
+                query_or_url=target,
+                concurrent_fragments=settings.ytdlp_concurrent_fragments,
+                max_duration_s=settings.max_video_duration_s,
+                search_mode="first",
+                audio_bitrate=audio_bitrate,
+                ytdlp_verbose=settings.ytdlp_verbose,
+                audio_mode=audio_mode,
+                prefer_abr_128=prefer_abr_128,
+                ytdlp_player_client=settings.ytdlp_player_client,
+                fast_mode=settings.fast_mode,
+                max_abr_kbps=320,
+            )
     except Exception as e:
         logger.error("Download failed for %s: %s", target, e)
         raise HTTPException(status_code=500, detail=str(e)[:500])
@@ -547,6 +571,8 @@ def _handle_music_request(*, query: Optional[str], url: Optional[str], request: 
 def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> FileResponse:
     if not _FILE_ID_RE.match(file_id):
         raise HTTPException(status_code=404, detail="File not found")
+    if ext and not re.match(r"^[a-zA-Z0-9]{2,5}$", ext):
+        raise HTTPException(status_code=400, detail="Invalid extension")
     hit = find_by_file_id(settings.music_dir, file_id, ext=ext)
     if not hit or not hit.path.exists():
         raise HTTPException(status_code=404, detail="File not found")
@@ -652,7 +678,8 @@ class PlaylistPayload(BaseModel):
 
 
 @app.post("/api/playlist/generate")
-async def api_playlist_generate(payload: PlaylistPayload):
+async def api_playlist_generate(payload: PlaylistPayload, request: Request):
+    await rate_limiter.check(request, "playlist_gen", max_requests=10, window_s=60)
     key = os.getenv("GROQ_API_KEY") or _read_env_file().get("GROQ_API_KEY") or ""
     if not key:
         raise HTTPException(status_code=400, detail="Chưa set Groq API key trong Cài đặt")
@@ -756,27 +783,28 @@ async def api_playlist_generate(payload: PlaylistPayload):
     seen_ids: set[str] = set()
     for song in songs:
         try:
-            res = await asyncio.to_thread(
-                download_from_youtube,
-                music_dir=settings.music_dir,
-                cookies_dir=settings.cookies_dir,
-                query_or_url=song,
-                concurrent_fragments=settings.ytdlp_concurrent_fragments,
-                max_duration_s=min(settings.max_video_duration_s, 600),
-                search_mode="score",
-                audio_bitrate=audio_bitrate,
-                ytdlp_verbose=settings.ytdlp_verbose,
-                audio_mode=audio_mode,
-                prefer_abr_128=prefer_abr_128,
-                ytdlp_js_runtimes=settings.ytdlp_js_runtimes,
-                ytdlp_js_runtimes_path=settings.ytdlp_js_runtimes_path,
-                fast_mode=settings.fast_mode,
-                prefer_itag_140=settings.prefer_itag_140,
-                ytdlp_player_client=settings.ytdlp_player_client,
-                ytdlp_debug_list_formats=settings.ytdlp_debug_list_formats,
-                max_abr_kbps=settings.max_abr_kbps,
-                exclude_ids=seen_ids,
-            )
+            async with download_semaphore:
+                res = await asyncio.to_thread(
+                    download_from_youtube,
+                    music_dir=settings.music_dir,
+                    cookies_dir=settings.cookies_dir,
+                    query_or_url=song,
+                    concurrent_fragments=settings.ytdlp_concurrent_fragments,
+                    max_duration_s=min(settings.max_video_duration_s, 600),
+                    search_mode="score",
+                    audio_bitrate=audio_bitrate,
+                    ytdlp_verbose=settings.ytdlp_verbose,
+                    audio_mode=audio_mode,
+                    prefer_abr_128=prefer_abr_128,
+                    ytdlp_js_runtimes=settings.ytdlp_js_runtimes,
+                    ytdlp_js_runtimes_path=settings.ytdlp_js_runtimes_path,
+                    fast_mode=settings.fast_mode,
+                    prefer_itag_140=settings.prefer_itag_140,
+                    ytdlp_player_client=settings.ytdlp_player_client,
+                    ytdlp_debug_list_formats=settings.ytdlp_debug_list_formats,
+                    max_abr_kbps=settings.max_abr_kbps,
+                    exclude_ids=seen_ids,
+                )
             if res.file_id:
                 seen_ids.add(res.file_id)
             enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
@@ -852,7 +880,8 @@ class DownloadListPayload(BaseModel):
 
 
 @app.post("/api/playlist/download")
-async def api_playlist_download(payload: DownloadListPayload):
+async def api_playlist_download(payload: DownloadListPayload, request: Request):
+    await rate_limiter.check(request, "playlist_dl", max_requests=10, window_s=60)
     fmt = payload.format or "m4a"
     audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(fmt)
     songs = [s.strip() for s in (payload.songs or []) if str(s).strip()]
@@ -860,27 +889,28 @@ async def api_playlist_download(payload: DownloadListPayload):
     seen_ids: set[str] = set()
     for song in songs:
         try:
-            res = await asyncio.to_thread(
-                download_from_youtube,
-                music_dir=settings.music_dir,
-                cookies_dir=settings.cookies_dir,
-                query_or_url=song,
-                concurrent_fragments=settings.ytdlp_concurrent_fragments,
-                max_duration_s=min(settings.max_video_duration_s, 600),
-                search_mode="score",
-                audio_bitrate=audio_bitrate,
-                ytdlp_verbose=settings.ytdlp_verbose,
-                audio_mode=audio_mode,
-                prefer_abr_128=prefer_abr_128,
-                ytdlp_js_runtimes=settings.ytdlp_js_runtimes,
-                ytdlp_js_runtimes_path=settings.ytdlp_js_runtimes_path,
-                fast_mode=settings.fast_mode,
-                prefer_itag_140=settings.prefer_itag_140,
-                ytdlp_player_client=settings.ytdlp_player_client,
-                ytdlp_debug_list_formats=settings.ytdlp_debug_list_formats,
-                max_abr_kbps=settings.max_abr_kbps,
-                exclude_ids=seen_ids,
-            )
+            async with download_semaphore:
+                res = await asyncio.to_thread(
+                    download_from_youtube,
+                    music_dir=settings.music_dir,
+                    cookies_dir=settings.cookies_dir,
+                    query_or_url=song,
+                    concurrent_fragments=settings.ytdlp_concurrent_fragments,
+                    max_duration_s=min(settings.max_video_duration_s, 600),
+                    search_mode="score",
+                    audio_bitrate=audio_bitrate,
+                    ytdlp_verbose=settings.ytdlp_verbose,
+                    audio_mode=audio_mode,
+                    prefer_abr_128=prefer_abr_128,
+                    ytdlp_js_runtimes=settings.ytdlp_js_runtimes,
+                    ytdlp_js_runtimes_path=settings.ytdlp_js_runtimes_path,
+                    fast_mode=settings.fast_mode,
+                    prefer_itag_140=settings.prefer_itag_140,
+                    ytdlp_player_client=settings.ytdlp_player_client,
+                    ytdlp_debug_list_formats=settings.ytdlp_debug_list_formats,
+                    max_abr_kbps=settings.max_abr_kbps,
+                    exclude_ids=seen_ids,
+                )
             if res.file_id:
                 seen_ids.add(res.file_id)
             enforce_library_limit(settings.music_dir, exclude_id=res.file_id)

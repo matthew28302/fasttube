@@ -47,6 +47,101 @@
       --shadow-glow: 0 0 35px rgba(99, 102, 241, 0.22);
     }
 
+    [data-theme="light"] {
+      --bg-base: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-hover: #ffffff;
+      --bg-glass: rgba(255, 255, 255, 0.85);
+      --bg-glass-heavy: rgba(248, 250, 252, 0.95);
+      
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --border-card: rgba(0, 0, 0, 0.08);
+      --border-hover: rgba(99, 102, 241, 0.55);
+      --border-focus: #6366f1;
+      
+      --text-main: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.08);
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Custom Wallpaper & Backdrop Layers */
+    .custom-bg-layer {
+      position: fixed;
+      inset: -25px;
+      z-index: -3;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      transition: filter 0.25s ease;
+      display: none;
+    }
+    .custom-bg-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background-color: #07090e;
+      opacity: 0.5;
+      pointer-events: none;
+      transition: opacity 0.25s ease, background-color 0.25s ease;
+      display: none;
+    }
+    [data-theme="light"] .custom-bg-overlay {
+      background-color: #f8fafc;
+    }
+
+    /* Real-Time Visitor Stats Badge (In the middle of Navbar) */
+    .nav-stats-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      user-select: none;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.25s ease;
+    }
+    .nav-stats-badge:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    }
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .nav-stats-num {
+      color: var(--text-main);
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .nav-stats-sep {
+      color: var(--text-dim);
+    }
+    @media (max-width: 900px) {
+      .nav-stats-badge {
+        display: none;
+      }
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -222,6 +317,56 @@
       color: var(--text-main);
       border-color: var(--border-hover);
       transform: rotate(45deg);
+    }
+    .btn-icon-setting.no-rotate:hover {
+      transform: scale(1.08) rotate(0deg);
+    }
+
+    /* Appearance & Customizer UI */
+    .theme-choice-btn {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .theme-choice-btn:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card-hover);
+    }
+    .theme-choice-btn.active {
+      border-color: var(--accent-indigo);
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.25);
+    }
+    .bg-preset-card {
+      height: 52px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.74rem;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    .bg-preset-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-indigo);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
     }
 
     /* Main Container */
@@ -1238,6 +1383,10 @@
 </head>
 <body>
 
+  <!-- Dynamic Custom Background & Blur Overlays -->
+  <div id="custom-bg-layer" class="custom-bg-layer"></div>
+  <div id="custom-bg-overlay" class="custom-bg-overlay"></div>
+
   <!-- Top App Navigation -->
   <header>
     <div class="header-container">
@@ -1260,6 +1409,14 @@
         </div>
       </a>
 
+      <!-- Real-Time Visitor Stats Badge (In the middle of Navbar) -->
+      <div class="nav-stats-badge" id="nav-stats" title="Lượng truy cập thời gian thực">
+        <span class="pulse-dot"></span>
+        <span class="nav-stats-num" id="nav-online-count">1</span> <span class="nav-stats-label">online</span>
+        <span class="nav-stats-sep">•</span>
+        <span class="nav-stats-num" id="nav-views-count">1,280</span> <span class="nav-stats-label">lượt xem</span>
+      </div>
+
       <div class="nav-container">
         <nav class="nav-segmented">
           <button class="nav-btn active" id="tab-search" onclick="switchTab('search')">
@@ -1276,6 +1433,17 @@
             <span>AI Playlist</span>
           </button>
         </nav>
+
+        <!-- Theme Toggle Button -->
+        <button class="btn-icon-setting no-rotate" id="btn-theme-toggle" onclick="toggleTheme()" title="Chuyển đổi giao diện Sáng / Tối">
+          <svg id="icon-theme-dark" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg id="icon-theme-light" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+
+        <!-- Appearance Customizer Modal Button -->
+        <button class="btn-icon-setting no-rotate" id="btn-appearance" onclick="openAppearance()" title="Tùy chỉnh ảnh nền & màu sắc">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12A10 10 0 0 1 12 2z"></path><circle cx="8" cy="9" r="1.5" fill="currentColor"></circle><circle cx="12" cy="7" r="1.5" fill="currentColor"></circle><circle cx="16" cy="9" r="1.5" fill="currentColor"></circle><circle cx="16" cy="14" r="1.5" fill="currentColor"></circle></svg>
+        </button>
 
         <button class="btn-icon-setting" id="btn-settings" onclick="openSettings()" title="Cài đặt hệ thống">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -1563,6 +1731,90 @@
       <div class="volume-container">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
         <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.05" value="1" oninput="changeVolume(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Appearance & Wallpaper Modal -->
+  <div class="video-modal" id="appearance-modal">
+    <div class="video-modal-content" style="max-width:540px;">
+      <div class="video-modal-header">
+        <div class="video-modal-title">🎨 Tùy chỉnh Giao diện & Ảnh nền</div>
+        <button class="close-btn" onclick="closeAppearance()">&times;</button>
+      </div>
+      <div style="padding:22px; display:flex; flex-direction:column; gap:20px; max-height:80vh; overflow-y:auto;">
+        
+        <!-- Theme Mode Selection -->
+        <div>
+          <label style="font-weight:700; font-size:0.92rem; margin-bottom:8px; display:block;">Chế độ hiển thị</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <button class="theme-choice-btn active" id="theme-btn-dark" onclick="setTheme('dark')">
+              🌙 Chế độ Tối (Dark)
+            </button>
+            <button class="theme-choice-btn" id="theme-btn-light" onclick="setTheme('light')">
+              ☀️ Chế độ Sáng (Light)
+            </button>
+          </div>
+        </div>
+
+        <!-- Custom Wallpaper Upload -->
+        <div>
+          <label style="font-weight:700; font-size:0.92rem; margin-bottom:6px; display:block;">Ảnh nền toàn màn hình</label>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Hỗ trợ ảnh PNG, JPG, WebP. Ảnh được lưu trực tiếp trên trình duyệt của bạn.</p>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="file" id="bg-file-input" accept="image/*" style="display:none;" onchange="handleBgUpload(event)">
+            <button class="btn btn-primary" onclick="document.getElementById('bg-file-input').click()" style="padding:9px 15px; font-size:0.84rem;">
+              📁 Tải ảnh từ máy tính
+            </button>
+            <button class="btn btn-secondary" onclick="resetDefaultWallpaper()" style="padding:9px 15px; font-size:0.84rem;">
+              🔄 Khôi phục mặc định
+            </button>
+          </div>
+        </div>
+
+        <!-- Blur Slider -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label style="font-weight:700; font-size:0.92rem;">Độ mờ ảnh nền (Blur)</label>
+            <span id="bg-blur-val" style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--accent-indigo); font-weight:700;">12px</span>
+          </div>
+          <input type="range" id="bg-blur-range" min="0" max="35" value="12" step="1" style="width:100%; accent-color:var(--accent-indigo); cursor:pointer;" oninput="updateBgBlur(this.value)">
+        </div>
+
+        <!-- Overlay Darkness/Opacity Slider -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label style="font-weight:700; font-size:0.92rem;">Độ phủ mờ tối (Overlay)</label>
+            <span id="bg-opacity-val" style="font-family:'JetBrains Mono',monospace; font-size:0.85rem; color:var(--accent-indigo); font-weight:700;">50%</span>
+          </div>
+          <input type="range" id="bg-opacity-range" min="10" max="90" value="50" step="5" style="width:100%; accent-color:var(--accent-indigo); cursor:pointer;" oninput="updateBgOpacity(this.value)">
+        </div>
+
+        <!-- Preset Backgrounds -->
+        <div>
+          <label style="font-weight:700; font-size:0.92rem; margin-bottom:8px; display:block;">Hình nền có sẵn (Presets)</label>
+          <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+            <button class="bg-preset-card" onclick="setPresetWallpaper('cyberpunk')" style="background: linear-gradient(135deg, #07090e 0%, #1e1b4b 50%, #030712 100%);">
+              <span>Cyberpunk Deep</span>
+            </button>
+            <button class="bg-preset-card" onclick="setPresetWallpaper('nebula')" style="background: linear-gradient(135deg, #2e0854 0%, #4c1d95 50%, #0f172a 100%);">
+              <span>Nebula Purple</span>
+            </button>
+            <button class="bg-preset-card" onclick="setPresetWallpaper('emerald')" style="background: linear-gradient(135deg, #022c22 0%, #064e3b 50%, #020617 100%);">
+              <span>Emerald Night</span>
+            </button>
+            <button class="bg-preset-card" onclick="setPresetWallpaper('sunset')" style="background: linear-gradient(135deg, #4a044e 0%, #831843 50%, #1e1b4b 100%);">
+              <span>Sunset Glow</span>
+            </button>
+            <button class="bg-preset-card" onclick="setPresetWallpaper('ocean')" style="background: linear-gradient(135deg, #082f49 0%, #0369a1 50%, #090d16 100%);">
+              <span>Deep Ocean</span>
+            </button>
+            <button class="bg-preset-card" onclick="setPresetWallpaper('carbon')" style="background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #030712 100%);">
+              <span>Minimal Carbon</span>
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -2513,7 +2765,166 @@
       playCurrentPlaylist();
     }
 
+    // --- Live Visitor Stats ---
+    async function updateVisitorStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.online !== 'undefined') {
+            const onlineEl = document.getElementById('nav-online-count');
+            const viewsEl = document.getElementById('nav-views-count');
+            if (onlineEl) onlineEl.textContent = Number(data.online).toLocaleString();
+            if (viewsEl) viewsEl.textContent = Number(data.views).toLocaleString();
+          }
+        }
+      } catch (e) {}
+    }
+    setInterval(updateVisitorStats, 30000);
+
+    // --- Theme (Light / Dark) ---
+    function setTheme(theme) {
+      if (theme === 'light') {
+        document.documentElement.setAttribute('data-theme', 'light');
+        localStorage.setItem('fasttube_theme', 'light');
+        const darkIcon = document.getElementById('icon-theme-dark');
+        const lightIcon = document.getElementById('icon-theme-light');
+        if (darkIcon) darkIcon.style.display = 'none';
+        if (lightIcon) lightIcon.style.display = 'block';
+        const btnDark = document.getElementById('theme-btn-dark');
+        const btnLight = document.getElementById('theme-btn-light');
+        if (btnDark) btnDark.classList.remove('active');
+        if (btnLight) btnLight.classList.add('active');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('fasttube_theme', 'dark');
+        const darkIcon = document.getElementById('icon-theme-dark');
+        const lightIcon = document.getElementById('icon-theme-light');
+        if (darkIcon) darkIcon.style.display = 'block';
+        if (lightIcon) lightIcon.style.display = 'none';
+        const btnDark = document.getElementById('theme-btn-dark');
+        const btnLight = document.getElementById('theme-btn-light');
+        if (btnDark) btnDark.classList.add('active');
+        if (btnLight) btnLight.classList.remove('active');
+      }
+    }
+    function toggleTheme() {
+      const current = localStorage.getItem('fasttube_theme') || 'dark';
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // --- Appearance & Wallpaper ---
+    function openAppearance() {
+      document.getElementById('appearance-modal').classList.add('active');
+    }
+    function closeAppearance() {
+      document.getElementById('appearance-modal').classList.remove('active');
+    }
+
+    function applySavedBackground() {
+      const bgData = localStorage.getItem('fasttube_custom_bg');
+      const blurVal = localStorage.getItem('fasttube_bg_blur') || '12';
+      const opacityVal = localStorage.getItem('fasttube_bg_opacity') || '50';
+
+      const bgLayer = document.getElementById('custom-bg-layer');
+      const bgOverlay = document.getElementById('custom-bg-overlay');
+      const blurInput = document.getElementById('bg-blur-range');
+      const blurText = document.getElementById('bg-blur-val');
+      const opacityInput = document.getElementById('bg-opacity-range');
+      const opacityText = document.getElementById('bg-opacity-val');
+
+      if (blurInput) blurInput.value = blurVal;
+      if (blurText) blurText.textContent = blurVal + 'px';
+      if (opacityInput) opacityInput.value = opacityVal;
+      if (opacityText) opacityText.textContent = opacityVal + '%';
+
+      if (bgData) {
+        if (bgLayer) {
+          if (bgData.startsWith('linear-gradient')) {
+            bgLayer.style.backgroundImage = bgData;
+          } else {
+            bgLayer.style.backgroundImage = `url(${bgData})`;
+          }
+          bgLayer.style.filter = `blur(${blurVal}px)`;
+          bgLayer.style.display = 'block';
+        }
+        if (bgOverlay) {
+          bgOverlay.style.opacity = (Number(opacityVal) / 100).toString();
+          bgOverlay.style.display = 'block';
+        }
+      } else {
+        if (bgLayer) bgLayer.style.display = 'none';
+        if (bgOverlay) bgOverlay.style.display = 'none';
+      }
+    }
+
+    function handleBgUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      if (file.size > 15 * 1024 * 1024) {
+        showToast("⚠️ Ảnh quá lớn! Vui lòng chọn ảnh dung lượng dưới 15MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const dataUrl = e.target.result;
+        try {
+          localStorage.setItem('fasttube_custom_bg', dataUrl);
+          applySavedBackground();
+          showToast("✨ Đã cập nhật ảnh nền toàn màn hình!");
+        } catch (err) {
+          showToast("⚠️ Không thể lưu ảnh vì dung lượng vượt hạn mức bộ nhớ trình duyệt.");
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateBgBlur(val) {
+      const bgLayer = document.getElementById('custom-bg-layer');
+      const text = document.getElementById('bg-blur-val');
+      if (text) text.textContent = val + 'px';
+      if (bgLayer) bgLayer.style.filter = `blur(${val}px)`;
+      localStorage.setItem('fasttube_bg_blur', val);
+    }
+
+    function updateBgOpacity(val) {
+      const bgOverlay = document.getElementById('custom-bg-overlay');
+      const text = document.getElementById('bg-opacity-val');
+      if (text) text.textContent = val + '%';
+      if (bgOverlay) bgOverlay.style.opacity = (Number(val) / 100).toString();
+      localStorage.setItem('fasttube_bg_opacity', val);
+    }
+
+    function setPresetWallpaper(name) {
+      const presets = {
+        cyberpunk: 'linear-gradient(135deg, #07090e 0%, #1e1b4b 50%, #030712 100%)',
+        nebula: 'linear-gradient(135deg, #2e0854 0%, #4c1d95 50%, #0f172a 100%)',
+        emerald: 'linear-gradient(135deg, #022c22 0%, #064e3b 50%, #020617 100%)',
+        sunset: 'linear-gradient(135deg, #4a044e 0%, #831843 50%, #1e1b4b 100%)',
+        ocean: 'linear-gradient(135deg, #082f49 0%, #0369a1 50%, #090d16 100%)',
+        carbon: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #030712 100%)'
+      };
+      if (presets[name]) {
+        localStorage.setItem('fasttube_custom_bg', presets[name]);
+        applySavedBackground();
+        showToast("🎨 Đã áp dụng hình nền preset!");
+      }
+    }
+
+    function resetDefaultWallpaper() {
+      localStorage.removeItem('fasttube_custom_bg');
+      const bgLayer = document.getElementById('custom-bg-layer');
+      const bgOverlay = document.getElementById('custom-bg-overlay');
+      if (bgLayer) bgLayer.style.display = 'none';
+      if (bgOverlay) bgOverlay.style.display = 'none';
+      showToast("🔄 Đã khôi phục giao diện mặc định");
+    }
+
     // Initialize
+    const savedTheme = localStorage.getItem('fasttube_theme') || 'dark';
+    setTheme(savedTheme);
+    applySavedBackground();
+    updateVisitorStats();
     loadLibraryCount();
   </script>
 </body>
