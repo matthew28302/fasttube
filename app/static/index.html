@@ -1227,6 +1227,43 @@
       color: #ffffff;
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     }
+    .btn-loading-cancel {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.22) 0%, rgba(220, 38, 38, 0.22) 100%) !important;
+      color: #fca5a5 !important;
+      border: 1.5px solid rgba(239, 68, 68, 0.5) !important;
+      font-weight: 700 !important;
+      cursor: pointer !important;
+      animation: pulse-cancel 1.8s infinite;
+    }
+    .btn-loading-cancel:hover {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+      color: #ffffff !important;
+      border-color: #b91c1c !important;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4) !important;
+      transform: translateY(-1px);
+    }
+    [data-theme="light"] .btn-loading-cancel {
+      background: #fee2e2 !important;
+      color: #b91c1c !important;
+      border: 1.5px solid #f87171 !important;
+    }
+    [data-theme="light"] .btn-loading-cancel:hover {
+      background: #dc2626 !important;
+      color: #ffffff !important;
+    }
+    .card-thumb-wrap.loading-active .thumb-play-overlay {
+      opacity: 1 !important;
+      background: rgba(0, 0, 0, 0.6) !important;
+    }
+    .card-thumb-wrap.loading-active .thumb-play-circle {
+      background: rgba(239, 68, 68, 0.95) !important;
+      box-shadow: 0 0 24px rgba(239, 68, 68, 0.7) !important;
+      transform: scale(1) !important;
+    }
+    @keyframes pulse-cancel {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(0.98); }
+    }
     .btn-download {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: #ffffff;
@@ -2299,23 +2336,68 @@
       return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     }
 
+    // Single active video loader state
+    let currentLoadingTrack = null; // { id, controller, title, btn, origHtml, thumbWrap }
+
+    function cancelCurrentLoading(notifyUser = true) {
+      if (!currentLoadingTrack) return;
+      const { id, controller, title, btn, origHtml, thumbWrap } = currentLoadingTrack;
+      try { controller.abort(); } catch (e) {}
+      fetch(`/api/download/cancel?id=${encodeURIComponent(id)}`, { method: 'POST' }).catch(() => {});
+      if (btn) {
+        btn.innerHTML = origHtml;
+        btn.classList.remove('btn-loading-cancel');
+        btn.title = '';
+      }
+      if (thumbWrap) {
+        thumbWrap.classList.remove('loading-active');
+      }
+      currentLoadingTrack = null;
+      if (notifyUser) {
+        showToast(`⏹️ Đã dừng tải: '${title}'`);
+      }
+    }
+
     async function actionPlay(id, title, channel, thumb, isDownloaded) {
+      // 1. If clicking the currently loading video -> STOP IT
+      if (currentLoadingTrack && currentLoadingTrack.id === id) {
+        cancelCurrentLoading(true);
+        return;
+      }
+
+      // 2. If another video was currently loading -> Cancel it before starting new one
+      if (currentLoadingTrack) {
+        cancelCurrentLoading(false);
+      }
+
       const fmtSelect = document.getElementById(`fmt-${id}`);
       const fmt = fmtSelect ? fmtSelect.value : selectedFormat;
 
       const btn = document.getElementById(`btn-play-${id}`);
-      const orig = btn ? btn.innerHTML : '';
+      const origHtml = btn ? btn.innerHTML : `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Xem / Nghe</span>`;
+      const card = document.getElementById(`card-${id}`);
+      const thumbWrap = card ? card.querySelector('.card-thumb-wrap') : null;
+
+      const controller = new AbortController();
+
       if (btn) {
-        btn.innerHTML = `<div class="spinner"></div><span>Đang tải...</span>`;
-        btn.disabled = true;
+        btn.classList.add('btn-loading-cancel');
+        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0;"></div><span>Dừng tải</span>`;
+        btn.title = 'Bấm để dừng tải video này';
       }
+      if (thumbWrap) {
+        thumbWrap.classList.add('loading-active');
+      }
+
+      currentLoadingTrack = { id, controller, title, btn, origHtml, thumbWrap };
 
       const t0 = performance.now();
       try {
         const res = await fetch('/api/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, format: fmt })
+          body: JSON.stringify({ id, format: fmt }),
+          signal: controller.signal
         });
         const data = await res.json();
         if (!data.success) throw new Error(data.detail || 'Không thể tải');
@@ -2324,11 +2406,21 @@
         showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
         startStreamingTrack({ id: data.file_id, title: data.title, channel, thumb, fmt });
       } catch (err) {
+        if (err.name === 'AbortError') {
+          return; // Silently handled or notified
+        }
         showToast(`❌ Lỗi phát: ${err.message}`);
       } finally {
-        if (btn) {
-          btn.innerHTML = orig;
-          btn.disabled = false;
+        if (currentLoadingTrack && currentLoadingTrack.id === id) {
+          currentLoadingTrack = null;
+          if (btn) {
+            btn.innerHTML = origHtml;
+            btn.classList.remove('btn-loading-cancel');
+            btn.title = '';
+          }
+          if (thumbWrap) {
+            thumbWrap.classList.remove('loading-active');
+          }
         }
       }
     }

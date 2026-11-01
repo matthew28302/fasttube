@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from app.config import load_settings
-from app.downloader import download_from_youtube
+from app.downloader import download_from_youtube, cancel_download
 from app.fastsearch import fast_search_youtube, fast_search_youtube_list, get_youtube_video_info
 from app.library import (
     find_by_file_id,
@@ -328,6 +328,11 @@ async def api_download(payload: DownloadPayload, request: Request):
                 fast_mode=settings.fast_mode,
                 max_abr_kbps=320,
             )
+    except asyncio.CancelledError:
+        if target_id:
+            cancel_download(target_id)
+        logger.info("api_download: cancelled by client for %s", target)
+        raise
     except Exception as e:
         logger.error("Download failed for %s: %s", target, e)
         raise HTTPException(status_code=500, detail=str(e)[:500])
@@ -350,6 +355,16 @@ async def api_download(payload: DownloadPayload, request: Request):
         "download_url": f"{base}/stream/{res.file_id}?download=1&ext={actual_ext}",
         "path": str(res.path),
     }
+
+
+@app.post("/api/download/cancel")
+async def api_download_cancel(id: str = ""):
+    """Instantly cancel an in-flight yt-dlp download process."""
+    cid = (id or "").strip()
+    cancelled = False
+    if cid:
+        cancelled = cancel_download(cid)
+    return {"ok": True, "cancelled": cancelled, "file_id": cid}
 
 
 @app.get("/api/library")

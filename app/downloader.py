@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import unicodedata
 from dataclasses import dataclass
@@ -14,6 +15,31 @@ from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
+
+_ACTIVE_CANCELLATION_EVENTS: dict[str, threading.Event] = {}
+
+
+def cancel_download(file_id: str) -> bool:
+    """Signal any active yt-dlp download for file_id to terminate immediately."""
+    file_id = (file_id or "").strip()
+    ev = _ACTIVE_CANCELLATION_EVENTS.get(file_id)
+    if ev:
+        ev.set()
+        logger.info("cancel_download: signal set for file_id=%s", file_id)
+        return True
+    return False
+
+
+def _extract_id_from_url_or_id(s: str) -> Optional[str]:
+    s = (s or "").strip()
+    if re.match(r"^[A-Za-z0-9_-]{11}$", s):
+        return s
+    if "v=" in s:
+        part = s.split("v=", 1)[1]
+        return part.split("&", 1)[0].split("#", 1)[0]
+    if "youtu.be/" in s:
+        return s.split("youtu.be/", 1)[1].split("?", 1)[0].split("#", 1)[0]
+    return None
 
 
 def _get_ytdlp_bin() -> str:
@@ -348,8 +374,13 @@ def download_from_youtube(
     ytdlp_debug_list_formats: bool = False,
     max_abr_kbps: int = 96,
     exclude_ids: set[str] | list[str] | None = None,
+    cancel_event: Optional[threading.Event] = None,
 ) -> DownloadResult:
     music_dir.mkdir(parents=True, exist_ok=True)
+    target_id = _extract_id_from_url_or_id(query_or_url)
+    ev = cancel_event or threading.Event()
+    if target_id:
+        _ACTIVE_CANCELLATION_EVENTS[target_id] = ev
     
     # Use audio_mode from settings if not explicitly provided
     if audio_mode is None:
@@ -655,25 +686,47 @@ def download_from_youtube(
                 )
                 t_cmd0 = time.perf_counter()
                 try:
-                    # Set timeout to 30 seconds to prevent hanging on HLS downloads
-                    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-                except subprocess.TimeoutExpired as e:
-                    logger.warning("yt-dlp timeout after 30s, killing process")
-                    if e.stdout:
-                        last_stdout = (e.stdout or "").strip()
-                    if e.stderr:
-                        last_stderr = (e.stderr or "").strip()
-                    last_stdout, last_stderr, last_rc = last_stdout or "", last_stderr or "yt-dlp timeout", 1
-                    last_cmd = cmd
-                    t_cmd_s = time.perf_counter() - t_cmd0
-                    logger.info("yt-dlp done | try=%s rc=%s wall=%.2fs", attempt, last_rc, t_cmd_s)
+                    proc = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                    )
+                    t_end = time.perf_counter() + 30.0
+                    timed_out = False
+                    while proc.poll() is None:
+                        if ev.is_set():
+                            proc.kill()
+                            try:
+                                proc.wait(timeout=2)
+                            except Exception:
+                                pass
+                            logger.info("yt-dlp killed due to cancel signal for %s", target_id or source)
+                            raise RuntimeError("Tiến trình tải đã được người dùng dừng lại.")
+                        if time.perf_counter() > t_end:
+                            proc.kill()
+                            timed_out = True
+                            break
+                        time.sleep(0.08)
+
+                    if timed_out:
+                        logger.warning("yt-dlp timeout after 30s, killing process")
+                        last_stdout, last_stderr, last_rc = "", "yt-dlp timeout", 1
+                        last_cmd = cmd
+                        t_cmd_s = time.perf_counter() - t_cmd0
+                        logger.info("yt-dlp done | try=%s rc=%s wall=%.2fs", attempt, last_rc, t_cmd_s)
+                        continue
+
+                    stdout, stderr = proc.communicate()
+                    last_stdout = (stdout or "").strip()
+                    last_stderr = (stderr or "").strip()
+                    last_rc = proc.returncode
+                except RuntimeError as re_err:
+                    if "dừng lại" in str(re_err):
+                        raise
                     continue
                 t_cmd_s = time.perf_counter() - t_cmd0
-                stdout = (proc.stdout or "").strip()
-                stderr = (proc.stderr or "").strip()
-                last_stdout, last_stderr, last_rc = stdout, stderr, proc.returncode
-
-                logger.info("yt-dlp done | try=%s rc=%s wall=%.2fs", attempt, proc.returncode, t_cmd_s)
+                logger.info("yt-dlp done | try=%s rc=%s wall=%.2fs", attempt, last_rc, t_cmd_s)
 
                 if stderr:
                     # yt-dlp may emit a lot of "[GetPOT] Failed to fetch ... No request handlers configured" noise.
@@ -870,6 +923,9 @@ def download_from_youtube(
         if not candidates:
             raise RuntimeError(f"Downloaded file not found for id={file_id}")
         media_path = candidates[0]
+
+    if target_id and target_id in _ACTIVE_CANCELLATION_EVENTS:
+        _ACTIVE_CANCELLATION_EVENTS.pop(target_id, None)
 
     return DownloadResult(
         file_id=file_id,
