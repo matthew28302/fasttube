@@ -17,6 +17,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+
+# 512KB chunks for high-speed video seeking and streaming
+FileResponse.chunk_size = 512 * 1024
 from pydantic import BaseModel, Field
 
 from app.config import load_settings
@@ -599,10 +602,15 @@ def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> F
     # When download=False: no filename -> browsers stream inline
     # When download=True: filename set -> browsers download as attachment
     filename = f"{hit.title}{hit.path.suffix}" if download else None
+    stream_headers = {
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=3600",
+    }
     return FileResponse(
         path=str(hit.path),
         media_type=_media_type_for_path(hit.path),
         filename=filename,
+        headers=stream_headers,
     )
 
 
