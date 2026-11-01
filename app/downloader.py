@@ -261,6 +261,7 @@ def _ytsearch_pick_best(
     query: str,
     max_duration_s: int,
     search_n: int = 10,
+    exclude_ids: set[str] | list[str] | None = None,
 ) -> dict:
     cookie_file = _pick_cookie_file(cookies_dir)
     src = f"ytsearch{max(1, int(search_n))}:{query}"
@@ -275,6 +276,7 @@ def _ytsearch_pick_best(
     entries = data.get("entries") or []
     best = None
     best_score = -1
+    excluded = set(exclude_ids or [])
     for e in entries:
         vid = (e.get("id") or "").strip()
         title = (e.get("title") or "").strip()
@@ -283,7 +285,7 @@ def _ytsearch_pick_best(
             dur_i = int(dur) if dur is not None else None
         except (TypeError, ValueError):
             dur_i = None
-        if not vid or not title:
+        if not vid or not title or vid in excluded:
             continue
         if dur_i is not None and dur_i > int(max_duration_s):
             continue
@@ -302,6 +304,7 @@ def _ytsearch_list(
     cookies_dir: Path,
     query: str,
     search_n: int = 10,
+    exclude_ids: set[str] | list[str] | None = None,
 ) -> list[str]:
     cookie_file = _pick_cookie_file(cookies_dir)
     src = f"ytsearch{max(1, int(search_n))}:{query}"
@@ -318,9 +321,10 @@ def _ytsearch_list(
     data = json.loads(proc.stdout)
     entries = data.get("entries") or []
     urls: list[str] = []
+    excluded = set(exclude_ids or [])
     for e in entries:
         vid = (e.get("id") or "").strip()
-        if vid:
+        if vid and vid not in excluded:
             urls.append(f"https://www.youtube.com/watch?v={vid}")
     return urls
 
@@ -387,12 +391,13 @@ def download_from_youtube(
                 query=source,
                 max_duration_s=max_duration_s,
                 search_n=10,
+                exclude_ids=exclude_ids,
             )
             source = picked["webpage_url"]
         else:
             # Prefer search result #1, but if it fails to download (SABR/EJS/PO-token),
             # fall back to next results to keep the API stable.
-            fallback_urls = _ytsearch_list(cookies_dir=cookies_dir, query=source, search_n=10)
+            fallback_urls = _ytsearch_list(cookies_dir=cookies_dir, query=source, search_n=10, exclude_ids=exclude_ids)
             if not fallback_urls:
                 raise RuntimeError(f"No YouTube results for query='{source}'")
             source = fallback_urls[0]

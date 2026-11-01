@@ -57,6 +57,7 @@ class Settings:
     ytdlp_verbose: bool
     prefer_itag_140: bool
     ytdlp_debug_list_formats: bool
+    max_storage_mb: int
 
 
 def load_settings() -> Settings:
@@ -106,6 +107,10 @@ def load_settings() -> Settings:
     ytdlp_verbose = (os.getenv("YTDLP_VERBOSE", "0") or "0").strip().lower() in {"1", "true", "yes", "y"}
     prefer_itag_140 = (os.getenv("PREFER_ITAG_140", "1") or "1").strip().lower() in {"1", "true", "yes", "y"}
     ytdlp_debug_list_formats = (os.getenv("YTDLP_DEBUG_LIST_FORMATS", "0") or "0").strip().lower() in {"1", "true", "yes", "y"}
+    try:
+        max_storage_mb = int(os.getenv("MAX_STORAGE_MB", "500"))
+    except ValueError:
+        max_storage_mb = 500
 
     return Settings(
         project_root=project_root(),
@@ -132,6 +137,7 @@ def load_settings() -> Settings:
         ytdlp_verbose=ytdlp_verbose,
         prefer_itag_140=prefer_itag_140,
         ytdlp_debug_list_formats=ytdlp_debug_list_formats,
+        max_storage_mb=max_storage_mb,
     )
 
 

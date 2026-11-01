@@ -7,8 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <style>
     :root {
+      color-scheme: dark;
       --bg-base: #07090e;
       --bg-surface: #0e121c;
       --bg-card: #141926;
@@ -51,6 +53,7 @@
        THEME: LIGHT MODE (High Contrast, Razor Sharp Text & Borders)
        ------------------------------------------------------------- */
     [data-theme="light"] {
+      color-scheme: light !important;
       --bg-base: #f1f5f9;         /* Slate 100 */
       --bg-surface: #ffffff;
       --bg-card: #ffffff;
@@ -435,6 +438,7 @@
        THEME: GRAY / SLATE (Calm Neutral Dark Mode)
        ------------------------------------------------------------- */
     [data-theme="gray"] {
+      color-scheme: dark !important;
       --bg-base: #1e293b;        /* Slate 800 */
       --bg-surface: #273549;     /* Slate 750 */
       --bg-card: #273549;
@@ -1817,11 +1821,6 @@
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             <span>Tìm kiếm & Tải</span>
           </button>
-          <button class="nav-btn" id="tab-library" onclick="switchTab('library')">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span>Thư viện máy chủ</span>
-            <span class="nav-count" id="library-count">0</span>
-          </button>
           <button class="nav-btn" id="tab-playlist" onclick="switchTab('playlist')">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
             <span>AI Playlist</span>
@@ -1932,33 +1931,6 @@
         </div>
         <div class="results-grid" id="results-grid"></div>
       </div>
-    </section>
-
-    <!-- LIBRARY TAB -->
-    <section id="view-library" style="display: none;">
-      <div class="section-header">
-        <div class="section-title">
-          Kho Nhạc & Video Máy Chủ
-          <span class="section-badge" id="library-total-badge">0 file</span>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-          <div style="position: relative;">
-            <input 
-              type="text" 
-              id="lib-filter-input" 
-              placeholder="Lọc bài hát trong kho..." 
-              oninput="filterLibrary(this.value)"
-              style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 8px 16px; font-size: 0.86rem; outline: none; width: 220px;"
-            >
-          </div>
-          <button class="btn btn-play" onclick="loadLibrary()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-            <span>Làm mới</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="results-grid" id="library-grid"></div>
     </section>
 
     <!-- PLAYLIST TAB -->
@@ -2192,12 +2164,10 @@
     function switchTab(tab) {
       document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('view-search').style.display = tab === 'search' ? 'block' : 'none';
-      document.getElementById('view-library').style.display = tab === 'library' ? 'block' : 'none';
       const vp = document.getElementById('view-playlist');
       if (vp) vp.style.display = tab === 'playlist' ? 'block' : 'none';
       if (tab === 'playlist') loadSavedPlaylists();
       document.getElementById(`tab-${tab}`).classList.add('active');
-      if (tab === 'library') loadLibrary();
     }
 
     function handleSearchInput(e) {
@@ -2301,7 +2271,6 @@
               </div>
             </div>
             <span class="card-duration">${it.duration || 'Video'}</span>
-            ${it.is_downloaded ? `<span class="card-badge-local">✓ Có sẵn</span>` : ''}
           </div>
           <div class="card-body">
             <h3 class="card-title" title="${it.title}">${it.title}</h3>
@@ -2330,7 +2299,7 @@
             <div class="card-actions">
               <button class="btn btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded})">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>${it.is_downloaded ? 'Phát ngay' : 'Xem / Nghe'}</span>
+                <span>Xem / Nghe</span>
               </button>
               <button class="btn btn-download" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -2370,7 +2339,6 @@
         const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
         showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
         startStreamingTrack({ id: data.file_id, title: data.title, channel, thumb, fmt });
-        updateLocalBadge(id);
       } catch (err) {
         showToast(`❌ Lỗi phát: ${err.message}`);
       } finally {
@@ -2403,7 +2371,6 @@
 
         const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
         showToast(`✅ Đã tải xong '${title}' [${data.format.toUpperCase()} • ${data.size_mb} MB] trong ${elapsed}s!`);
-        updateLocalBadge(id);
 
         // Trigger native browser download
         const a = document.createElement('a');
@@ -2420,20 +2387,6 @@
           btn.disabled = false;
         }
       }
-    }
-
-    function updateLocalBadge(id) {
-      const card = document.getElementById(`card-${id}`);
-      if (card) {
-        const wrap = card.querySelector('.card-thumb-wrap');
-        if (wrap && !wrap.querySelector('.card-badge-local')) {
-          const badge = document.createElement('span');
-          badge.className = 'card-badge-local';
-          badge.innerHTML = '✓ Có sẵn';
-          wrap.appendChild(badge);
-        }
-      }
-      loadLibraryCount();
     }
 
     // Media Player Logic
@@ -2543,7 +2496,7 @@
 
     function downloadCurrent() {
       if (!currentTrack) return;
-      window.location.href = `/stream/${currentTrack.id}?download=1`;
+      actionDownload(currentTrack.id, currentTrack.title);
     }
 
     function openVideoModal() {
@@ -2562,106 +2515,6 @@
       const m = Math.floor(s / 60);
       const sec = Math.floor(s % 60);
       return `${m}:${sec < 10 ? '0' : ''}${sec}`;
-    }
-
-    // Library Tab Functions
-    async function loadLibrary() {
-      const grid = document.getElementById('library-grid');
-      grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><div class="spinner" style="margin: 0 auto 14px; width:22px; height:22px;"></div>Đang tải kho nhạc & video...</div>`;
-
-      try {
-        const res = await fetch('/api/library');
-        libraryItems = await res.json();
-        renderLibraryGrid(libraryItems);
-      } catch (err) {
-        showToast(`❌ Lỗi tải thư viện: ${err.message}`);
-      }
-    }
-
-    function renderLibraryGrid(items) {
-      const grid = document.getElementById('library-grid');
-      document.getElementById('library-total-badge').textContent = `${items.length} file`;
-      document.getElementById('library-count').textContent = items.length;
-
-      if (items.length === 0) {
-        grid.innerHTML = `
-          <div class="empty-state" style="grid-column: 1 / -1;">
-            <div class="empty-icon">📂</div>
-            <h3>Kho máy chủ chưa có bài hát nào</h3>
-            <p>Hãy tìm kiếm và tải các bài hát yêu thích để lưu trữ vào máy</p>
-          </div>
-        `;
-        return;
-      }
-
-      grid.innerHTML = items.map(it => `
-        <div class="card" id="lib-card-${it.file_id}">
-          <div class="card-thumb-wrap" onclick="startStreamingTrack({ id: '${it.file_id}', title: '${escapeQuotes(it.title)}', channel: '${it.format.toUpperCase()}', thumb: 'https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg', fmt: '${it.format}' })">
-            <img class="card-thumb" src="https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg" onerror="this.src='/static/placeholder.png'" alt="${it.title}">
-            <div class="thumb-play-overlay">
-              <div class="thumb-play-circle">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              </div>
-            </div>
-            <span class="card-duration">${(it.format||'').toUpperCase()} • ${it.size_mb} MB</span>
-            <span class="card-badge-local">✓ Máy chủ</span>
-          </div>
-          <div class="card-body">
-            <h3 class="card-title" title="${it.title}">${it.title}</h3>
-            <div class="card-channel">${it.filename}</div>
-
-            <div class="card-actions" style="grid-template-columns: 1fr 1fr 42px;">
-              <button class="btn btn-play" onclick="startStreamingTrack({ id: '${it.file_id}', title: '${escapeQuotes(it.title)}', channel: '${it.format.toUpperCase()}', thumb: 'https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg', fmt: '${it.format}' })">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>Phát</span>
-              </button>
-              <a class="btn btn-download" style="text-decoration:none;" href="/stream/${it.file_id}?download=1" download>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Tải</span>
-              </a>
-              <button class="btn btn-delete" title="Xóa file khỏi máy chủ" onclick="deleteFile('${it.file_id}')">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function filterLibrary(q) {
-      q = q.trim().toLowerCase();
-      if (!q) {
-        renderLibraryGrid(libraryItems);
-        return;
-      }
-      const filtered = libraryItems.filter(it => 
-        (it.title || '').toLowerCase().includes(q) || 
-        (it.filename || '').toLowerCase().includes(q) ||
-        (it.format || '').toLowerCase().includes(q)
-      );
-      renderLibraryGrid(filtered);
-    }
-
-    async function loadLibraryCount() {
-      try {
-        const res = await fetch('/api/library');
-        libraryItems = await res.json();
-        document.getElementById('library-count').textContent = libraryItems.length;
-      } catch (e) {}
-    }
-
-    async function deleteFile(id) {
-      if (!confirm('Bạn có chắc chắn muốn xóa bài này khỏi máy chủ?')) return;
-      try {
-        const res = await fetch(`/api/library/${id}`, { method: 'DELETE' });
-        const data = await res.json();
-        if (data.ok) {
-          showToast('🗑️ Đã xóa file khỏi máy chủ');
-          loadLibrary();
-        }
-      } catch (err) {
-        showToast(`❌ Lỗi xóa: ${err.message}`);
-      }
     }
 
     function showToast(msg) {
@@ -3117,7 +2970,10 @@
     const savedTheme = localStorage.getItem('fasttube_theme') || 'dark';
     setTheme(savedTheme);
     updateVisitorStats();
-    loadLibraryCount();
   </script>
+
+  <footer style="text-align:center; padding:18px 16px 24px; color:var(--text-muted); font-size:0.72rem; line-height:1.6; opacity:0.55; max-width:700px; margin:0 auto;">
+    FastTube là công cụ chuyển đổi định dạng âm thanh/video phục vụ mục đích cá nhân. Hệ thống hoạt động dưới dạng bộ nhớ đệm tạm thời (ephemeral cache), không lưu trữ vĩnh viễn nội dung có bản quyền. Nếu bạn là chủ sở hữu bản quyền và muốn gỡ nội dung, vui lòng liên hệ quản trị viên.
+  </footer>
 </body>
 </html>

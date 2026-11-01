@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import time
 import unicodedata
@@ -125,38 +126,63 @@ def _get_index(music_dir: Path) -> tuple[dict[str, LibraryHit], list[tuple[str, 
     return _cache["by_id"], _cache["entries"]  # type: ignore[return-value]
 
 
+DEFAULT_MAX_STORAGE_BYTES = int(os.getenv("MAX_STORAGE_MB", "500")) * 1024 * 1024
+
+
 def enforce_library_limit(
     music_dir: Path,
-    max_bytes: int = 5 * 1024 * 1024 * 1024,
-    target_bytes: int = 4 * 1024 * 1024 * 1024,
+    max_bytes: int = DEFAULT_MAX_STORAGE_BYTES,
     exclude_id: Optional[str] = None,
 ) -> None:
-    """Keep total library size <= max_bytes (default 5GB) by deleting oldest files until <= target_bytes (default 4GB)."""
+    """Keep total library storage <= max_bytes (default 500MB).
+    If total size exceeds max_bytes, wipe all media files to immediately free storage.
+    """
     if not music_dir.exists():
         return
-    files = sorted(iter_audio_files(music_dir), key=lambda p: p.stat().st_mtime)
+
+    # First, always purge orphan temporary/incomplete download files
+    for p in music_dir.iterdir():
+        if p.is_file() and (p.name.endswith(".part") or ".temp." in p.name or p.name.endswith(".ytdl")):
+            try:
+                p.unlink()
+            except Exception:
+                pass
+
+    files = [p for p in music_dir.iterdir() if p.is_file() and p.name != ".gitkeep"]
     total = sum(p.stat().st_size for p in files if p.exists())
     if total <= max_bytes:
         return
-    # Delete oldest until under target_bytes, but NEVER delete the file with exclude_id
+
+    logger.warning("Storage quota exceeded (%.2f MB > %.2f MB). Purging music cache...", total / (1024 * 1024), max_bytes / (1024 * 1024))
+    # Wipe all files except currently active exclude_id
     for p in files:
-        if total <= target_bytes:
-            break
         if exclude_id and exclude_id in p.name:
             continue
         try:
             sz = p.stat().st_size
             p.unlink()
-            total -= sz
-            logger.info("library cleanup: removed %s (%d bytes)", p.name, sz)
+            logger.info("library purge: deleted %s (%.2f MB)", p.name, sz / (1024 * 1024))
         except Exception as e:
-            logger.warning("library cleanup failed for %s: %s", p, e)
+            logger.warning("library purge failed for %s: %s", p.name, e)
+
+    # Invalidate memory cache
+    _cache["by_id"] = {}
+    _cache["entries"] = []
+    _cache["t"] = 0.0
 
 
 def iter_audio_files(music_dir: Path) -> Iterable[Path]:
     if not music_dir.exists():
         return []
-    return (p for p in music_dir.iterdir() if p.is_file() and p.suffix.lower() in SUPPORTED_EXTS)
+    return (
+        p for p in music_dir.iterdir()
+        if p.is_file()
+        and p.suffix.lower() in SUPPORTED_EXTS
+        and not p.name.endswith(".part")
+        and not p.name.endswith(".ytdl")
+        and ".temp." not in p.name
+        and not p.name.startswith(".")
+    )
 
 
 def _iter_info_json(music_dir: Path) -> Iterable[Path]:

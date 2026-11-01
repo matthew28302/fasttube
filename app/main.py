@@ -15,7 +15,7 @@ from typing import Optional
 import psutil
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -118,6 +118,8 @@ async def lifespan(app: FastAPI):
     )
     logger.info("Music API started | run=%s:%s | music_dir=%s", settings.run_host, settings.run_port, settings.music_dir)
     send_telegram_message_async(settings.telegram_bot_token, settings.telegram_chat_id, msg)
+    # Enforce transient storage limit on startup
+    enforce_library_limit(settings.music_dir)
     yield
 
 
@@ -149,6 +151,12 @@ def index_page():
     if index_file.is_file():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
     return HTMLResponse(content="<h1>FastTube Studio API</h1><p>Visit /health</p>")
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse)
+def robots_txt():
+    """Block all crawlers and search engine indexing."""
+    return "User-agent: *\nDisallow: /\n"
 
 
 @app.get("/api/stats")
@@ -345,42 +353,14 @@ async def api_download(payload: DownloadPayload, request: Request):
 
 
 @app.get("/api/library")
-async def api_library(request: Request):
-    def _read_lib():
-        files = []
-        base = _base_url(request)
-        for p in sorted(iter_audio_files(settings.music_dir), key=lambda x: x.stat().st_mtime, reverse=True):
-            fid = _extract_id_from_filename(p) or p.stem
-            title = _title_from_filename(p, fid)
-            size_b = p.stat().st_size
-            ext = p.suffix.lower().lstrip(".")
-            files.append({
-                "file_id": fid,
-                "title": title,
-                "filename": p.name,
-                "size_mb": round(size_b / 1024 / 1024, 2),
-                "format": ext,
-                "stream_url": f"{base}/stream/{fid}?ext={ext}",
-                "download_url": f"{base}/stream/{fid}?download=1&ext={ext}",
-                "mtime": p.stat().st_mtime,
-            })
-        return files
-    return await asyncio.to_thread(_read_lib)
-
+async def api_library():
+    # Public server library disabled for copyright privacy & security
+    return []
 
 
 @app.delete("/api/library/{file_id}")
 def api_delete_file(file_id: str):
-    if not _FILE_ID_RE.match(file_id):
-        raise HTTPException(status_code=400, detail="Invalid ID")
-    hit = find_by_file_id(settings.music_dir, file_id)
-    if not hit or not hit.path.exists():
-        raise HTTPException(status_code=404, detail="File not found")
-    try:
-        hit.path.unlink()
-        return {"ok": True, "file_id": file_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    raise HTTPException(status_code=404, detail="Library disabled")
 
 
 @app.post("/api/music", response_model=MusicResponse)
@@ -573,6 +553,31 @@ def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> F
     if ext and not re.match(r"^[a-zA-Z0-9]{2,5}$", ext):
         raise HTTPException(status_code=400, detail="Invalid extension")
     hit = find_by_file_id(settings.music_dir, file_id, ext=ext)
+    if not hit or not hit.path.exists():
+        # Auto on-demand download so missing/purged files or direct links never return a broken JSON download
+        try:
+            target = f"https://www.youtube.com/watch?v={file_id}"
+            audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(ext or "m4a")
+            res = download_from_youtube(
+                music_dir=settings.music_dir,
+                cookies_dir=settings.cookies_dir,
+                query_or_url=target,
+                concurrent_fragments=settings.ytdlp_concurrent_fragments,
+                max_duration_s=settings.max_video_duration_s,
+                search_mode="first",
+                audio_bitrate=audio_bitrate,
+                ytdlp_verbose=settings.ytdlp_verbose,
+                audio_mode=audio_mode,
+                prefer_abr_128=prefer_abr_128,
+                ytdlp_player_client=settings.ytdlp_player_client,
+                fast_mode=settings.fast_mode,
+                max_abr_kbps=320,
+            )
+            enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
+            hit = find_by_file_id(settings.music_dir, file_id, ext=res.path.suffix.lstrip("."))
+        except Exception as e:
+            logger.warning("On-demand download for stream %s failed: %s", file_id, e)
+
     if not hit or not hit.path.exists():
         raise HTTPException(status_code=404, detail="File not found")
     # FileResponse supports conditional/range with proper headers via Starlette.

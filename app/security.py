@@ -207,6 +207,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive, nosnippet"
         response.headers["Server"] = "FastTube-Engine"
 
         return response
