@@ -144,8 +144,7 @@ app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def index_page(request: Request):
-    await visitor_tracker.record_visit(request)
+def index_page():
     index_file = _STATIC_DIR / "index.html"
     if index_file.is_file():
         return HTMLResponse(content=index_file.read_text(encoding="utf-8"))
@@ -153,9 +152,9 @@ async def index_page(request: Request):
 
 
 @app.get("/api/stats")
-async def api_stats(request: Request):
+async def api_stats(cid: Optional[str] = None):
     """Real-time visitor and view counter for public navbar display."""
-    return await visitor_tracker.record_visit(request)
+    return await visitor_tracker.heartbeat(cid)
 
 
 def _base_url(req: Request) -> str:

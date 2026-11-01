@@ -137,12 +137,12 @@ rate_limiter = RateLimiter()
 
 
 # ---------------------------------------------------------------------------
-# Real-Time Visitor & Live Active Counter
+# Real-Time Visitor & Live Active Counter (Accurate Client-ID Tracking)
 # ---------------------------------------------------------------------------
 class VisitorTracker:
     def __init__(self, stats_file: Path):
         self._stats_file = stats_file
-        self._active_sessions: dict[str, float] = {}  # session_hash -> last_seen_ts
+        self._active_sessions: dict[str, float] = {}  # client_id -> last_seen_ts
         self._total_views: int = 0
         self._lock = asyncio.Lock()
         self._load_stats()
@@ -151,11 +151,11 @@ class VisitorTracker:
         if self._stats_file.exists():
             try:
                 data = json.loads(self._stats_file.read_text(encoding="utf-8"))
-                self._total_views = int(data.get("views", 1280))
+                self._total_views = max(0, int(data.get("views", 0)))
             except Exception:
-                self._total_views = 1280
+                self._total_views = 0
         else:
-            self._total_views = 1280
+            self._total_views = 0
             self._save_stats()
 
     def _save_stats(self) -> None:
@@ -168,32 +168,31 @@ class VisitorTracker:
         except Exception:
             pass
 
-    async def record_visit(self, req: Request) -> dict:
-        ip = get_client_ip(req)
-        ua = req.headers.get("user-agent") or ""
-        session_id = hashlib.sha256(f"{ip}:{ua}".encode("utf-8")).hexdigest()[:16]
+    async def heartbeat(self, client_id: Optional[str]) -> dict:
+        """Tracks active sessions via persistent browser Client-ID.
+        If a new client_id connects for the first time, increment total_views.
+        """
         now = time.time()
-
         async with self._lock:
-            is_new_session = session_id not in self._active_sessions
-            self._active_sessions[session_id] = now
-            if is_new_session:
-                self._total_views += 1
-                if self._total_views % 5 == 0:
+            # Clean up sessions inactive for more than 60 seconds
+            cutoff = now - 60
+            self._active_sessions = {cid: ts for cid, ts in self._active_sessions.items() if ts > cutoff}
+
+            if client_id and len(client_id) >= 6:
+                if client_id not in self._active_sessions:
+                    # New distinct browser session detected
+                    self._total_views += 1
                     self._save_stats()
+                self._active_sessions[client_id] = now
 
-            # Evict sessions older than 5 minutes (300s)
-            cutoff = now - 300
-            self._active_sessions = {s: ts for s, ts in self._active_sessions.items() if ts > cutoff}
             online_count = max(1, len(self._active_sessions))
-
             return {"online": online_count, "views": self._total_views}
 
     async def get_stats(self) -> dict:
         now = time.time()
-        cutoff = now - 300
+        cutoff = now - 60
         async with self._lock:
-            self._active_sessions = {s: ts for s, ts in self._active_sessions.items() if ts > cutoff}
+            self._active_sessions = {cid: ts for cid, ts in self._active_sessions.items() if ts > cutoff}
             online_count = max(1, len(self._active_sessions))
             return {"online": online_count, "views": self._total_views}
 

@@ -1414,7 +1414,7 @@
         <span class="pulse-dot"></span>
         <span class="nav-stats-num" id="nav-online-count">1</span> <span class="nav-stats-label">online</span>
         <span class="nav-stats-sep">•</span>
-        <span class="nav-stats-num" id="nav-views-count">1,280</span> <span class="nav-stats-label">lượt xem</span>
+        <span class="nav-stats-num" id="nav-views-count">1</span> <span class="nav-stats-label">lượt xem</span>
       </div>
 
       <div class="nav-container">
@@ -2766,9 +2766,19 @@
     }
 
     // --- Live Visitor Stats ---
+    function getClientId() {
+      let cid = localStorage.getItem('fasttube_client_id');
+      if (!cid) {
+        cid = 'ft_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now().toString(36);
+        localStorage.setItem('fasttube_client_id', cid);
+      }
+      return cid;
+    }
+
     async function updateVisitorStats() {
       try {
-        const res = await fetch('/api/stats');
+        const cid = getClientId();
+        const res = await fetch('/api/stats?cid=' + encodeURIComponent(cid));
         if (res.ok) {
           const data = await res.json();
           if (data && typeof data.online !== 'undefined') {
