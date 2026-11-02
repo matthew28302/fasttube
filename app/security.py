@@ -137,7 +137,6 @@ _BLOCKED_SCANNER_UAS = (
     "python-requests",
     "aiohttp",
     "scrapy",
-    "go-http-client",
     "java/",
     "libwww-perl",
     "httpclient",
@@ -165,10 +164,36 @@ _BLOCKED_PATHS = (
 )
 
 
+def is_health_check_request(request: Request) -> bool:
+    """Detect cloud deployment and platform health-check probes."""
+    path = request.url.path.lower()
+    if path not in ("/", "/health", "/robots.txt", "/favicon.ico"):
+        return False
+
+    ua = (request.headers.get("user-agent") or "").lower()
+    # Known cloud health checkers (Replit, Google Cloud, AWS, Kubernetes, etc.)
+    if any(h in ua for h in (
+        "googlehc", "kube-probe", "go-http-client", "healthcheck",
+        "health-check", "replit", "uptimerobot", "pingdom", "statuspage"
+    )):
+        return True
+
+    # Private cloud IPs (internal container network probes)
+    ip = get_client_ip(request)
+    if is_private_ip(ip):
+        return True
+
+    return False
+
+
 class SecurityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path_lower = request.url.path.lower()
         ua_lower = (request.headers.get("user-agent") or "").lower()
+
+        # 0. Immediate bypass for platform & container health check probes
+        if is_health_check_request(request):
+            return await call_next(request)
 
         # 1. Block known scanner probes
         for probe in _BLOCKED_PATHS:

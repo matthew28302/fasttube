@@ -4,6 +4,10 @@ entrypoint = "main.py"
 [nix]
 channel = "stable-24_05"
 
+[deployment]
+run = ["bash", "run.sh"]
+deploymentTarget = "autoscale"
+
 [env]
 PYTHONUNBUFFERED = "1"
 PIP_BREAK_SYSTEM_PACKAGES = "1"
