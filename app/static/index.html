@@ -1559,14 +1559,14 @@
       left: 0;
       right: 0;
       bottom: 0;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       height: 100dvh;
       background: rgba(0, 0, 0, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       z-index: 1000;
-      padding: 0;
+      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
       margin: 0;
       box-sizing: border-box;
       overflow-x: hidden;
@@ -1584,9 +1584,9 @@
       justify-content: center;
     }
     .video-modal-content {
-      width: calc(100% - 32px);
+      width: 100%;
       max-width: 920px;
-      margin: 16px auto;
+      margin: auto;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: 20px;
@@ -2335,21 +2335,22 @@
 
       /* Saved Playlist Drawer */
       #saved-drawer {
-        width: 100vw;
-        max-width: 100vw;
+        width: 100%;
+        max-width: 100%;
       }
 
       /* Modals on Mobile & iPhone 16 - Centered perfectly with equal margins */
       .video-modal {
-        padding: 0 !important;
+        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)) !important;
         margin: 0 !important;
-        width: 100vw !important;
+        width: 100% !important;
+        height: 100% !important;
         height: 100dvh !important;
       }
       .video-modal-content {
-        width: calc(100vw - 24px) !important;
-        max-width: calc(100vw - 24px) !important;
-        margin: 12px auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: auto !important;
         border-radius: 16px !important;
         box-sizing: border-box !important;
         overflow: hidden !important;

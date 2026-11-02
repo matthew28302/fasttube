@@ -127,7 +127,22 @@ async def lifespan(app: FastAPI):
     send_telegram_message_async(settings.telegram_bot_token, settings.telegram_chat_id, msg)
     # Enforce transient storage limit on startup
     enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours)
-    yield
+
+    async def _periodic_cleanup():
+        while True:
+            try:
+                await asyncio.sleep(1800)  # Scan and purge files older than 24h every 30 mins
+                enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.warning('Periodic library cleanup error: %s', e)
+
+    cleanup_task = asyncio.create_task(_periodic_cleanup())
+    try:
+        yield
+    finally:
+        cleanup_task.cancel()
 
 
 app = FastAPI(
