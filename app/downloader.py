@@ -193,6 +193,13 @@ except Exception as e:
     logger.warning("Failed to hook YoutubeIE player cache: %s", e)
 
 
+def _detect_js_engine() -> Optional[str]:
+    for cand in ["node", "deno", "bun", "quickjs"]:
+        if shutil.which(cand):
+            return cand
+    return None
+
+
 def _fast_inprocess_download(
     source_url: str,
     music_dir: Path,
@@ -214,6 +221,7 @@ def _fast_inprocess_download(
     if not merge_output_format and "/18" not in format_spec and "/best" not in format_spec:
         format_spec = f"{format_spec}/18/best"
 
+    js_eng = _detect_js_engine()
     opts = {
         "noplaylist": True,
         "format": format_spec,
@@ -231,6 +239,8 @@ def _fast_inprocess_download(
             }
         },
     }
+    if js_eng:
+        opts["js_runtimes"] = {js_eng: {}}
     if merge_output_format:
         opts["merge_output_format"] = merge_output_format
         if merge_output_format == "mp4":
@@ -675,10 +685,12 @@ def download_from_youtube(
             cmd.insert(1, "--extractor-args")
             cmd.insert(2, f"youtube:player_client={ytdlp_player_client}")
         # Force JS runtime to help with EJS/n challenges (e.g. deno).
-        if ytdlp_js_runtimes:
-            runtime = ytdlp_js_runtimes
-            if ytdlp_js_runtimes_path:
-                runtime = f"{runtime}:{ytdlp_js_runtimes_path}"
+        runtime = ytdlp_js_runtimes
+        if not runtime:
+            runtime = _detect_js_engine()
+        elif ytdlp_js_runtimes_path:
+            runtime = f"{runtime}:{ytdlp_js_runtimes_path}"
+        if runtime:
             cmd.insert(1, "--js-runtimes")
             cmd.insert(2, runtime)
         if "--remote-components" not in cmd:

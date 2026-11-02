@@ -17,7 +17,7 @@ if local_lib.exists():
         if sp.is_dir() and str(sp) not in sys.path:
             sys.path.insert(0, str(sp))
 
-# 2. Ensure .local/bin is prepended to PATH so binaries (yt-dlp, ffmpeg) are immediately discoverable
+# 2. Ensure .local/bin is prepended to PATH so binaries (yt-dlp, ffmpeg, deno) are immediately discoverable
 local_bin = project_root / ".local" / "bin"
 if local_bin.exists():
     local_bin_str = str(local_bin.resolve())
@@ -33,7 +33,40 @@ if ytdlp_bin.is_file() and os.name != "nt":
     except Exception:
         pass
 
-# 4. Ensure project root is on sys.path
+# 4. Ensure a JavaScript runtime (deno/node) is available for YouTube n-challenge deciphering
+def _ensure_js_runtime(target_dir: Path) -> None:
+    import shutil
+    if shutil.which("node") or shutil.which("deno") or shutil.which("bun") or shutil.which("quickjs"):
+        return
+    deno_bin = target_dir / "deno"
+    if deno_bin.is_file():
+        return
+    if sys.platform.startswith("linux"):
+        import platform
+        arch = platform.machine().lower()
+        deno_arch = "aarch64" if ("aarch64" in arch or "arm64" in arch) else "x86_64"
+        url = f"https://github.com/denoland/deno/releases/latest/download/deno-{deno_arch}-unknown-linux-gnu.zip"
+        try:
+            import urllib.request, zipfile, io
+            target_dir.mkdir(parents=True, exist_ok=True)
+            print(f"[FastTube] Auto-installing standalone Deno JS runtime ({deno_arch}) for YouTube deciphering...")
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = resp.read()
+            with zipfile.ZipFile(io.BytesIO(data)) as z:
+                z.extract("deno", target_dir)
+            deno_bin.chmod(0o755)
+            # Make sure it's in PATH immediately
+            t_str = str(target_dir.resolve())
+            if t_str not in os.environ.get("PATH", ""):
+                os.environ["PATH"] = t_str + os.pathsep + os.environ.get("PATH", "")
+            print("[FastTube] Deno JS runtime installed successfully into .local/bin/deno!")
+        except Exception as e:
+            print(f"[FastTube] Notice: could not auto-install Deno JS runtime: {e}")
+
+_ensure_js_runtime(local_bin)
+
+# 5. Ensure project root is on sys.path
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
