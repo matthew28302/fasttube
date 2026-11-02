@@ -1005,7 +1005,9 @@ if __name__ == "__main__":
     except Exception:
         _http = "auto"
 
-    _workers = 1 if os.name == "nt" else 2
+    # Replit & container memory optimization: default 1 worker to prevent OOM
+    default_workers = 1 if (os.name == "nt" or os.environ.get("REPL_ID") or os.environ.get("REPLIT_ENVIRONMENT")) else 1
+    _workers = int(os.environ.get("WEB_CONCURRENCY", str(default_workers)))
     uvicorn.run(
         "app.main:app",
         host=settings.run_host,

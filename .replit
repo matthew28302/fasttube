@@ -1,0 +1,16 @@
+run = "python main.py"
+entrypoint = "main.py"
+
+[nix]
+channel = "stable-24_05"
+
+[env]
+PYTHONUNBUFFERED = "1"
+PORT = "8080"
+RUN_HOST = "0.0.0.0"
+ALLOW_ONLY_VN = "false"
+WEB_CONCURRENCY = "1"
+
+[ports]
+localPort = 8080
+externalPort = 80
