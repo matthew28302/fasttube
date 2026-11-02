@@ -445,6 +445,9 @@ def download_from_youtube(
     if not source:
         raise ValueError("Empty query/url")
     is_url = "://" in source
+    if target_id and not is_url:
+        source = f"https://www.youtube.com/watch?v={target_id}"
+        is_url = True
     fallback_urls: list[str] | None = None
     if not is_url:
         mode = (search_mode or "first").strip().lower()
@@ -708,19 +711,20 @@ def download_from_youtube(
 
         # In FAST_MODE: do not iterate across many clients. Keep overhead minimal.
         if fast_mode:
-            # Prefer visionos first (no ads, no forced wait), fallback to tv_samsung with cookies
+            # Prefer visionos first, then android (bypasses datacenter bot check!), tv_samsung with cookies
             player_clients: list[tuple[str | None, bool]] = [
                 ("visionos", False),
+                ("android", False),
                 ("tv_samsung", True),
                 (None, True),
             ]
         else:
-            # Try several clients; some don't support cookies (e.g., android) but may bypass SABR issues.
             player_clients = [
-                (None, True),
+                ("visionos", False),
+                ("android", False),
+                ("tv_samsung", True),
                 ("web", True),
                 ("tv", True),
-                ("android", False),
             ]
         attempt = 0
         for fmt_try in fmt_list:
@@ -850,6 +854,22 @@ def download_from_youtube(
                     target_codec=t_codec,
                     merge_output_format=merge_fmt,
                 )
+            # Datacenter anti-bot fallback: android client often succeeds without cookies on datacenter IPs
+            if not fast_res and primary_client != "android":
+                fast_res = _fast_inprocess_download(
+                    source_url=source,
+                    music_dir=music_dir,
+                    cookie_file=None,
+                    format_spec="bestaudio/best",
+                    player_client="android",
+                    concurrent_fragments=concurrent_fragments,
+                    ytdlp_cache_dir=ytdlp_cache_dir,
+                    ytdlp_verbose=ytdlp_verbose,
+                    force_mp3=(t_codec == "mp3"),
+                    audio_bitrate=audio_bitrate,
+                    target_codec=t_codec,
+                    merge_output_format=merge_fmt,
+                )
             if fast_res:
                 logger.info("fast in-process download succeeded | id=%s title=%r path=%s", fast_res.file_id, fast_res.title, fast_res.path)
                 return fast_res
@@ -880,6 +900,14 @@ def download_from_youtube(
             fmt_list=_format_candidates(),
             force_mp3=(mode == "mp3"),
         )
+        if last_rc != 0 or not _has_json_output(last_stdout):
+            logger.warning("specific formats failed, falling back to best video/audio format")
+            last_stdout, last_stderr, last_cmd, last_rc = _try_download_current_source(
+                fmt_list=_video_fallback_formats(),
+                force_mp3=(mode in ("mp3", "mp3_320", "mp3_128", "m4a")),
+                relax_retries=True,
+                skip_hls=False,
+            )
     if (last_rc != 0 or not _has_json_output(last_stdout)) and fallback_urls:
         for alt in fallback_urls[1:]:
             logger.warning("yt-dlp failed for first result; trying next search result: %s", alt)
