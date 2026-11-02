@@ -680,10 +680,6 @@ def download_from_youtube(
             cmd.insert(11, "--socket-timeout")
             cmd.insert(12, "30")
             cmd.insert(13, "--no-check-certificates")
-        # Force a specific YouTube player client if configured (often reduces SABR weirdness)
-        if ytdlp_player_client:
-            cmd.insert(1, "--extractor-args")
-            cmd.insert(2, f"youtube:player_client={ytdlp_player_client}")
         # Force JS runtime to help with EJS/n challenges (e.g. deno).
         runtime = ytdlp_js_runtimes
         if not runtime:
@@ -698,9 +694,10 @@ def download_from_youtube(
             cmd.insert(2, "ejs:github")
         if "--no-check-certificates" not in cmd:
             cmd.insert(1, "--no-check-certificates")
-        if player_client:
+        client_to_use = player_client or ytdlp_player_client
+        if client_to_use:
             cmd.insert(1, "--extractor-args")
-            cmd.insert(2, f"youtube:player_client={player_client}")
+            cmd.insert(2, f"youtube:player_client={client_to_use}")
         mode_str = (audio_mode or "").strip().lower()
         if mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p"):
             cmd.insert(1, "--merge-output-format")
@@ -850,10 +847,13 @@ def download_from_youtube(
         try:
             fmt_candidates = _format_candidates()
             best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio"
-            # When cookies are present, tv_samsung is the #1 fastest and most reliable client.
-            # When no cookies exist, android is the #1 client to bypass bot check.
+            # When cookies are present, client MUST support cookies (tv_samsung or web).
+            # visionos/android/android_vr explicitly ignore cookies and trigger bot blocks on datacenters.
             if cookie_file:
-                primary_client = ytdlp_player_client or "tv_samsung"
+                if not ytdlp_player_client or ytdlp_player_client in ("visionos", "android_vr", "android", "ios"):
+                    primary_client = "tv_samsung"
+                else:
+                    primary_client = ytdlp_player_client
             else:
                 primary_client = ytdlp_player_client or "android"
 

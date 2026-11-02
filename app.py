@@ -66,7 +66,36 @@ def _ensure_js_runtime(target_dir: Path) -> None:
 
 _ensure_js_runtime(local_bin)
 
-# 5. Ensure project root is on sys.path
+# 5. Ensure Git tracking is initialized if AUTO_UPDATE is enabled and .git is missing
+def _ensure_git_tracking(target_dir: Path) -> None:
+    git_dir = target_dir / ".git"
+    if git_dir.exists():
+        return
+    git_repo = (
+        os.getenv("GIT_REPO_ADDRESS")
+        or os.getenv("GIT_ADDRESS")
+        or "https://github.com/matthew28302/fasttube"
+    ).strip()
+    branch = (os.getenv("GIT_BRANCH") or "main").strip()
+    import shutil, subprocess
+    if not shutil.which("git"):
+        return
+    try:
+        print(f"[FastTube] Initializing Git repository for {git_repo} (branch: {branch})...")
+        subprocess.run(["git", "init"], cwd=target_dir, capture_output=True, check=True)
+        # Avoid error if remote origin already exists
+        subprocess.run(["git", "remote", "remove", "origin"], cwd=target_dir, capture_output=True)
+        subprocess.run(["git", "remote", "add", "origin", git_repo], cwd=target_dir, capture_output=True, check=True)
+        subprocess.run(["git", "fetch", "origin", branch, "--depth=1"], cwd=target_dir, capture_output=True, check=True)
+        subprocess.run(["git", "branch", "-M", branch], cwd=target_dir, capture_output=True, check=True)
+        subprocess.run(["git", "reset", f"origin/{branch}"], cwd=target_dir, capture_output=True, check=True)
+        print("[FastTube] Git tracking initialized! Future server startups will auto-pull with git pull.")
+    except Exception as e:
+        print(f"[FastTube] Notice: Git tracking auto-init skipped: {e}")
+
+_ensure_git_tracking(project_root)
+
+# 6. Ensure project root is on sys.path
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
