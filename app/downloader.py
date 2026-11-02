@@ -227,7 +227,7 @@ def _fast_inprocess_download(
         "format": format_spec,
         "concurrent_fragment_downloads": max(16, concurrent_fragments),
         "http_chunk_size": 10485760,  # 10MB chunking bypasses YouTube playback-speed throttling
-        "buffersize": 1048576,        # 1MB buffer for high-throughput disk I/O
+        "buffersize": 4194304,        # 4MB buffer for high-throughput disk I/O
         "cachedir": str(ytdlp_cache_dir),
         "outtmpl": str(music_dir / "%(title).200B [%(id)s].%(ext)s"),
         "cookiefile": str(use_cookie) if use_cookie else None,
@@ -245,12 +245,6 @@ def _fast_inprocess_download(
         opts["js_runtimes"] = {js_eng: {}}
     if merge_output_format:
         opts["merge_output_format"] = merge_output_format
-        if merge_output_format == "mp4":
-            # Ensure audio track inside MP4 container is AAC 192k (not Opus),
-            # so Windows Media Player, Movies & TV, QuickTime, TVs, etc. all have sound!
-            opts["postprocessor_args"] = {
-                "merger": ["-c:a", "aac", "-b:a", "192k"]
-            }
     if _FFMPEG_PATH:
         opts["ffmpeg_location"] = _FFMPEG_PATH
     # Force re-download/overwrite so changing quality actually replaces the old file.
@@ -630,7 +624,7 @@ def download_from_youtube(
             "--http-chunk-size",
             "10M",
             "--buffer-size",
-            "1024k",
+            "4096k",
             "--socket-timeout",
             "60",
             "--geo-bypass",
@@ -714,8 +708,6 @@ def download_from_youtube(
         if mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p"):
             cmd.insert(1, "--merge-output-format")
             cmd.insert(2, "mp4")
-            cmd.insert(3, "--postprocessor-args")
-            cmd.insert(4, "merger:-c:a aac -b:a 192k")
         if force_mp3:
             cmd.insert(1, "--extract-audio")
             cmd.insert(2, "--audio-format")
