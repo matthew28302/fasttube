@@ -1,4 +1,4 @@
-run = "python main.py"
+run = "bash run.sh"
 entrypoint = "main.py"
 
 [nix]
@@ -6,6 +6,7 @@ channel = "stable-24_05"
 
 [env]
 PYTHONUNBUFFERED = "1"
+PIP_BREAK_SYSTEM_PACKAGES = "1"
 PORT = "8080"
 RUN_HOST = "0.0.0.0"
 ALLOW_ONLY_VN = "false"
