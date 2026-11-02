@@ -238,7 +238,26 @@ async def api_search(q: str, request: Request, limit: int = 30):
         vid = it.get("id")
         hits = find_all_by_file_id(settings.music_dir, vid) if vid else []
         it["is_downloaded"] = bool(hits)
-        it["downloaded_formats"] = sorted(list({h.path.suffix.lstrip(".").upper() for h in hits}))
+        labels = []
+        for h in hits:
+            folder = h.path.parent.name.lower()
+            if "1080" in folder:
+                labels.append("1080P")
+            elif "720" in folder:
+                labels.append("720P")
+            elif "480" in folder:
+                labels.append("480P")
+            elif "360" in folder:
+                labels.append("360P")
+            elif "320" in folder:
+                labels.append("MP3-320K")
+            elif "128" in folder:
+                labels.append("MP3-128K")
+            elif folder in ("m4a", "flac", "wav", "opus"):
+                labels.append(folder.upper())
+            else:
+                labels.append(h.path.suffix.lstrip(".").upper())
+        it["downloaded_formats"] = sorted(list(set(labels)))
         if hits:
             best_hit = next((h for h in hits if h.path.suffix.lower() == ".mp4"), hits[0])
             best_ext = best_hit.path.suffix.lstrip(".")
@@ -260,26 +279,28 @@ def _resolve_format(fmt: str) -> tuple[str, str, bool, str, str]:
     # Returns (audio_mode, audio_bitrate, prefer_abr_128, target_ext, subfolder)
     fmt = (fmt or "m4a").strip().lower()
     if fmt == "mp3_320":
-        return "mp3", "320k", False, "mp3", "audio-320kb"
+        return "mp3", "320k", False, "mp3", "mp3-320k"
     if fmt == "mp3_128":
-        return "mp3", "128k", True, "mp3", "audio-128kb"
+        return "mp3", "128k", True, "mp3", "mp3-128k"
     if fmt in ("mp3",):
-        return "mp3", "320k", False, "mp3", "mp3"
+        return "mp3", "320k", False, "mp3", "mp3-320k"
     if fmt == "wav":
-        return "wav", "320k", False, "wav", "audio-320kb"
+        return "wav", "320k", False, "wav", "wav"
     if fmt == "flac":
-        return "flac", "320k", False, "flac", "audio-320kb"
+        return "flac", "320k", False, "flac", "flac"
     if fmt in ("mp4_1080", "1080p"):
-        return "mp4_1080", "128k", False, "mp4", "mp4"
-    if fmt in ("mp4", "mp4_720", "720p", "video"):
-        return "mp4_720", "128k", False, "mp4", "mp4"
+        return "mp4_1080", "128k", False, "mp4", "mp4-1080p"
+    if fmt in ("mp4_720", "720p", "video"):
+        return "mp4_720", "128k", False, "mp4", "mp4-720p"
     if fmt in ("mp4_480", "480p"):
-        return "mp4_480", "128k", False, "mp4", "mp4"
+        return "mp4_480", "128k", False, "mp4", "mp4-480p"
     if fmt in ("mp4_360", "360p"):
-        return "mp4_360", "128k", False, "mp4", "mp4"
+        return "mp4_360", "128k", False, "mp4", "mp4-360p"
+    if fmt == "mp4":
+        return "mp4_720", "128k", False, "mp4", "mp4-720p"
     if fmt == "opus":
-        return "opus", "160k", False, "webm", "audio-128kb"
-    return "m4a", "128k", False, "m4a", "audio-128kb"
+        return "opus", "160k", False, "webm", "opus"
+    return "m4a", "128k", False, "m4a", "m4a"
 
 
 @app.post("/api/download")
