@@ -11,9 +11,12 @@ if zip_path.exists():
 # Complete list of files and directories required for production deployment
 include_items = [
     "app",
+    "scripts",
+    "cookies",
     "app.py",
     ".env",
     ".env.example",
+    ".gitignore",
     "requirements.txt",
     "playlists.json",
     "Dockerfile",
@@ -24,9 +27,9 @@ include_items = [
     "music-api-user.service",
     "nginx.conf.example",
     "music/.gitkeep",
-    "cookies/.gitkeep",
     "logs/.gitkeep",
     "cache/.gitkeep",
+    "cache/stats.json",
 ]
 
 exclude_names = {
@@ -36,6 +39,7 @@ exclude_names = {
     ".pytest_cache",
     ".DS_Store",
     "Thumbs.db",
+    "ytdlp",
 }
 
 exclude_exts = {
@@ -44,6 +48,15 @@ exclude_exts = {
     ".pyd",
     ".zip",
     ".log",
+    ".part",
+    ".ytdl",
+    ".mp3",
+    ".m4a",
+    ".mp4",
+    ".opus",
+    ".webm",
+    ".wav",
+    ".flac",
 }
 
 added_entries = []
@@ -88,4 +101,7 @@ with zipfile.ZipFile(zip_path, "r") as zf:
     assert ".env" in names, "Error: .env missing from zip!"
     assert "app/main.py" in names, "Error: app/main.py missing from zip!"
     assert "app/static/index.html" in names, "Error: app/static/index.html missing from zip!"
-    print("\nVERIFICATION PASSED: fasttube_deploy.zip contains all required files with POSIX paths.")
+    assert "cookies/www.youtube.com_cookies.txt" in names, "Error: cookies/www.youtube.com_cookies.txt missing from zip!"
+    assert "scripts/start.sh" in names, "Error: scripts/start.sh missing from zip!"
+    assert "scripts/build.sh" in names, "Error: scripts/build.sh missing from zip!"
+    print("\nVERIFICATION PASSED: fasttube_deploy.zip contains all 100% required production files with POSIX paths.")
