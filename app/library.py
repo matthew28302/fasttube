@@ -126,7 +126,7 @@ def _get_index(music_dir: Path) -> tuple[dict[str, LibraryHit], list[tuple[str, 
     return _cache["by_id"], _cache["entries"]  # type: ignore[return-value]
 
 
-DEFAULT_MAX_STORAGE_BYTES = int(os.getenv("MAX_STORAGE_MB", "2000")) * 1024 * 1024
+DEFAULT_MAX_STORAGE_BYTES = int(os.getenv("MAX_STORAGE_MB", "10240")) * 1024 * 1024
 
 
 def enforce_library_limit(
@@ -134,7 +134,7 @@ def enforce_library_limit(
     max_bytes: int = DEFAULT_MAX_STORAGE_BYTES,
     exclude_id: Optional[str] = None,
 ) -> None:
-    """Keep total library storage <= max_bytes (default 2GB).
+    """Keep total library storage <= max_bytes (default 10GB).
     Purges stale temporary files and evicts oldest media files when quota is exceeded.
     """
     if not music_dir.exists():

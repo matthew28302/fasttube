@@ -225,7 +225,9 @@ def _fast_inprocess_download(
     opts = {
         "noplaylist": True,
         "format": format_spec,
-        "concurrent_fragment_downloads": max(8, concurrent_fragments),
+        "concurrent_fragment_downloads": max(16, concurrent_fragments),
+        "http_chunk_size": 10485760,  # 10MB chunking bypasses YouTube playback-speed throttling
+        "buffersize": 1048576,        # 1MB buffer for high-throughput disk I/O
         "cachedir": str(ytdlp_cache_dir),
         "outtmpl": str(music_dir / "%(title).200B [%(id)s].%(ext)s"),
         "cookiefile": str(use_cookie) if use_cookie else None,
@@ -624,7 +626,13 @@ def download_from_youtube(
             "-f",
             fmt,
             "--concurrent-fragments",
-            str(max(1, concurrent_fragments)),
+            str(max(16, concurrent_fragments)),
+            "--http-chunk-size",
+            "10M",
+            "--buffer-size",
+            "1024k",
+            "--socket-timeout",
+            "60",
             "--geo-bypass",
             "--cache-dir",
             str(ytdlp_cache_dir),
@@ -777,7 +785,7 @@ def download_from_youtube(
                     )
                     mode_str = (audio_mode or "").strip().lower()
                     is_vid = mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p")
-                    timeout_limit = 600.0 if is_vid else 180.0
+                    timeout_limit = 1800.0 if is_vid else 900.0
                     t_end = time.perf_counter() + timeout_limit
                     timed_out = False
                     while proc.poll() is None:

@@ -78,14 +78,14 @@ def load_settings() -> Settings:
         run_port = 8000
 
     try:
-        ytdlp_concurrent_fragments = int(os.getenv("YTDLP_CONCURRENT_FRAGMENTS", "4"))
+        ytdlp_concurrent_fragments = int(os.getenv("YTDLP_CONCURRENT_FRAGMENTS", "16"))
     except ValueError:
-        ytdlp_concurrent_fragments = 4
+        ytdlp_concurrent_fragments = 16
 
     try:
-        max_video_duration_s = int(os.getenv("MAX_VIDEO_DURATION_S", "14400"))
+        max_video_duration_s = int(os.getenv("MAX_VIDEO_DURATION_S", "86400"))
     except ValueError:
-        max_video_duration_s = 14400
+        max_video_duration_s = 86400
 
     log_level = (os.getenv("LOG_LEVEL", "INFO") or "INFO").strip().upper()
     log_file = _resolve_path(os.getenv("LOG_FILE"), "logs/app.log")
@@ -108,9 +108,9 @@ def load_settings() -> Settings:
     prefer_itag_140 = (os.getenv("PREFER_ITAG_140", "1") or "1").strip().lower() in {"1", "true", "yes", "y"}
     ytdlp_debug_list_formats = (os.getenv("YTDLP_DEBUG_LIST_FORMATS", "0") or "0").strip().lower() in {"1", "true", "yes", "y"}
     try:
-        max_storage_mb = int(os.getenv("MAX_STORAGE_MB", "500"))
+        max_storage_mb = int(os.getenv("MAX_STORAGE_MB", "10240"))
     except ValueError:
-        max_storage_mb = 500
+        max_storage_mb = 10240
 
     return Settings(
         project_root=project_root(),
