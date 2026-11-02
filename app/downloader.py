@@ -207,9 +207,12 @@ def _fast_inprocess_download(
     target_codec: Optional[str] = None,
     merge_output_format: Optional[str] = None,
 ) -> Optional[DownloadResult]:
-    client = (player_client or "visionos").strip()
+    client = (player_client or "android").strip()
     # visionos/android_vr do not support cookies; passing cookies causes yt-dlp to skip them
     use_cookie = cookie_file if (cookie_file and client not in ("visionos", "android_vr")) else None
+
+    if not merge_output_format and "/18" not in format_spec and "/best" not in format_spec:
+        format_spec = f"{format_spec}/18/best"
 
     opts = {
         "noplaylist": True,
@@ -244,7 +247,9 @@ def _fast_inprocess_download(
     opts["updatetime"] = False  # Keep current local download time, do not overwrite mtime with YouTube upload date
 
     codec = target_codec or ("mp3" if force_mp3 else None)
-    if codec in ("mp3", "wav", "flac"):
+    if not codec and not merge_output_format:
+        codec = "m4a"
+    if codec in ("mp3", "m4a", "wav", "flac"):
         pp = {
             "key": "FFmpegExtractAudio",
             "preferredcodec": codec,
@@ -545,15 +550,15 @@ def download_from_youtube(
                 "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
             ]
         if m in ("wav", "flac"):
-            return [base_any, m4a_first]
+            return [f"{base_any}/18/best", f"{m4a_first}/18/best"]
         if m in ("mp3", "mp3_320", "mp3_128"):
-            return [base_any, m4a_first]
+            return [f"{base_any}/18/best", f"{m4a_first}/18/best"]
         if m == "m4a":
-            # Prefer m4a audio-only, but fall back to any audio-only if unavailable
+            # Prefer m4a audio-only, but fall back to any audio-only or format 18 if unavailable
             return [
-                m4a_first,
-                base_small,
-                base_any,
+                f"{m4a_first}/18/best",
+                f"{base_small}/18/best",
+                f"{base_any}/18/best",
             ]
         if m == "opus":
             if prefer_abr_128:
@@ -696,6 +701,10 @@ def download_from_youtube(
             cmd.insert(3, "mp3")
             cmd.insert(4, "--postprocessor-args")
             cmd.insert(5, f"ffmpeg:-b:a {audio_bitrate}")
+        elif not is_video:
+            cmd.insert(1, "--extract-audio")
+            cmd.insert(2, "--audio-format")
+            cmd.insert(3, "m4a")
         if ytdlp_verbose:
             cmd.insert(1, "--verbose")
         if use_cookies and cookie_file and (player_client not in ("visionos", "android_vr")):
@@ -711,17 +720,17 @@ def download_from_youtube(
 
         # In FAST_MODE: do not iterate across many clients. Keep overhead minimal.
         if fast_mode:
-            # Prefer visionos first, then android (bypasses datacenter bot check!), tv_samsung with cookies
+            # Android client bypasses datacenter bot checks without cookies!
             player_clients: list[tuple[str | None, bool]] = [
-                ("visionos", False),
                 ("android", False),
+                ("visionos", False),
                 ("tv_samsung", True),
                 (None, True),
             ]
         else:
             player_clients = [
-                ("visionos", False),
                 ("android", False),
+                ("visionos", False),
                 ("tv_samsung", True),
                 ("web", True),
                 ("tv", True),
@@ -823,7 +832,7 @@ def download_from_youtube(
         try:
             fmt_candidates = _format_candidates()
             best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio"
-            primary_client = ytdlp_player_client or "visionos"
+            primary_client = ytdlp_player_client or "android"
             fast_res = _fast_inprocess_download(
                 source_url=source,
                 music_dir=music_dir,
