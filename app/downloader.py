@@ -735,9 +735,8 @@ def download_from_youtube(
         if cookie_file:
             player_clients: list[tuple[str | None, bool]] = [
                 ("tv_samsung", True),
-                ("android", False),
                 (None, True),
-                ("visionos", False),
+                ("web", True),
             ]
         elif fast_mode:
             player_clients = [
@@ -776,7 +775,10 @@ def download_from_youtube(
                         stderr=subprocess.PIPE,
                         text=True,
                     )
-                    t_end = time.perf_counter() + 30.0
+                    mode_str = (audio_mode or "").strip().lower()
+                    is_vid = mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p")
+                    timeout_limit = 600.0 if is_vid else 180.0
+                    t_end = time.perf_counter() + timeout_limit
                     timed_out = False
                     while proc.poll() is None:
                         if ev.is_set():
@@ -794,7 +796,7 @@ def download_from_youtube(
                         time.sleep(0.08)
 
                     if timed_out:
-                        logger.warning("yt-dlp timeout after 30s, killing process")
+                        logger.warning("yt-dlp timeout after %ss, killing process", int(timeout_limit))
                         last_stdout, last_stderr, last_rc = "", "yt-dlp timeout", 1
                         last_cmd = cmd
                         t_cmd_s = time.perf_counter() - t_cmd0

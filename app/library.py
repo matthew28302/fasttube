@@ -126,7 +126,7 @@ def _get_index(music_dir: Path) -> tuple[dict[str, LibraryHit], list[tuple[str, 
     return _cache["by_id"], _cache["entries"]  # type: ignore[return-value]
 
 
-DEFAULT_MAX_STORAGE_BYTES = int(os.getenv("MAX_STORAGE_MB", "500")) * 1024 * 1024
+DEFAULT_MAX_STORAGE_BYTES = int(os.getenv("MAX_STORAGE_MB", "2000")) * 1024 * 1024
 
 
 def enforce_library_limit(
@@ -134,17 +134,22 @@ def enforce_library_limit(
     max_bytes: int = DEFAULT_MAX_STORAGE_BYTES,
     exclude_id: Optional[str] = None,
 ) -> None:
-    """Keep total library storage <= max_bytes (default 500MB).
-    If total size exceeds max_bytes, wipe all media files to immediately free storage.
+    """Keep total library storage <= max_bytes (default 2GB).
+    Purges stale temporary files and evicts oldest media files when quota is exceeded.
     """
     if not music_dir.exists():
         return
 
-    # First, always purge orphan temporary/incomplete download files
+    now = time.time()
+    # Purge only stale orphan temporary files older than 30 minutes.
+    # NEVER delete actively downloading .part files!
     for p in music_dir.iterdir():
         if p.is_file() and (p.name.endswith(".part") or ".temp." in p.name or p.name.endswith(".ytdl")):
+            if exclude_id and exclude_id in p.name:
+                continue
             try:
-                p.unlink()
+                if (now - p.stat().st_mtime) > 1800:
+                    p.unlink()
             except Exception:
                 pass
 
@@ -153,14 +158,18 @@ def enforce_library_limit(
     if total <= max_bytes:
         return
 
-    logger.warning("Storage quota exceeded (%.2f MB > %.2f MB). Purging music cache...", total / (1024 * 1024), max_bytes / (1024 * 1024))
-    # Wipe all files except currently active exclude_id
+    logger.warning("Storage quota exceeded (%.2f MB > %.2f MB). Evicting oldest media files...", total / (1024 * 1024), max_bytes / (1024 * 1024))
+    # Sort files by last modification time (oldest first)
+    files.sort(key=lambda p: p.stat().st_mtime if p.exists() else 0)
     for p in files:
+        if total <= max_bytes:
+            break
         if exclude_id and exclude_id in p.name:
             continue
         try:
             sz = p.stat().st_size
             p.unlink()
+            total -= sz
             logger.info("library purge: deleted %s (%.2f MB)", p.name, sz / (1024 * 1024))
         except Exception as e:
             logger.warning("library purge failed for %s: %s", p.name, e)
