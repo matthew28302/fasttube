@@ -240,7 +240,8 @@ async def api_search(q: str, request: Request, limit: int = 30):
         if hit:
             it["stream_url"] = f"{base_url}/stream/{vid}"
 
-    _SEARCH_CACHE[cache_key] = (now, items)
+    if items:
+        _SEARCH_CACHE[cache_key] = (now, items)
     return items
 
 

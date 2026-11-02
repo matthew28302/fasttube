@@ -613,8 +613,12 @@ def download_from_youtube(
             "--no-continue",
             "--no-playlist",
             "--no-mtime",
-            "--match-filter",
-            f"duration < {max(1, int(max_duration_s))}",
+        ]
+        mode_str = (audio_mode or "").strip().lower()
+        is_video_mode = mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p")
+        if max_duration_s and max_duration_s > 0 and not is_video_mode and not _extract_id_from_url_or_id(source):
+            cmd += ["--match-filter", f"duration < {int(max_duration_s)}"]
+        cmd += [
             # Try different YouTube clients to improve success rate when signature/EJS challenges occur.
             # (Added via --extractor-args when player_client is not None)
             "-f",

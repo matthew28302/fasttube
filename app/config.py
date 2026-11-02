@@ -83,9 +83,9 @@ def load_settings() -> Settings:
         ytdlp_concurrent_fragments = 4
 
     try:
-        max_video_duration_s = int(os.getenv("MAX_VIDEO_DURATION_S", "600"))
+        max_video_duration_s = int(os.getenv("MAX_VIDEO_DURATION_S", "14400"))
     except ValueError:
-        max_video_duration_s = 600
+        max_video_duration_s = 14400
 
     log_level = (os.getenv("LOG_LEVEL", "INFO") or "INFO").strip().upper()
     log_file = _resolve_path(os.getenv("LOG_FILE"), "logs/app.log")

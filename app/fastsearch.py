@@ -194,7 +194,7 @@ def fast_search_youtube(
                     continue
                 length = vr.get("lengthText", {}).get("simpleText")
                 dur = _parse_duration(length)
-                if dur is not None and dur > int(max_duration_s):
+                if max_duration_s and max_duration_s > 0 and dur is not None and dur > int(max_duration_s):
                     continue
 
                 score, is_valid = _score_title(query, title, index=item_idx)
@@ -271,12 +271,12 @@ def get_youtube_video_info(url_or_id: str) -> Optional[dict]:
 def fast_search_youtube_list(
     query: str,
     limit: int = 30,
-    max_duration_s: int = 3600,
+    max_duration_s: Optional[int] = None,
     timeout: int = 10,
 ) -> list[dict]:
     """
     Fast YouTube search returning up to `limit` items (default 30) with rich metadata.
-    Automatically fetches continuation page when needed to deliver full count.
+    Supports long videos, full movies (Châu Tinh Trì, etc.), podcasts, and multi-page pagination.
     """
     q = query.strip()
     if not q:
@@ -286,6 +286,60 @@ def fast_search_youtube_list(
         info = get_youtube_video_info(q)
         if info:
             return [info]
+
+    results = []
+    seen_ids = set()
+
+    def _extract_item(it: dict):
+        if not isinstance(it, dict):
+            return
+        vr = it.get("videoRenderer") or it.get("movieRenderer") or it.get("compactVideoRenderer")
+        if not vr and "shelfRenderer" in it:
+            shelf_items = (
+                it["shelfRenderer"]
+                .get("content", {})
+                .get("verticalListRenderer", {})
+                .get("items", [])
+            )
+            for sub in shelf_items:
+                _extract_item(sub)
+            return
+        if not vr:
+            return
+
+        vid = (vr.get("videoId") or "").strip()
+        if not vid or vid in seen_ids:
+            return
+        runs = vr.get("title", {}).get("runs") or []
+        title = "".join(run.get("text", "") for run in runs).strip()
+        if not title:
+            # Movie renderer might store title under title simpleText
+            title = vr.get("title", {}).get("simpleText") or ""
+        if not title:
+            return
+
+        channel_runs = vr.get("ownerText", {}).get("runs") or vr.get("shortBylineText", {}).get("runs") or []
+        channel = "".join(run.get("text", "") for run in channel_runs).strip()
+        length = vr.get("lengthText", {}).get("simpleText") or ""
+        dur_s = _parse_duration(length)
+        if max_duration_s and max_duration_s > 0 and dur_s is not None and dur_s > max_duration_s:
+            return
+
+        thumbs = vr.get("thumbnail", {}).get("thumbnails", [])
+        thumb = thumbs[-1]["url"] if thumbs else f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+        if thumb.startswith("//"):
+            thumb = "https:" + thumb
+
+        seen_ids.add(vid)
+        results.append({
+            "id": vid,
+            "title": title,
+            "channel": channel or "YouTube",
+            "duration": length or "Video",
+            "duration_s": dur_s,
+            "thumbnail": thumb,
+            "url": f"https://www.youtube.com/watch?v={vid}",
+        })
 
     data = _query_innertube_search(q, timeout=timeout)
     sections = (
@@ -298,92 +352,41 @@ def fast_search_youtube_list(
         else []
     )
 
-    # Check for safety filter retry
-    has_videos = False
-    for s in sections:
-        items = s.get("itemSectionRenderer", {}).get("contents", [])
-        if any("videoRenderer" in it for it in items):
-            has_videos = True
-            break
-            
-    if not has_videos and not q.lower().startswith("bài hát"):
-        data = _query_innertube_search(f"Bài hát {q}", timeout=timeout)
-        sections = (
-            data.get("contents", {})
-            .get("twoColumnSearchResultsRenderer", {})
-            .get("primaryContents", {})
-            .get("sectionListRenderer", {})
-            .get("contents", [])
-            if data
-            else []
-        )
-
-    if not sections:
-        return []
-
-    results = []
-    seen_ids = set()
     continuation_token = None
-
-    def _extract_from_items(item_list: list[dict]):
-        for it in item_list:
-            vr = it.get("videoRenderer")
-            if not vr:
-                continue
-            vid = (vr.get("videoId") or "").strip()
-            if not vid or vid in seen_ids:
-                continue
-            runs = vr.get("title", {}).get("runs") or []
-            title = "".join(run.get("text", "") for run in runs).strip()
-            if not title:
-                continue
-            channel_runs = vr.get("ownerText", {}).get("runs") or vr.get("shortBylineText", {}).get("runs") or []
-            channel = "".join(run.get("text", "") for run in channel_runs).strip()
-            length = vr.get("lengthText", {}).get("simpleText") or ""
-            dur_s = _parse_duration(length)
-            if dur_s is not None and dur_s > max_duration_s:
-                continue
-            thumbs = vr.get("thumbnail", {}).get("thumbnails", [])
-            thumb = thumbs[-1]["url"] if thumbs else f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
-            if thumb.startswith("//"):
-                thumb = "https:" + thumb
-
-            seen_ids.add(vid)
-            results.append({
-                "id": vid,
-                "title": title,
-                "channel": channel or "YouTube",
-                "duration": length or "N/A",
-                "duration_s": dur_s,
-                "thumbnail": thumb,
-                "url": f"https://www.youtube.com/watch?v={vid}",
-            })
-            if len(results) >= limit:
-                break
-
     try:
         for section in sections:
-            _extract_from_items(section.get("itemSectionRenderer", {}).get("contents", []))
+            for it in section.get("itemSectionRenderer", {}).get("contents", []):
+                _extract_item(it)
+                if len(results) >= limit:
+                    break
             if len(results) >= limit:
                 break
             cir = section.get("continuationItemRenderer", {})
             if cir:
                 continuation_token = cir.get("continuationEndpoint", {}).get("continuationCommand", {}).get("token")
 
-        # If we need more items up to `limit` and have a continuation token, query Page 2
-        if len(results) < limit and continuation_token:
+        # Automatically paginate up to `limit` items using continuation tokens
+        page = 1
+        while len(results) < limit and continuation_token and page < 5:
+            page += 1
             data2 = _query_innertube_search(q, timeout=timeout, continuation=continuation_token)
-            if data2:
-                cmds = data2.get("onResponseReceivedCommands", [])
-                for cmd in cmds:
-                    ac = cmd.get("appendContinuationItemsAction", {})
-                    for ci in ac.get("continuationItems", []):
-                        sub_items = ci.get("itemSectionRenderer", {}).get("contents", [])
-                        _extract_from_items(sub_items)
+            continuation_token = None
+            if not data2:
+                break
+            cmds = data2.get("onResponseReceivedCommands", [])
+            for cmd in cmds:
+                for ci in cmd.get("appendContinuationItemsAction", {}).get("continuationItems", []):
+                    for it in ci.get("itemSectionRenderer", {}).get("contents", []):
+                        _extract_item(it)
                         if len(results) >= limit:
                             break
+                    cir = ci.get("continuationItemRenderer", {})
+                    if cir:
+                        continuation_token = cir.get("continuationEndpoint", {}).get("continuationCommand", {}).get("token")
                     if len(results) >= limit:
                         break
+                if len(results) >= limit:
+                    break
     except Exception as e:
         logger.warning("fast search list parse error: %s", e)
 
