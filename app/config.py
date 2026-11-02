@@ -73,7 +73,7 @@ def load_settings() -> Settings:
     telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID") or None
     run_host = os.getenv("RUN_HOST", "0.0.0.0")
     try:
-        run_port = int(os.getenv("RUN_PORT", "8000"))
+        run_port = int(os.getenv("SERVER_PORT") or os.getenv("PORT") or os.getenv("RUN_PORT", "8000"))
     except ValueError:
         run_port = 8000
 

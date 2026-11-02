@@ -43,15 +43,60 @@ def _extract_id_from_url_or_id(s: str) -> Optional[str]:
 
 
 def _get_ytdlp_bin() -> str:
+    # 0) Environment variable override
+    override = os.getenv("YTDLP_BIN") or os.getenv("YTDLP_PATH")
+    if override and Path(override).is_file():
+        return str(Path(override).resolve())
+
+    # 1) Search in .local/bin (Pterodactyl / HIDENCLOUD container pip --prefix .local)
+    for root_dir in [Path.cwd(), Path(__file__).resolve().parent.parent]:
+        for bin_name in ["yt-dlp", "yt-dlp.exe"]:
+            local_bin = root_dir / ".local" / "bin" / bin_name
+            if local_bin.is_file():
+                if os.name != "nt":
+                    try:
+                        os.chmod(local_bin, os.stat(local_bin).st_mode | 0o755)
+                    except Exception:
+                        pass
+                return str(local_bin.resolve())
+
+    # 2) Python venv directory (e.g. venv/bin or venv/Scripts)
     base = Path(sys.executable).parent
-    # Windows venv puts executables in Scripts/ and uses .exe suffix.
     candidates = [base / "yt-dlp", base / "yt-dlp.exe"]
     for venv_bin in candidates:
         if venv_bin.is_file():
             return str(venv_bin)
+
+    # 3) Current process PATH search
     found = shutil.which("yt-dlp")
     if found:
         return found
+
+    # 4) Absolute bulletproof fallback: write a launcher script using python -m yt_dlp
+    try:
+        import yt_dlp
+        launcher = Path.cwd() / "cache" / ("yt-dlp.bat" if os.name == "nt" else "yt-dlp")
+        launcher.parent.mkdir(parents=True, exist_ok=True)
+        if not launcher.is_file():
+            if os.name == "nt":
+                launcher.write_text(f'@"{sys.executable}" -m yt_dlp %*\n', encoding="utf-8")
+            else:
+                launcher.write_text(
+                    f"#!{sys.executable}\n"
+                    "import sys\n"
+                    "from yt_dlp import main\n"
+                    "if __name__ == '__main__':\n"
+                    "    sys.exit(main())\n",
+                    encoding="utf-8",
+                )
+                try:
+                    os.chmod(launcher, 0o755)
+                except Exception:
+                    pass
+        return str(launcher.resolve())
+    except Exception:
+        pass
+
     return "yt-dlp"
 
 
@@ -61,7 +106,14 @@ def _get_ffmpeg_path() -> Optional[str]:
     if override and Path(override).is_file():
         return str(Path(override).resolve())
 
-    # 1) System ffmpeg on current process PATH.
+    # 1) Search in .local/bin (Pterodactyl / HIDENCLOUD container pip --prefix .local)
+    for root_dir in [Path.cwd(), Path(__file__).resolve().parent.parent]:
+        for bin_name in ["ffmpeg", "ffmpeg.exe"]:
+            local_bin = root_dir / ".local" / "bin" / bin_name
+            if local_bin.is_file():
+                return str(local_bin.resolve())
+
+    # 2) System ffmpeg on current process PATH.
     found = shutil.which("ffmpeg")
     if found:
         return found
