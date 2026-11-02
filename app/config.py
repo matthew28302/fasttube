@@ -72,10 +72,21 @@ def load_settings() -> Settings:
     telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN") or None
     telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID") or None
     run_host = os.getenv("RUN_HOST", "0.0.0.0")
+    is_replit = bool(
+        os.getenv("REPL_ID")
+        or os.getenv("REPLIT_ENVIRONMENT")
+        or os.getenv("REPL_SLUG")
+        or os.getenv("REPLIT_DEPLOYMENT")
+    )
     try:
-        run_port = int(os.getenv("PORT") or os.getenv("RUN_PORT", "8000"))
+        if os.getenv("PORT"):
+            run_port = int(os.getenv("PORT"))
+        elif is_replit:
+            run_port = 8080
+        else:
+            run_port = int(os.getenv("RUN_PORT", "9000"))
     except ValueError:
-        run_port = 8000
+        run_port = 8080 if is_replit else 9000
 
     try:
         ytdlp_concurrent_fragments = int(os.getenv("YTDLP_CONCURRENT_FRAGMENTS", "4"))

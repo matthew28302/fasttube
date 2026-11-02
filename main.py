@@ -20,10 +20,25 @@ from app.config import load_settings
 def main():
     settings = load_settings()
     
-    # Priority: PORT (Replit/Cloud) > RUN_PORT (.env) > default 8080/8000
-    port_env = os.environ.get("PORT") or os.environ.get("RUN_PORT")
-    port = int(port_env) if port_env else settings.run_port
-    host = os.environ.get("RUN_HOST") or settings.run_host or "0.0.0.0"
+    is_replit = bool(
+        os.environ.get("REPL_ID")
+        or os.environ.get("REPLIT_ENVIRONMENT")
+        or os.environ.get("REPL_SLUG")
+        or os.environ.get("REPL_OWNER")
+        or os.environ.get("REPLIT_DEPLOYMENT")
+    )
+
+    # Priority: PORT (Replit/Cloud) > 8080 (if Replit) > RUN_PORT (.env) > settings.run_port
+    if os.environ.get("PORT"):
+        port = int(os.environ["PORT"])
+    elif is_replit:
+        port = 8080
+    elif os.environ.get("RUN_PORT"):
+        port = int(os.environ["RUN_PORT"])
+    else:
+        port = settings.run_port or 9000
+
+    host = os.environ.get("RUN_HOST") or "0.0.0.0"
     
     # In low-memory containers (Replit free tier = 512MB RAM), keep workers=1 to prevent OOM kills
     workers = int(os.environ.get("WEB_CONCURRENCY", "1"))

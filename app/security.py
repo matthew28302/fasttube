@@ -25,7 +25,14 @@ download_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DOWNLOADS)
 # ---------------------------------------------------------------------------
 # GeoIP: Allow Only Vietnam traffic (VN)
 # ---------------------------------------------------------------------------
-ALLOW_ONLY_VN = os.getenv("ALLOW_ONLY_VN", "true").lower() in ("true", "1", "yes")
+_IS_REPLIT = bool(
+    os.getenv("REPL_ID")
+    or os.getenv("REPLIT_ENVIRONMENT")
+    or os.getenv("REPL_SLUG")
+    or os.getenv("REPLIT_DEPLOYMENT")
+)
+# On Replit cloud deployments, traffic goes through Replit US proxies, so disable GeoIP by default
+ALLOW_ONLY_VN = False if _IS_REPLIT else (os.getenv("ALLOW_ONLY_VN", "true").lower() in ("true", "1", "yes"))
 _GEO_CACHE: dict[str, str] = {}  # ip -> country_code
 
 
@@ -213,8 +220,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     media_type="text/plain; charset=utf-8",
                 )
 
-        # 3. GeoIP Rule: Only allow Vietnam traffic if enabled
-        if ALLOW_ONLY_VN and path_lower != "/health":
+        # 3. GeoIP Rule: Only allow Vietnam traffic if enabled (never block root index or health probes)
+        if ALLOW_ONLY_VN and path_lower not in ("/", "/health", "/robots.txt", "/favicon.ico"):
             country = await get_ip_country(request)
             if country and country not in ("VN", "VNM", "XX"):
                 return Response(
