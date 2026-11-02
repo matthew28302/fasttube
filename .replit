@@ -11,6 +11,6 @@ RUN_HOST = "0.0.0.0"
 ALLOW_ONLY_VN = "false"
 WEB_CONCURRENCY = "1"
 
-[ports]
+[[ports]]
 localPort = 8080
 externalPort = 80
