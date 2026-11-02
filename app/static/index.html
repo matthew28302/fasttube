@@ -2324,10 +2324,20 @@
         return;
       }
 
-      grid.innerHTML = items.map(it => `
+      grid.innerHTML = items.map(it => {
+        const fmtsLabel = (it.downloaded_formats && it.downloaded_formats.length > 0)
+          ? it.downloaded_formats.join(', ')
+          : 'Đã có';
+        return `
         <div class="card" id="card-${it.id}">
           <div class="card-thumb-wrap" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded})">
             <img class="card-thumb" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
+            ${it.is_downloaded ? `
+              <div class="card-badge-local" title="Đã có sẵn file: ${fmtsLabel}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Đã tải (${fmtsLabel})</span>
+              </div>
+            ` : ''}
             <div class="thumb-play-overlay">
               <div class="thumb-play-circle">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -2371,7 +2381,8 @@
             </div>
           </div>
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     function escapeQuotes(str) {
@@ -2445,7 +2456,12 @@
         if (!data.success) throw new Error(data.detail || 'Không thể tải');
 
         const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
-        showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
+        if (data.cached) {
+          showToast(`⚡ Phát ngay từ kho lưu trữ: '${title}'`);
+        } else {
+          showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
+        }
+        _updateCardBadge(id, data.format);
         startStreamingTrack({ id: data.file_id, title: data.title, channel, thumb, fmt });
       } catch (err) {
         if (err.name === 'AbortError') {
@@ -2488,7 +2504,12 @@
         if (!data.success) throw new Error(data.detail || 'Lỗi tải');
 
         const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
-        showToast(`✅ Đã tải xong '${title}' [${data.format.toUpperCase()} • ${data.size_mb} MB] trong ${elapsed}s!`);
+        if (data.cached) {
+          showToast(`⚡ Đã có sẵn '${title}' [${data.format.toUpperCase()} • ${data.size_mb} MB]! Đang lưu về máy...`);
+        } else {
+          showToast(`✅ Đã tải xong '${title}' [${data.format.toUpperCase()} • ${data.size_mb} MB] trong ${elapsed}s!`);
+        }
+        _updateCardBadge(id, data.format);
 
         // Trigger native browser download
         const a = document.createElement('a');
@@ -2503,6 +2524,28 @@
         if (btn) {
           btn.innerHTML = orig;
           btn.disabled = false;
+        }
+      }
+    }
+
+    function _updateCardBadge(id, formatName) {
+      if (!formatName) return;
+      const card = document.getElementById(`card-${id}`);
+      if (!card) return;
+      const thumbWrap = card.querySelector('.card-thumb-wrap');
+      if (!thumbWrap) return;
+      let badge = thumbWrap.querySelector('.card-badge-local');
+      const fmtUpper = formatName.toUpperCase();
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'card-badge-local';
+        badge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Đã tải (${fmtUpper})</span>`;
+        thumbWrap.prepend(badge);
+      } else {
+        const txt = badge.querySelector('span');
+        if (txt && !txt.textContent.includes(fmtUpper)) {
+          const raw = txt.textContent.replace('Đã tải (', '').replace(')', '').trim();
+          txt.textContent = `Đã tải (${raw ? raw + ', ' + fmtUpper : fmtUpper})`;
         }
       }
     }

@@ -143,7 +143,7 @@ def enforce_library_limit(
     now = time.time()
     # Purge only stale orphan temporary files older than 30 minutes.
     # NEVER delete actively downloading .part files!
-    for p in music_dir.iterdir():
+    for p in music_dir.rglob("*"):
         if p.is_file() and (p.name.endswith(".part") or ".temp." in p.name or p.name.endswith(".ytdl")):
             if exclude_id and exclude_id in p.name:
                 continue
@@ -153,7 +153,7 @@ def enforce_library_limit(
             except Exception:
                 pass
 
-    files = [p for p in music_dir.iterdir() if p.is_file() and p.name != ".gitkeep"]
+    files = [p for p in music_dir.rglob("*") if p.is_file() and p.name != ".gitkeep"]
     total = sum(p.stat().st_size for p in files if p.exists())
     if total <= max_bytes:
         return
@@ -184,7 +184,7 @@ def iter_audio_files(music_dir: Path) -> Iterable[Path]:
     if not music_dir.exists():
         return []
     return (
-        p for p in music_dir.iterdir()
+        p for p in music_dir.rglob("*")
         if p.is_file()
         and p.suffix.lower() in SUPPORTED_EXTS
         and not p.name.endswith(".part")
@@ -208,34 +208,46 @@ def _load_info(p: Path) -> Optional[dict]:
 
 
 def _find_media_for_id(music_dir: Path, file_id: str) -> Optional[Path]:
-    # Preferred: title-based output template contains "[id]"
     pattern = f"*[[]{file_id}[]]*"
-    candidates = sorted(music_dir.glob(pattern))
-    candidates = [p for p in candidates if p.is_file() and p.suffix.lower() in SUPPORTED_EXTS]
+    candidates = [p for p in music_dir.rglob(pattern) if p.is_file() and p.suffix.lower() in SUPPORTED_EXTS]
     if candidates:
-        return candidates[0]
-    # Fallback: legacy id-based naming
-    legacy = music_dir / f"{file_id}.mp3"
-    if legacy.exists():
-        return legacy
+        return max(candidates, key=lambda p: p.stat().st_mtime)
     for p in iter_audio_files(music_dir):
         if p.stem == file_id:
             return p
     return None
 
+def find_all_by_file_id(music_dir: Path, file_id: str) -> list[LibraryHit]:
+    file_id = (file_id or "").strip()
+    if not file_id or not music_dir.exists():
+        return []
+    pattern = f"*[[]{file_id}[]]*"
+    hits: list[LibraryHit] = []
+    seen_paths = set()
+    for p in music_dir.rglob(pattern):
+        if p.is_file() and p.suffix.lower() in SUPPORTED_EXTS and p not in seen_paths:
+            seen_paths.add(p)
+            hits.append(LibraryHit(file_id=file_id, path=p, title=_title_from_filename(p, file_id)))
+    for ext in SUPPORTED_EXTS:
+        for p in music_dir.rglob(f"{file_id}{ext}"):
+            if p.is_file() and p not in seen_paths:
+                seen_paths.add(p)
+                hits.append(LibraryHit(file_id=file_id, path=p, title=_title_from_filename(p, file_id)))
+    return hits
+
 def find_by_file_id(music_dir: Path, file_id: str, ext: Optional[str] = None) -> Optional[LibraryHit]:
-    file_id = file_id.strip()
-    if not file_id:
+    file_id = (file_id or "").strip()
+    if not file_id or not music_dir.exists():
         return None
     target_ext = f".{ext.lower().lstrip('.')}" if ext else None
 
     if target_ext:
         pattern = f"*[[]{file_id}[]]*"
-        candidates = [p for p in music_dir.glob(pattern) if p.is_file() and p.suffix.lower() == target_ext]
+        candidates = [p for p in music_dir.rglob(pattern) if p.is_file() and p.suffix.lower() == target_ext]
         if not candidates:
-            legacy = music_dir / f"{file_id}{target_ext}"
-            if legacy.exists():
-                candidates = [legacy]
+            for p in music_dir.rglob(f"{file_id}{target_ext}"):
+                if p.is_file():
+                    candidates.append(p)
         if candidates:
             best = max(candidates, key=lambda p: p.stat().st_mtime)
             return LibraryHit(file_id=file_id, path=best, title=_title_from_filename(best, file_id))
@@ -243,12 +255,11 @@ def find_by_file_id(music_dir: Path, file_id: str, ext: Optional[str] = None) ->
 
     by_id, _ = _get_index(music_dir)
     hit = by_id.get(file_id)
-    if hit:
+    if hit and hit.path.exists():
         return hit
-    # fallback to older behavior if cache misses
-    media = _find_media_for_id(music_dir, file_id)
-    if media:
-        return LibraryHit(file_id=file_id, path=media, title=_title_from_filename(media, file_id))
+    hits = find_all_by_file_id(music_dir, file_id)
+    if hits:
+        return max(hits, key=lambda h: h.path.stat().st_mtime)
     return None
 
 

@@ -28,6 +28,7 @@ from app.config import load_settings
 from app.downloader import download_from_youtube, cancel_download
 from app.fastsearch import fast_search_youtube, fast_search_youtube_list, get_youtube_video_info
 from app.library import (
+    find_all_by_file_id,
     find_by_file_id,
     find_by_query,
     iter_audio_files,
@@ -235,10 +236,13 @@ async def api_search(q: str, request: Request, limit: int = 30):
     base_url = _base_url(request)
     for it in items:
         vid = it.get("id")
-        hit = find_by_file_id(settings.music_dir, vid) if vid else None
-        it["is_downloaded"] = bool(hit)
-        if hit:
-            it["stream_url"] = f"{base_url}/stream/{vid}"
+        hits = find_all_by_file_id(settings.music_dir, vid) if vid else []
+        it["is_downloaded"] = bool(hits)
+        it["downloaded_formats"] = sorted(list({h.path.suffix.lstrip(".").upper() for h in hits}))
+        if hits:
+            best_hit = next((h for h in hits if h.path.suffix.lower() == ".mp4"), hits[0])
+            best_ext = best_hit.path.suffix.lstrip(".")
+            it["stream_url"] = f"{base_url}/stream/{vid}?ext={best_ext}"
 
     if items:
         _SEARCH_CACHE[cache_key] = (now, items)
@@ -252,27 +256,30 @@ class DownloadPayload(BaseModel):
     format: str = Field(default="m4a", description="Format: m4a, mp3_320, mp3_128, wav, flac, opus, mp4_1080, mp4_720, mp4_480, mp4_360")
 
 
-def _resolve_format(fmt: str) -> tuple[str, str, bool, str]:
+def _resolve_format(fmt: str) -> tuple[str, str, bool, str, str]:
+    # Returns (audio_mode, audio_bitrate, prefer_abr_128, target_ext, subfolder)
     fmt = (fmt or "m4a").strip().lower()
-    if fmt in ("mp3_320", "mp3"):
-        return "mp3", "320k", False, "mp3"
+    if fmt == "mp3_320":
+        return "mp3", "320k", False, "mp3", "audio-320kb"
     if fmt == "mp3_128":
-        return "mp3", "128k", True, "mp3"
+        return "mp3", "128k", True, "mp3", "audio-128kb"
+    if fmt in ("mp3",):
+        return "mp3", "320k", False, "mp3", "mp3"
     if fmt == "wav":
-        return "wav", "320k", False, "wav"
+        return "wav", "320k", False, "wav", "audio-320kb"
     if fmt == "flac":
-        return "flac", "320k", False, "flac"
+        return "flac", "320k", False, "flac", "audio-320kb"
     if fmt in ("mp4_1080", "1080p"):
-        return "mp4_1080", "128k", False, "mp4"
+        return "mp4_1080", "128k", False, "mp4", "mp4"
     if fmt in ("mp4", "mp4_720", "720p", "video"):
-        return "mp4_720", "128k", False, "mp4"
+        return "mp4_720", "128k", False, "mp4", "mp4"
     if fmt in ("mp4_480", "480p"):
-        return "mp4_480", "128k", False, "mp4"
+        return "mp4_480", "128k", False, "mp4", "mp4"
     if fmt in ("mp4_360", "360p"):
-        return "mp4_360", "128k", False, "mp4"
+        return "mp4_360", "128k", False, "mp4", "mp4"
     if fmt == "opus":
-        return "opus", "160k", False, "webm"
-    return "m4a", "128k", False, "m4a"
+        return "opus", "160k", False, "webm", "audio-128kb"
+    return "m4a", "128k", False, "m4a", "audio-128kb"
 
 
 @app.post("/api/download")
@@ -297,30 +304,41 @@ async def api_download(payload: DownloadPayload, request: Request):
         target = target_query
 
     fmt = (payload.format or "m4a").strip().lower()
-    audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(fmt)
+    audio_mode, audio_bitrate, prefer_abr_128, target_ext, subfolder = _resolve_format(fmt)
+    target_folder = settings.music_dir / subfolder
+    target_folder.mkdir(parents=True, exist_ok=True)
+    base = _base_url(request)
 
-    # NOTE: Do not short-circuit on an existing file here. Reusing a cached file
-    # regardless of its resolution made the quality selector appear to do nothing
-    # (e.g. a previously downloaded 480p file kept being served for 1080p).
-    # Always download so the requested quality is honored; yt-dlp overwrites the
-    # same id-based filename.
-
-    # Remove any previously cached file of the same id/ext so a lower/higher
-    # quality switch cannot accidentally reuse the old bytes (and so the browser
-    # does not serve a stale cached response).
+    # Re-use existing file if already downloaded in this exact format / quality subfolder
     if target_id:
-        try:
-            old = find_by_file_id(settings.music_dir, target_id, ext=target_ext)
-            if old and old.path.exists():
-                old.path.unlink()
-        except Exception:
-            pass
+        existing = find_by_file_id(target_folder, target_id, ext=target_ext)
+        if not existing:
+            existing = find_by_file_id(settings.music_dir, target_id, ext=target_ext)
+
+        if existing and existing.path.exists() and existing.path.stat().st_size > 1024:
+            logger.info("api_download: reusing existing file in %s for %s (%s)", subfolder, target_id, target_ext)
+            size_b = existing.path.stat().st_size
+            actual_ext = existing.path.suffix.lstrip(".")
+            return {
+                "success": True,
+                "cached": True,
+                "file_id": target_id,
+                "title": existing.title,
+                "format": actual_ext,
+                "subfolder": subfolder,
+                "size_mb": round(size_b / 1024 / 1024, 2),
+                "duration_s": None,
+                "elapsed_s": 0.01,
+                "stream_url": f"{base}/stream/{target_id}?ext={actual_ext}",
+                "download_url": f"{base}/stream/{target_id}?download=1&ext={actual_ext}",
+                "path": str(existing.path),
+            }
 
     try:
         async with download_semaphore:
             res = await asyncio.to_thread(
                 download_from_youtube,
-                music_dir=settings.music_dir,
+                music_dir=target_folder,
                 cookies_dir=settings.cookies_dir,
                 query_or_url=target,
                 concurrent_fragments=settings.ytdlp_concurrent_fragments,
@@ -578,9 +596,11 @@ def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> F
         # Auto on-demand download so missing/purged files or direct links never return a broken JSON download
         try:
             target = f"https://www.youtube.com/watch?v={file_id}"
-            audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(ext or "m4a")
+            audio_mode, audio_bitrate, prefer_abr_128, target_ext, subfolder = _resolve_format(ext or "m4a")
+            target_folder = settings.music_dir / subfolder
+            target_folder.mkdir(parents=True, exist_ok=True)
             res = download_from_youtube(
-                music_dir=settings.music_dir,
+                music_dir=target_folder,
                 cookies_dir=settings.cookies_dir,
                 query_or_url=target,
                 concurrent_fragments=settings.ytdlp_concurrent_fragments,
@@ -834,7 +854,9 @@ async def api_playlist_generate(payload: PlaylistPayload, request: Request):
         if not songs:
             raise HTTPException(status_code=502, detail=last_err or "Không thể tạo danh sách bài hát từ AI")
 
-        audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(payload.format or "m4a")
+        audio_mode, audio_bitrate, prefer_abr_128, target_ext, subfolder = _resolve_format(payload.format or "m4a")
+        target_folder = settings.music_dir / subfolder
+        target_folder.mkdir(parents=True, exist_ok=True)
 
         # Download each song with cancellation support and deduplication
         results = []
@@ -847,7 +869,7 @@ async def api_playlist_generate(payload: PlaylistPayload, request: Request):
                 async with download_semaphore:
                     res = await asyncio.to_thread(
                         download_from_youtube,
-                        music_dir=settings.music_dir,
+                        music_dir=target_folder,
                         cookies_dir=settings.cookies_dir,
                         query_or_url=song,
                         concurrent_fragments=settings.ytdlp_concurrent_fragments,
@@ -947,7 +969,9 @@ class DownloadListPayload(BaseModel):
 async def api_playlist_download(payload: DownloadListPayload, request: Request):
     await rate_limiter.check(request, "playlist_dl", max_requests=10, window_s=60)
     fmt = payload.format or "m4a"
-    audio_mode, audio_bitrate, prefer_abr_128, target_ext = _resolve_format(fmt)
+    audio_mode, audio_bitrate, prefer_abr_128, target_ext, subfolder = _resolve_format(fmt)
+    target_folder = settings.music_dir / subfolder
+    target_folder.mkdir(parents=True, exist_ok=True)
     songs = [s.strip() for s in (payload.songs or []) if str(s).strip()]
     results = []
     seen_ids: set[str] = set()
@@ -956,7 +980,7 @@ async def api_playlist_download(payload: DownloadListPayload, request: Request):
             async with download_semaphore:
                 res = await asyncio.to_thread(
                     download_from_youtube,
-                    music_dir=settings.music_dir,
+                    music_dir=target_folder,
                     cookies_dir=settings.cookies_dir,
                     query_or_url=song,
                     concurrent_fragments=settings.ytdlp_concurrent_fragments,
