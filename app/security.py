@@ -307,3 +307,60 @@ class VisitorTracker:
 
 _STATS_PATH = Path(__file__).resolve().parent.parent / "cache" / "stats.json"
 visitor_tracker = VisitorTracker(_STATS_PATH)
+
+
+# ---------------------------------------------------------------------------
+# Password Authentication Middleware
+# ---------------------------------------------------------------------------
+_ACCESS_PASSWORD = (
+    __import__("os").getenv("ACCESS_PASSWORD", "duahau") or "duahau"
+).strip()
+
+# Paths that do NOT require a password
+_AUTH_BYPASS_PREFIXES = ("/static/", "/favicon.ico", "/robots.txt", "/health")
+
+
+def _check_auth(request) -> bool:
+    """Return True if the request carries valid auth credentials."""
+    if not _ACCESS_PASSWORD:
+        return True
+    # 1. Cookie (used by native <audio>/<video> src)
+    cookie_val = request.cookies.get("fasttube_auth", "")
+    if cookie_val == _ACCESS_PASSWORD:
+        return True
+    # 2. Custom header (used by XHR / fetch)
+    header_val = request.headers.get("x-access-password", "")
+    if header_val == _ACCESS_PASSWORD:
+        return True
+    # 3. Query param (fallback for direct links)
+    query_val = request.query_params.get("auth", "")
+    if query_val == _ACCESS_PASSWORD:
+        return True
+    return False
+
+
+class PasswordMiddleware(BaseHTTPMiddleware):
+    """Protect all API and stream endpoints with a simple shared password."""
+
+    async def dispatch(self, request, call_next):
+        path = request.url.path
+
+        # Always allow: landing page so lock screen can be shown, static assets, and public counters
+        if (
+            path == "/"
+            or path.startswith("/static/")
+            or path in ("/favicon.ico", "/robots.txt", "/health")
+            or path.startswith("/api/stats")
+        ):
+            return await call_next(request)
+
+        # Check auth for everything else
+        if not _check_auth(request):
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Unauthorized", "message": "Vui lòng nhập mật khẩu để tiếp tục."},
+                headers={"WWW-Authenticate": "Password realm=\"FastTube\""},
+            )
+
+        return await call_next(request)

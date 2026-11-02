@@ -2409,6 +2409,90 @@
         padding: 5px 7px;
       }
     }
+
+    /* ──────────────────────────────────────────
+       LOCK SCREEN OVERLAY
+       ────────────────────────────────────────── */
+    #lock-overlay {
+      position: fixed; inset: 0; z-index: 99999;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(4, 6, 14, 0.97);
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      padding: 24px;
+      transition: opacity 0.3s ease;
+    }
+    #lock-overlay.hide {
+      opacity: 0; pointer-events: none;
+    }
+    .lock-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 24px;
+      padding: 40px 36px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 60px rgba(99,102,241,0.12);
+      text-align: center;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .lock-logo {
+      font-size: 2.2rem; font-weight: 900; letter-spacing: -1px;
+      background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 4px;
+    }
+    .lock-subtitle {
+      color: var(--text-muted); font-size: 0.88rem; margin-top: -12px;
+    }
+    .lock-input-wrap {
+      position: relative;
+    }
+    #lock-password-input {
+      width: 100%; padding: 14px 48px 14px 18px;
+      background: var(--bg-surface); border: 1.5px solid var(--border-subtle);
+      border-radius: 14px; color: var(--text-main); font-size: 1rem;
+      outline: none; box-sizing: border-box; letter-spacing: 0.08em;
+      transition: border-color 0.2s;
+    }
+    #lock-password-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    #lock-password-input.shake {
+      animation: lockShake 0.38s ease;
+      border-color: var(--accent-rose) !important;
+    }
+    @keyframes lockShake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}
+      60%{transform:translateX(-6px)}
+      80%{transform:translateX(6px)}
+    }
+    .lock-toggle-pw {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      padding: 4px; line-height: 1;
+    }
+    #lock-error {
+      color: var(--accent-rose); font-size: 0.84rem;
+      min-height: 20px; margin-top: -8px;
+    }
+    .lock-btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      border: none; border-radius: 14px; cursor: pointer;
+      box-shadow: 0 6px 24px rgba(99,102,241,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .lock-btn:active { transform: scale(0.97); }
+    .lock-hint {
+      color: var(--text-dim); font-size: 0.76rem;
+    }
+    @media (max-width: 400px) {
+      .lock-card { padding: 32px 20px; }
+    }
   </style>
 </head>
 <body>
@@ -2722,6 +2806,10 @@
         </div>
         <button class="btn btn-download" onclick="saveSettings()" style="padding:12px;">Lưu cấu hình</button>
         <div id="settings-status" style="color:var(--text-muted); font-size:0.86rem; text-align:center;"></div>
+        <hr style="border:none; border-top:1px solid var(--border-subtle); margin:4px 0;">
+        <button class="btn" onclick="lockApp()" style="padding:12px; background:rgba(244,63,94,0.15); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.3); border-radius:12px; font-weight:600; cursor:pointer; width:100%;">
+          🔒 Đăng xuất / Khóa màn hình
+        </button>
       </div>
     </div>
   </div>
@@ -3745,14 +3833,130 @@
       });
     }
 
+
+    // ══════════════════════════════════════════
+    // PASSWORD LOCK SCREEN LOGIC
+    // ══════════════════════════════════════════
+    const FASTTUBE_AUTH_KEY = 'fasttube_auth';
+
+    function getCookie(name) {
+      return document.cookie.split('; ').find(r => r.startsWith(name + '='))?.split('=')[1] || '';
+    }
+
+    function setCookie(name, value, days) {
+      const maxAge = days * 86400;
+      document.cookie = name + '=' + value + '; path=/; max-age=' + maxAge + '; SameSite=Lax';
+    }
+
+    function getStoredPassword() {
+      return localStorage.getItem(FASTTUBE_AUTH_KEY) || getCookie(FASTTUBE_AUTH_KEY) || '';
+    }
+
+    function isUnlocked() {
+      return !!getStoredPassword();
+    }
+
+    function unlockApp() {
+      const input = document.getElementById('lock-password-input');
+      const pw = input.value.trim();
+      if (!pw) { showLockError('Vui lòng nhập mật khẩu'); return; }
+
+      // Verify against server
+      fetch('/api/search?q=__ping__&limit=1', {
+        headers: { 'x-access-password': pw }
+      }).then(r => {
+        if (r.ok || r.status === 200) {
+          // Correct password
+          localStorage.setItem(FASTTUBE_AUTH_KEY, pw);
+          setCookie(FASTTUBE_AUTH_KEY, pw, 365);
+          const overlay = document.getElementById('lock-overlay');
+          overlay.classList.add('hide');
+          setTimeout(() => { overlay.style.display = 'none'; }, 350);
+          // Reload library with auth
+          if (typeof loadLibrary === 'function') loadLibrary();
+        } else if (r.status === 401) {
+          showLockError('Mật khẩu không đúng. Vui lòng thử lại.');
+          shakeLockInput();
+        } else {
+          showLockError('Lỗi xác thực. Thử lại sau.');
+        }
+      }).catch(() => {
+        // Network error - accept stored password
+        localStorage.setItem(FASTTUBE_AUTH_KEY, pw);
+        setCookie(FASTTUBE_AUTH_KEY, pw, 365);
+        document.getElementById('lock-overlay').style.display = 'none';
+      });
+    }
+
+    function showLockError(msg) {
+      document.getElementById('lock-error').textContent = msg;
+    }
+
+    function shakeLockInput() {
+      const inp = document.getElementById('lock-password-input');
+      inp.classList.remove('shake');
+      void inp.offsetWidth;
+      inp.classList.add('shake');
+      inp.addEventListener('animationend', () => inp.classList.remove('shake'), { once: true });
+    }
+
+    function toggleLockPwVisible() {
+      const inp = document.getElementById('lock-password-input');
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function checkAndShowLockScreen() {
+      if (!isUnlocked()) {
+        document.getElementById('lock-overlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('lock-password-input').focus(), 100);
+      } else {
+        document.getElementById('lock-overlay').style.display = 'none';
+        // Re-set cookie from localStorage in case it expired
+        const pw = localStorage.getItem(FASTTUBE_AUTH_KEY);
+        if (pw) setCookie(FASTTUBE_AUTH_KEY, pw, 365);
+      }
+    }
+
+    // Inject auth header into all fetch calls via global wrapper
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = function(url, opts) {
+      const pw = getStoredPassword();
+      if (pw && typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/stream'))) {
+        opts = opts || {};
+        opts.headers = Object.assign({}, opts.headers || {}, { 'x-access-password': pw });
+      }
+      return _origFetch(url, opts);
+    };
+
+    function lockApp() {
+      localStorage.removeItem(FASTTUBE_AUTH_KEY);
+      setCookie(FASTTUBE_AUTH_KEY, '', 0);
+      location.reload();
+    }
+
     // Initialize
     const savedTheme = localStorage.getItem('fasttube_theme') || 'dark';
     setTheme(savedTheme);
     updateVisitorStats();
+    checkAndShowLockScreen();
   </script>
 
-  <footer style="text-align:center; padding:18px 16px 24px; color:var(--text-muted); font-size:0.72rem; line-height:1.6; opacity:0.55; max-width:700px; margin:0 auto;">
-    FastTube là công cụ chuyển đổi định dạng âm thanh/video phục vụ mục đích cá nhân. Hệ thống hoạt động dưới dạng bộ nhớ đệm tạm thời (ephemeral cache), không lưu trữ vĩnh viễn nội dung có bản quyền. Nếu bạn là chủ sở hữu bản quyền và muốn gỡ nội dung, vui lòng liên hệ quản trị viên.
+  <footer style="text-align:center; padding:28px 20px 36px; border-top:1px solid var(--border-subtle); margin-top:32px;">
+    <div style="max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:10px;">
+      <div style="font-weight:700; font-size:0.82rem; color:var(--text-secondary); letter-spacing:0.05em;">
+        ⚖️ TUYÊN BỐ MIỄN TRỪ TRÁCH NHIỆM BẢN QUYỀN (DMCA &amp; COPYRIGHT DISCLAIMER)
+      </div>
+      <p style="color:var(--text-muted); font-size:0.74rem; line-height:1.7; margin:0;">
+        FastTube là công cụ lưu đệm và quản lý luồng đa phương tiện cá nhân phục vụ mục đích
+        <strong>nghiên cứu, học tập và trải nghiệm cá nhân (Personal &amp; Educational Use Only)</strong>.
+        Chúng tôi không lưu trữ cố định hay tuyên bố sở hữu bản quyền đối với bất kỳ nội dung âm thanh hoặc video nào từ bên thứ ba.
+        Mọi bản quyền, quyền tác giả và quyền liên quan đều thuộc về các chủ sở hữu hợp pháp trên nền tảng YouTube.
+      </p>
+      <p style="color:var(--text-dim); font-size:0.72rem; line-height:1.6; margin:0;">
+        🗑️ Hệ thống <strong>tự động xóa toàn bộ dữ liệu sau 24 giờ</strong> hoặc khi vượt dung lượng đệm 10GB.
+        Nếu bạn là chủ sở hữu bản quyền và yêu cầu gỡ bỏ bất kỳ nội dung nào, vui lòng liên hệ quản trị viên để được xử lý ngay lập tức.
+      </p>
+    </div>
   </footer>
 </body>
 </html>

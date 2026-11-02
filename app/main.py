@@ -41,6 +41,7 @@ from app.search_cache import SearchCache
 from app.telegram_notify import send_telegram_message_async
 from app.security import (
     SecurityMiddleware,
+    PasswordMiddleware,
     rate_limiter,
     download_semaphore,
     visitor_tracker,
@@ -125,7 +126,7 @@ async def lifespan(app: FastAPI):
     logger.info("Music API started | run=%s:%s | music_dir=%s", settings.run_host, settings.run_port, settings.music_dir)
     send_telegram_message_async(settings.telegram_bot_token, settings.telegram_chat_id, msg)
     # Enforce transient storage limit on startup
-    enforce_library_limit(settings.music_dir)
+    enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours)
     yield
 
 
@@ -137,6 +138,8 @@ app = FastAPI(
 
 # Production security & anti-scanner middleware
 app.add_middleware(SecurityMiddleware)
+# Password protection middleware (runs AFTER SecurityMiddleware wrapping order)
+app.add_middleware(PasswordMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -382,7 +385,7 @@ async def api_download(payload: DownloadPayload, request: Request):
         logger.error("Download failed for %s: %s", target, e)
         raise HTTPException(status_code=500, detail=str(e)[:500])
 
-    enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
+    enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours, exclude_id=res.file_id)
     base = _base_url(request)
     size_b = res.path.stat().st_size if res.path.exists() else 0
     elapsed_s = time.perf_counter() - t0
@@ -635,7 +638,7 @@ def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> F
                 fast_mode=settings.fast_mode,
                 max_abr_kbps=320,
             )
-            enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
+            enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours, exclude_id=res.file_id)
             hit = find_by_file_id(settings.music_dir, file_id, ext=res.path.suffix.lstrip("."))
         except Exception as e:
             logger.warning("On-demand download for stream %s failed: %s", file_id, e)
@@ -912,7 +915,7 @@ async def api_playlist_generate(payload: PlaylistPayload, request: Request):
                     )
                 if res.file_id:
                     seen_ids.add(res.file_id)
-                enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
+                enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours, exclude_id=res.file_id)
                 results.append({
                     "title": res.title,
                     "file_id": res.file_id,
@@ -1022,7 +1025,7 @@ async def api_playlist_download(payload: DownloadListPayload, request: Request):
                 )
             if res.file_id:
                 seen_ids.add(res.file_id)
-            enforce_library_limit(settings.music_dir, exclude_id=res.file_id)
+            enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours, exclude_id=res.file_id)
             results.append({
                 "title": res.title,
                 "file_id": res.file_id,

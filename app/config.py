@@ -58,6 +58,8 @@ class Settings:
     prefer_itag_140: bool
     ytdlp_debug_list_formats: bool
     max_storage_mb: int
+    max_file_age_hours: int
+    access_password: str
 
 
 def load_settings() -> Settings:
@@ -112,6 +114,13 @@ def load_settings() -> Settings:
     except ValueError:
         max_storage_mb = 10240
 
+    try:
+        max_file_age_hours = int(os.getenv("MAX_FILE_AGE_HOURS", "24"))
+    except ValueError:
+        max_file_age_hours = 24
+
+    access_password = (os.getenv("ACCESS_PASSWORD", "duahau") or "duahau").strip()
+
     return Settings(
         project_root=project_root(),
         music_dir=music_dir,
@@ -138,6 +147,8 @@ def load_settings() -> Settings:
         prefer_itag_140=prefer_itag_140,
         ytdlp_debug_list_formats=ytdlp_debug_list_formats,
         max_storage_mb=max_storage_mb,
+        max_file_age_hours=max_file_age_hours,
+        access_password=access_password,
     )
 
 
