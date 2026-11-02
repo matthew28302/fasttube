@@ -15,7 +15,7 @@ from typing import Optional
 import uuid
 
 import psutil
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -209,6 +209,27 @@ def _media_type_for_path(p: Path) -> str:
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health() -> dict:
     return {"ok": True}
+
+
+class AuthVerifyRequest(BaseModel):
+    password: str = Field(default="", description="Access password")
+
+
+@app.post("/api/auth/verify")
+async def api_auth_verify(payload: AuthVerifyRequest, response: Response):
+    req_pw = (payload.password or "").strip()
+    expected_pw = (settings.access_password or "duahau").strip()
+    if not expected_pw or req_pw == expected_pw:
+        response.set_cookie(
+            key="fasttube_auth",
+            value=expected_pw,
+            max_age=365 * 86400,
+            path="/",
+            samesite="lax",
+            httponly=False,
+        )
+        return {"ok": True, "message": "Xác thực thành công"}
+    raise HTTPException(status_code=401, detail="Mật khẩu không chính xác.")
 
 
 _SEARCH_CACHE: dict[str, tuple[float, list[dict]]] = {}

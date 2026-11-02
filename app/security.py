@@ -312,29 +312,30 @@ visitor_tracker = VisitorTracker(_STATS_PATH)
 # ---------------------------------------------------------------------------
 # Password Authentication Middleware
 # ---------------------------------------------------------------------------
-_ACCESS_PASSWORD = (
-    __import__("os").getenv("ACCESS_PASSWORD", "duahau") or "duahau"
-).strip()
-
-# Paths that do NOT require a password
-_AUTH_BYPASS_PREFIXES = ("/static/", "/favicon.ico", "/robots.txt", "/health")
+def get_expected_password() -> str:
+    return (__import__("os").getenv("ACCESS_PASSWORD", "duahau") or "duahau").strip()
 
 
-def _check_auth(request) -> bool:
+def check_auth(request) -> bool:
     """Return True if the request carries valid auth credentials."""
-    if not _ACCESS_PASSWORD:
+    expected = get_expected_password()
+    if not expected:
         return True
-    # 1. Cookie (used by native <audio>/<video> src)
+    # 1. Cookie (used by native <audio>/<video> src and browser navigation)
     cookie_val = request.cookies.get("fasttube_auth", "")
-    if cookie_val == _ACCESS_PASSWORD:
+    if cookie_val == expected:
         return True
     # 2. Custom header (used by XHR / fetch)
     header_val = request.headers.get("x-access-password", "")
-    if header_val == _ACCESS_PASSWORD:
+    if header_val == expected:
         return True
-    # 3. Query param (fallback for direct links)
+    # 2b. Authorization Bearer header
+    auth_hdr = request.headers.get("authorization", "")
+    if auth_hdr.startswith("Bearer ") and auth_hdr[7:].strip() == expected:
+        return True
+    # 3. Query param (fallback for direct links / media elements)
     query_val = request.query_params.get("auth", "")
-    if query_val == _ACCESS_PASSWORD:
+    if query_val == expected:
         return True
     return False
 
@@ -345,22 +346,23 @@ class PasswordMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         path = request.url.path
 
-        # Always allow: landing page so lock screen can be shown, static assets, and public counters
+        # Always allow: landing page (so lock screen UI loads), static assets, public counters, and verify endpoint
         if (
             path == "/"
             or path.startswith("/static/")
             or path in ("/favicon.ico", "/robots.txt", "/health")
             or path.startswith("/api/stats")
+            or path == "/api/auth/verify"
         ):
             return await call_next(request)
 
-        # Check auth for everything else
-        if not _check_auth(request):
+        # Check auth for everything else (API and stream routes)
+        if not check_auth(request):
             from fastapi.responses import JSONResponse
             return JSONResponse(
                 status_code=401,
                 content={"error": "Unauthorized", "message": "Vui lòng nhập mật khẩu để tiếp tục."},
-                headers={"WWW-Authenticate": "Password realm=\"FastTube\""},
+                headers={"WWW-Authenticate": 'Password realm="FastTube"'},
             )
 
         return await call_next(request)
