@@ -2767,6 +2767,7 @@
     }
 
     async function doSearch() {
+      clearTimeout(searchDebounceTimer);
       const q = document.getElementById('search-input').value.trim();
       if (!q) return;
 
@@ -2942,6 +2943,11 @@
       }
 
       currentLoadingTrack = { id, controller, title, btn, origHtml, thumbWrap };
+      if (fmt.startsWith('mp4')) {
+        showToast(`⏳ Đang tải video '${title}' [${fmt.toUpperCase()}]... (Phim dài/video HD có thể mất 30s-1p)`);
+      } else {
+        showToast(`⏳ Đang tải '${title}'...`);
+      }
 
       const t0 = performance.now();
       try {
@@ -2990,6 +2996,11 @@
       if (btn) {
         btn.innerHTML = `<div class="spinner"></div><span>Đang tải...</span>`;
         btn.disabled = true;
+      }
+      if (fmt.startsWith('mp4')) {
+        showToast(`⏳ Đang tải video '${title}' [${fmt.toUpperCase()}]... (Phim dài/video HD có thể mất 30s-1p)`);
+      } else {
+        showToast(`⏳ Đang tải '${title}'...`);
       }
 
       const t0 = performance.now();
