@@ -25,14 +25,7 @@ download_semaphore = asyncio.Semaphore(MAX_CONCURRENT_DOWNLOADS)
 # ---------------------------------------------------------------------------
 # GeoIP: Allow Only Vietnam traffic (VN)
 # ---------------------------------------------------------------------------
-_IS_REPLIT = bool(
-    os.getenv("REPL_ID")
-    or os.getenv("REPLIT_ENVIRONMENT")
-    or os.getenv("REPL_SLUG")
-    or os.getenv("REPLIT_DEPLOYMENT")
-)
-# On Replit cloud deployments, traffic goes through Replit US proxies, so disable GeoIP by default
-ALLOW_ONLY_VN = False if _IS_REPLIT else (os.getenv("ALLOW_ONLY_VN", "true").lower() in ("true", "1", "yes"))
+ALLOW_ONLY_VN = os.getenv("ALLOW_ONLY_VN", "true").lower() in ("true", "1", "yes")
 _GEO_CACHE: dict[str, str] = {}  # ip -> country_code
 
 
@@ -144,6 +137,7 @@ _BLOCKED_SCANNER_UAS = (
     "python-requests",
     "aiohttp",
     "scrapy",
+    "go-http-client",
     "java/",
     "libwww-perl",
     "httpclient",
@@ -171,36 +165,10 @@ _BLOCKED_PATHS = (
 )
 
 
-def is_health_check_request(request: Request) -> bool:
-    """Detect cloud deployment and platform health-check probes."""
-    path = request.url.path.lower()
-    if path not in ("/", "/health", "/robots.txt", "/favicon.ico"):
-        return False
-
-    ua = (request.headers.get("user-agent") or "").lower()
-    # Known cloud health checkers (Replit, Google Cloud, AWS, Kubernetes, etc.)
-    if any(h in ua for h in (
-        "googlehc", "kube-probe", "go-http-client", "healthcheck",
-        "health-check", "replit", "uptimerobot", "pingdom", "statuspage"
-    )):
-        return True
-
-    # Private cloud IPs (internal container network probes)
-    ip = get_client_ip(request)
-    if is_private_ip(ip):
-        return True
-
-    return False
-
-
 class SecurityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path_lower = request.url.path.lower()
         ua_lower = (request.headers.get("user-agent") or "").lower()
-
-        # 0. Immediate bypass for platform & container health check probes
-        if is_health_check_request(request):
-            return await call_next(request)
 
         # 1. Block known scanner probes
         for probe in _BLOCKED_PATHS:
@@ -220,8 +188,8 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     media_type="text/plain; charset=utf-8",
                 )
 
-        # 3. GeoIP Rule: Only allow Vietnam traffic if enabled (never block root index or health probes)
-        if ALLOW_ONLY_VN and path_lower not in ("/", "/health", "/robots.txt", "/favicon.ico"):
+        # 3. GeoIP Rule: Only allow Vietnam traffic if enabled
+        if ALLOW_ONLY_VN and path_lower != "/health":
             country = await get_ip_country(request)
             if country and country not in ("VN", "VNM", "XX"):
                 return Response(

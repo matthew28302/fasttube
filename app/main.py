@@ -150,7 +150,7 @@ _STATIC_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
 
 
-@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 def index_page():
     index_file = _STATIC_DIR / "index.html"
     if index_file.is_file():
@@ -1005,9 +1005,7 @@ if __name__ == "__main__":
     except Exception:
         _http = "auto"
 
-    # Replit & container memory optimization: default 1 worker to prevent OOM
-    default_workers = 1 if (os.name == "nt" or os.environ.get("REPL_ID") or os.environ.get("REPLIT_ENVIRONMENT")) else 1
-    _workers = int(os.environ.get("WEB_CONCURRENCY", str(default_workers)))
+    _workers = 1 if os.name == "nt" else 2
     uvicorn.run(
         "app.main:app",
         host=settings.run_host,
