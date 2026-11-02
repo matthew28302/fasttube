@@ -216,7 +216,7 @@ def _fast_inprocess_download(
 ) -> Optional[DownloadResult]:
     client = (player_client or "android").strip()
     # visionos/android_vr do not support cookies; passing cookies causes yt-dlp to skip them
-    use_cookie = cookie_file if (cookie_file and client not in ("visionos", "android_vr")) else None
+    use_cookie = cookie_file if (cookie_file and client not in ("visionos", "android_vr", "android", "ios")) else None
 
     if not merge_output_format and "/18" not in format_spec and "/best" not in format_spec:
         format_spec = f"{format_spec}/18/best"
@@ -731,9 +731,15 @@ def download_from_youtube(
         last_rc: int | None = None
 
         # In FAST_MODE: do not iterate across many clients. Keep overhead minimal.
-        if fast_mode:
-            # Android client bypasses datacenter bot checks without cookies!
+        if cookie_file:
             player_clients: list[tuple[str | None, bool]] = [
+                ("tv_samsung", True),
+                ("android", False),
+                (None, True),
+                ("visionos", False),
+            ]
+        elif fast_mode:
+            player_clients = [
                 ("android", False),
                 ("visionos", False),
                 ("tv_samsung", True),
@@ -844,7 +850,13 @@ def download_from_youtube(
         try:
             fmt_candidates = _format_candidates()
             best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio"
-            primary_client = ytdlp_player_client or "android"
+            # When cookies are present, tv_samsung is the #1 fastest and most reliable client.
+            # When no cookies exist, android is the #1 client to bypass bot check.
+            if cookie_file:
+                primary_client = ytdlp_player_client or "tv_samsung"
+            else:
+                primary_client = ytdlp_player_client or "android"
+
             fast_res = _fast_inprocess_download(
                 source_url=source,
                 music_dir=music_dir,
@@ -859,30 +871,15 @@ def download_from_youtube(
                 target_codec=t_codec,
                 merge_output_format=merge_fmt,
             )
-            # If primary client was visionos and failed (e.g. age-gated or made for kids), try tv_samsung with cookies
-            if not fast_res and primary_client != "tv_samsung":
+            # Fallback to the other client if the first fails
+            if not fast_res:
+                alt_client = "android" if primary_client == "tv_samsung" else "tv_samsung"
                 fast_res = _fast_inprocess_download(
                     source_url=source,
                     music_dir=music_dir,
-                    cookie_file=cookie_file,
+                    cookie_file=cookie_file if alt_client != "android" else None,
                     format_spec=best_fmt,
-                    player_client="tv_samsung",
-                    concurrent_fragments=concurrent_fragments,
-                    ytdlp_cache_dir=ytdlp_cache_dir,
-                    ytdlp_verbose=ytdlp_verbose,
-                    force_mp3=(t_codec == "mp3"),
-                    audio_bitrate=audio_bitrate,
-                    target_codec=t_codec,
-                    merge_output_format=merge_fmt,
-                )
-            # Datacenter anti-bot fallback: android client often succeeds without cookies on datacenter IPs
-            if not fast_res and primary_client != "android":
-                fast_res = _fast_inprocess_download(
-                    source_url=source,
-                    music_dir=music_dir,
-                    cookie_file=None,
-                    format_spec="bestaudio/best",
-                    player_client="android",
+                    player_client=alt_client,
                     concurrent_fragments=concurrent_fragments,
                     ytdlp_cache_dir=ytdlp_cache_dir,
                     ytdlp_verbose=ytdlp_verbose,
