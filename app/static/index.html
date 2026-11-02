@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>FastTube - Studio Tải Nhạc & Video YouTube Siêu Tốc</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1555,14 +1555,23 @@
     .video-modal {
       display: none;
       position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.85);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(0, 0, 0, 0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      z-index: 1000;
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes modalFadeIn {
@@ -1571,61 +1580,74 @@
     }
     .video-modal.active {
       display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .video-modal-content {
-      width: 100%;
-      max-width: 980px;
+      width: calc(100% - 32px);
+      max-width: 920px;
+      margin: 16px auto;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
-      border-radius: 22px;
+      border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 30px 70px rgba(0, 0, 0, 0.85);
       animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
     @keyframes modalScaleUp {
-      from { transform: scale(0.95); }
-      to { transform: scale(1); }
+      from { transform: scale(0.96); opacity: 0.7; }
+      to { transform: scale(1); opacity: 1; }
     }
     .video-modal-header {
-      padding: 16px 24px;
+      padding: 14px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-subtle);
-      background: rgba(14, 18, 28, 0.6);
+      background: rgba(14, 18, 28, 0.7);
+      gap: 12px;
+      box-sizing: border-box;
+      width: 100%;
     }
     .video-modal-title {
       font-weight: 700;
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 80%;
+      flex: 1;
+      min-width: 0;
       color: var(--text-main);
     }
     .close-btn {
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.08);
       border: none;
       color: var(--text-muted);
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       font-size: 1.25rem;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
       transition: all 0.2s;
     }
     .close-btn:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.18);
       color: #fff;
     }
     .video-player-frame {
       width: 100%;
+      max-width: 100%;
       aspect-ratio: 16 / 9;
+      max-height: 72dvh;
       background: #000;
       display: block;
+      object-fit: contain;
     }
 
     /* AI Playlist View */
@@ -1759,18 +1781,27 @@
       top: 0;
       right: 0;
       width: 390px;
-      max-width: 92vw;
+      max-width: 100vw;
       height: 100vh;
+      height: 100dvh;
       background: var(--bg-glass-heavy);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
       border-left: 1px solid var(--border-card);
       z-index: 200;
       transform: translateX(100%);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
       display: flex;
       flex-direction: column;
       box-shadow: -15px 0 45px rgba(0, 0, 0, 0.6);
+    }
+    #saved-drawer.open,
+    #saved-drawer.active {
+      transform: translateX(0) !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
     }
     .drawer-header {
       padding: 20px 24px;
@@ -1802,35 +1833,35 @@
     /* Toast */
     .toast-container {
       position: fixed;
-      top: 24px;
-      right: 24px;
-      z-index: 999;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+      z-index: 9999;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       pointer-events: none;
     }
     .toast {
-      background: rgba(18, 24, 38, 0.95);
+      background: rgba(18, 24, 38, 0.96);
       border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.15);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      padding: 12px 18px;
-      border-radius: 14px;
+      padding: 11px 16px;
+      border-radius: 12px;
       color: var(--text-main);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 600;
       display: flex;
       align-items: center;
       gap: 10px;
-      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: toastFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: auto;
-      max-width: 380px;
+      max-width: 360px;
     }
-    @keyframes slideIn {
-      from { transform: translateX(110%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
+    @keyframes toastFadeIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* Spinner */
@@ -2137,10 +2168,10 @@
         left: 8px;
       }
 
-      /* Sticky Bottom Player Bar */
+      /* Sticky Bottom Player Bar (with iOS Safe Area support) */
       .player-bar {
-        height: 68px;
-        padding: 0 10px;
+        height: calc(68px + env(safe-area-inset-bottom, 0px));
+        padding: 0 max(10px, env(safe-area-inset-right)) env(safe-area-inset-bottom, 0px) max(10px, env(safe-area-inset-left));
         justify-content: space-between;
       }
       /* Top scrub progress bar */
@@ -2308,34 +2339,52 @@
         max-width: 100vw;
       }
 
-      /* Modals */
+      /* Modals on Mobile & iPhone 16 - Centered perfectly with equal margins */
       .video-modal {
-        padding: 10px;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
       }
       .video-modal-content {
-        border-radius: 14px;
-        max-width: 100%;
+        width: calc(100vw - 24px) !important;
+        max-width: calc(100vw - 24px) !important;
+        margin: 12px auto !important;
+        border-radius: 16px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
       }
       .video-modal-header {
-        padding: 12px 14px;
+        padding: 10px 14px !important;
+        gap: 10px !important;
       }
       .video-modal-title {
-        font-size: 0.92rem;
-        max-width: 75%;
+        font-size: 0.88rem !important;
+        flex: 1 !important;
+        min-width: 0 !important;
+      }
+      .close-btn {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 1.15rem !important;
+      }
+      .video-player-frame {
+        width: 100% !important;
+        max-height: 65dvh !important;
       }
 
       /* Toast */
       .toast-container {
-        top: 10px;
-        left: 10px;
-        right: 10px;
-        align-items: stretch;
+        top: max(10px, env(safe-area-inset-top)) !important;
+        left: max(10px, env(safe-area-inset-left)) !important;
+        right: max(10px, env(safe-area-inset-right)) !important;
+        align-items: stretch !important;
       }
       .toast {
-        max-width: 100%;
-        width: 100%;
-        font-size: 0.82rem;
-        padding: 10px 12px;
+        max-width: 100% !important;
+        width: 100% !important;
+        font-size: 0.82rem !important;
+        padding: 9px 12px !important;
       }
     }
 
@@ -2660,7 +2709,7 @@
   </div>
 
   <!-- Settings Modal -->
-  <div class="video-modal" id="settings-modal">
+  <div class="video-modal" id="settings-modal" onclick="if(event.target===this) closeSettings()">
     <div class="video-modal-content" style="max-width:520px;">
       <div class="video-modal-header">
         <div class="video-modal-title">Cài đặt hệ thống</div>
@@ -2678,7 +2727,7 @@
   </div>
 
   <!-- Video Modal -->
-  <div class="video-modal" id="video-modal">
+  <div class="video-modal" id="video-modal" onclick="if(event.target===this) closeVideoModal()">
     <div class="video-modal-content">
       <div class="video-modal-header">
         <div class="video-modal-title" id="video-modal-title">Xem Video</div>
@@ -3506,9 +3555,17 @@
     function toggleSavedDrawer() {
       const d = document.getElementById('saved-drawer');
       if (!d) return;
-      const open = d.style.transform === 'translateX(0px)' || d.style.transform === 'translateX(0)';
-      d.style.transform = open ? 'translateX(100%)' : 'translateX(0)';
-      if (!open) loadSavedPlaylists();
+      const isOpen = d.classList.contains('open') || d.style.transform === 'translateX(0px)' || d.style.transform === 'translateX(0)';
+      if (isOpen) {
+        d.classList.remove('open', 'active');
+        d.style.transform = 'translateX(100%)';
+        d.style.visibility = 'hidden';
+      } else {
+        d.classList.add('open', 'active');
+        d.style.transform = 'translateX(0)';
+        d.style.visibility = 'visible';
+        loadSavedPlaylists();
+      }
     }
 
     async function loadSavedPlaylist(pid) {
