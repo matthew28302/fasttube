@@ -1935,6 +1935,17 @@
       background: rgba(99, 102, 241, 0.12);
       border-color: rgba(99, 102, 241, 0.35);
     }
+    .ai-queue-row.active {
+      background: rgba(99, 102, 241, 0.22) !important;
+      border: 1px solid rgba(99, 102, 241, 0.55) !important;
+      box-shadow: 0 0 16px rgba(99, 102, 241, 0.28);
+    }
+    .ai-queue-row.played {
+      opacity: 0.72;
+    }
+    .ai-queue-row.played:hover {
+      opacity: 1;
+    }
     .ai-queue-row-idx {
       font-size: 0.76rem;
       font-weight: 700;
@@ -3725,6 +3736,51 @@
   <div class="toast-container" id="toast-container"></div>
 
   <script>
+    // ══════════════════════════════════════════
+    // GLOBAL AUTH & FETCH INTERCEPTOR (INITIALIZED FIRST)
+    // ══════════════════════════════════════════
+    const FASTTUBE_AUTH_KEY = 'fasttube_auth';
+
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
+      return match ? decodeURIComponent(match[2]) : '';
+    }
+
+    function setCookie(name, value, days) {
+      const maxAge = (days || 365) * 86400;
+      document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    }
+
+    function getStoredPassword() {
+      return localStorage.getItem(FASTTUBE_AUTH_KEY) || getCookie(FASTTUBE_AUTH_KEY) || '';
+    }
+
+    // Intercept all local fetch requests to automatically pass x-access-password
+    const _origFetch = window.fetch.bind(window);
+    window.fetch = async function(url, init = {}) {
+      const pw = getStoredPassword();
+      init = init || {};
+      init.credentials = init.credentials || 'same-origin';
+
+      if (pw && typeof url === 'string' && (url.startsWith('/') || url.startsWith(window.location.origin))) {
+        if (init.headers instanceof Headers) {
+          if (!init.headers.has('x-access-password')) init.headers.set('x-access-password', pw);
+        } else if (Array.isArray(init.headers)) {
+          init.headers.push(['x-access-password', pw]);
+        } else {
+          init.headers = Object.assign({}, init.headers || {}, { 'x-access-password': pw });
+        }
+      }
+
+      const resp = await _origFetch(url, init);
+      if (resp.status === 401 && typeof url === 'string' && !url.includes('/api/auth/verify')) {
+        if (typeof showLockScreen === 'function') {
+          showLockScreen('Vui lòng nhập mật khẩu để tiếp tục.');
+        }
+      }
+      return resp;
+    };
+
     // State
     let selectedFormat = 'm4a';
     let currentTrack = null;
@@ -4108,12 +4164,13 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Media Player & Universal Now Playing View (Vinyl Spin / Video) & AI AutoPlay
+    // Media Player & Universal Now Playing View (Vinyl Spin / Video) & AI Expanding Playlist
     // ──────────────────────────────────────────────────────────────────────────
     let autoPlayAI = localStorage.getItem('fasttube_ai_autoplay') !== 'false';
-    let aiQueue = [];       // Holds exactly up to 8 AI recommended tracks
-    let playHistory = [];   // History of played tracks for Previous button
+    let aiTrackList = [];       // Growing list of songs: [Song 1, Song 2, ..., Song 8, Song 9, ...]
+    let currentAIIndex = -1;    // Pointer to currently playing song in aiTrackList
     let isFetchingAI = false;
+    let isDownloadingQueue = false;
 
     // Synchronize initial toggle switch
     setTimeout(() => {
@@ -4126,10 +4183,10 @@
       localStorage.setItem('fasttube_ai_autoplay', autoPlayAI ? 'true' : 'false');
       const toggle = document.getElementById('ai-autoplay-toggle');
       if (toggle) toggle.checked = autoPlayAI;
-      showToast(autoPlayAI ? '✨ Đã bật chế độ AI AutoPlay (duy trì 8 bài)' : 'Đã tắt AI AutoPlay');
+      showToast(autoPlayAI ? '✨ Đã bật chế độ AI AutoPlay (danh sách lớn dần)' : 'Đã tắt AI AutoPlay');
 
-      if (autoPlayAI && aiQueue.length === 0 && currentTrack) {
-        fetchAIQueue(currentTrack, 8);
+      if (autoPlayAI && currentTrack && aiTrackList.length <= 1) {
+        fetchAIRecommendations(currentTrack, 8);
       }
       renderAIQueue();
     }
@@ -4156,14 +4213,19 @@
     function openVideoModal() { openNowPlayingModal(); }
     function closeVideoModal() { minimizePlayer(); }
 
-    function startStreamingTrack(track) {
+    function startStreamingTrack(track, queueIndex = -1) {
+      if (!track) return;
       currentTrack = track;
-      const isVideo = (track.fmt || '').startsWith('mp4') || (track.fmt || '').includes('video');
-      const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : (isVideo ? 'mp4' : 'm4a');
-      let streamUrl = track.stream_url || `/stream/${track.id}${cleanExt ? '?ext=' + cleanExt : ''}`;
-      streamUrl += (streamUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+      const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : ((track.fmt || '').includes('video') ? 'mp4' : 'm4a');
+      const isVideo = cleanExt.startsWith('mp4') || (track.fmt || '').includes('video');
+      
+      let streamUrl = track.stream_url || `/stream/${track.id || track.file_id}${cleanExt ? '?ext=' + cleanExt : ''}`;
+      // Append query params with auth password and timestamp so native <video>/<audio> never get 401
+      const pw = getStoredPassword();
+      const sep = streamUrl.includes('?') ? '&' : '?';
+      streamUrl += `${sep}_cb=${Date.now()}${pw ? '&auth=' + encodeURIComponent(pw) : ''}`;
 
-      const thumbUrl = track.thumb || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
+      const thumbUrl = track.thumb || track.thumbnail || `https://i.ytimg.com/vi/${track.id || track.file_id}/hqdefault.jpg`;
       const fmtLabel = (cleanExt || track.fmt || (isVideo ? 'MP4' : 'M4A')).toUpperCase();
 
       // 1. Update Sticky Bottom Player Bar (Mini Player)
@@ -4191,11 +4253,11 @@
         
         modalVideo.pause();
         modalVideo.src = streamUrl;
-        modalVideo.load(); // Vital for Safari iOS and modern browser media pipelines
+        modalVideo.load();
         const p = modalVideo.play();
         if (p !== undefined) {
           p.catch(e => {
-            console.warn('Autoplay video error, trying fallback:', e);
+            console.warn('Autoplay video error, trying muted fallback:', e);
             modalVideo.muted = true;
             modalVideo.play().then(() => {
               setTimeout(() => { modalVideo.muted = false; }, 400);
@@ -4225,10 +4287,32 @@
       // Open Now Playing view
       openNowPlayingModal();
 
-      // Trigger AI AutoPlay recommendations if enabled and queue is empty
-      if (autoPlayAI && (!aiQueue || aiQueue.length === 0)) {
-        fetchAIQueue(track, 8);
+      // Maintain growing AI playlist
+      const trackId = track.id || track.file_id;
+      if (queueIndex >= 0) {
+        currentAIIndex = queueIndex;
+      } else {
+        const foundIdx = aiTrackList.findIndex(t => (t.id || t.file_id) === trackId);
+        if (foundIdx >= 0) {
+          currentAIIndex = foundIdx;
+        } else {
+          if (aiTrackList.length === 0) {
+            aiTrackList = [{ ...track, id: trackId }];
+            currentAIIndex = 0;
+          } else {
+            aiTrackList.push({ ...track, id: trackId });
+            currentAIIndex = aiTrackList.length - 1;
+          }
+        }
       }
+
+      // Check remaining upcoming tracks. If less than 6 ahead, fetch more to grow list!
+      const remainingAhead = aiTrackList.length - 1 - currentAIIndex;
+      if (autoPlayAI && remainingAhead < 6) {
+        fetchAIRecommendations(track, Math.max(4, 8 - remainingAhead));
+      }
+
+      renderAIQueue();
     }
 
     function togglePlay() {
@@ -4340,9 +4424,8 @@
         }
       }
 
-      // 3. AI AutoPlay Mode (Tự động phát bài tiếp theo từ 8 bài đã tải sẵn)
-      if (autoPlayAI && aiQueue && aiQueue.length > 0) {
-        showToast('✨ Tự động chuyển bài tiếp theo từ AI...');
+      // 3. AI AutoPlay Mode (Tự động phát bài tiếp theo trong danh sách lớn dần)
+      if (autoPlayAI) {
         playNextTrack();
         return;
       }
@@ -4390,7 +4473,7 @@
       if (!currentTrack) return;
       const fullUrl = currentTrack.stream_url 
         ? (currentTrack.stream_url.startsWith('http') ? currentTrack.stream_url : `${window.location.origin}${currentTrack.stream_url}`)
-        : `${window.location.origin}/stream/${currentTrack.id}`;
+        : `${window.location.origin}/stream/${currentTrack.id || currentTrack.file_id}`;
       navigator.clipboard.writeText(fullUrl).then(() => {
         showToast(`📋 Đã chép link stream vào bộ nhớ tạm!`);
       });
@@ -4398,7 +4481,7 @@
 
     function downloadCurrent() {
       if (!currentTrack) return;
-      actionDownload(currentTrack.id, currentTrack.title);
+      actionDownload(currentTrack.id || currentTrack.file_id, currentTrack.title);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -4416,10 +4499,7 @@
       try {
         const res = await fetch('/api/ai/playlist/save_track', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-password': getStoredPassword()
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: track.id || track.file_id,
             title: track.title,
@@ -4441,26 +4521,22 @@
     }
 
     async function saveQueueToAIPlaylist() {
-      if (!aiQueue || aiQueue.length === 0) {
-        showToast('⚠️ Hàng đợi AI đang trống');
+      if (!aiTrackList || aiTrackList.length === 0) {
+        showToast('⚠️ Danh sách AI đang trống');
         return;
       }
       try {
         const listName = currentTrack ? `✨ AI Mix: ${currentTrack.title.substring(0, 30)}` : '✨ AI Smart Playlist';
-        const allTracks = currentTrack ? [currentTrack, ...aiQueue] : [...aiQueue];
         const res = await fetch('/api/ai/playlist/save_all', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-password': getStoredPassword()
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: listName,
-            tracks: allTracks
+            tracks: aiTrackList
           })
         });
         if (res.ok) {
-          showToast(`💾 Đã lưu toàn bộ ${allTracks.length} bài vào Tab AI Playlist!`);
+          showToast(`💾 Đã lưu toàn bộ ${aiTrackList.length} bài vào Tab AI Playlist!`);
           loadSavedPlaylists();
         } else {
           showToast('❌ Không thể lưu danh sách vào AI Playlist');
@@ -4480,10 +4556,7 @@
       try {
         const res = await fetch('/api/ai/playlist/save_all', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-password': getStoredPassword()
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: name,
             tracks: playlistItems.map(p => ({
@@ -4506,17 +4579,17 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AI AutoPlay Queue & Automatic 8-Track Pre-downloading
+    // AI AutoPlay Growing Playlist & Automatic Pre-downloading
     // ──────────────────────────────────────────────────────────────────────────
-    let isDownloadingQueue = false;
-
     async function downloadAllQueueTracks() {
-      if (isDownloadingQueue || !aiQueue || aiQueue.length === 0) return;
+      if (isDownloadingQueue || !aiTrackList || aiTrackList.length === 0) return;
       isDownloadingQueue = true;
 
       try {
-        for (let i = 0; i < aiQueue.length; i++) {
-          const track = aiQueue[i];
+        // Start downloading from current playing track downwards
+        const start = Math.max(0, currentAIIndex);
+        for (let i = start; i < aiTrackList.length; i++) {
+          const track = aiTrackList[i];
           if (!track || track.is_downloaded || track.downloading) continue;
 
           track.downloading = true;
@@ -4525,12 +4598,9 @@
           try {
             const resp = await fetch('/api/download', {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'x-access-password': getStoredPassword()
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                id: track.id,
+                id: track.id || track.file_id,
                 title: track.title,
                 format: selectedFormat
               })
@@ -4552,27 +4622,24 @@
       }
     }
 
-    async function fetchAIQueue(track, targetCount = 8) {
+    async function fetchAIRecommendations(track, targetCount = 8, autoPlayIfArrived = false) {
       if (!track || isFetchingAI) return;
       isFetchingAI = true;
       const queueList = document.getElementById('ai-queue-list');
-      if (aiQueue.length === 0 && queueList) {
-        queueList.innerHTML = '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">⏳ AI đang tìm kiếm 8 bài hát phù hợp nhất...</div>';
+      if (aiTrackList.length <= 1 && queueList) {
+        queueList.innerHTML = '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">⏳ AI đang tìm kiếm các bài hát phù hợp nhất...</div>';
       }
 
       try {
-        const historyTitles = playHistory.map(p => p.title).concat(aiQueue.map(q => q.title));
-        if (track && track.title) historyTitles.push(track.title);
+        const historyTitles = aiTrackList.map(t => t.title);
+        if (track && track.title && !historyTitles.includes(track.title)) historyTitles.push(track.title);
 
         const resp = await fetch('/api/ai/autoplay_recommendations', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-access-password': getStoredPassword()
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             current_title: track.title,
-            current_id: track.id,
+            current_id: track.id || track.file_id,
             current_channel: track.channel || '',
             history: historyTitles,
             count: targetCount,
@@ -4584,22 +4651,27 @@
         if (resp.ok) {
           const data = await resp.json();
           if (data.tracks && data.tracks.length > 0) {
-            // Deduplicate and append to queue
-            const existingIds = new Set(aiQueue.map(t => t.id));
-            if (track && track.id) existingIds.add(track.id);
+            const existingIds = new Set(aiTrackList.map(t => t.id || t.file_id));
+            const newTracks = [];
 
             for (const t of data.tracks) {
-              if (!existingIds.has(t.id)) {
-                existingIds.add(t.id);
+              const vid = t.id || t.file_id;
+              if (vid && !existingIds.has(vid)) {
+                existingIds.add(vid);
                 t.fmt = selectedFormat;
-                aiQueue.push(t);
+                aiTrackList.push(t);
+                newTracks.push(t);
               }
             }
-            aiQueue = aiQueue.slice(0, 8); // Keep queue at exact 8 tracks
-            renderAIQueue();
 
-            // Tự động tải về toàn bộ 8 bài hát trong danh sách AI
+            renderAIQueue();
+            // Automatically download in background
             downloadAllQueueTracks();
+
+            if (autoPlayIfArrived && newTracks.length > 0 && currentAIIndex + 1 < aiTrackList.length) {
+              currentAIIndex++;
+              startStreamingTrack(aiTrackList[currentAIIndex], currentAIIndex);
+            }
           }
         }
       } catch (e) {
@@ -4610,65 +4682,91 @@
       }
     }
 
-    async function fetchMoreAIRec(count = 1) {
+    async function fetchOneMoreAIRec() {
       if (!currentTrack || isFetchingAI) return;
-      if (aiQueue.length >= 8) return; // Queue is full
-      const needed = 8 - aiQueue.length;
-      await fetchAIQueue(currentTrack, Math.max(count, needed));
-      downloadAllQueueTracks();
+      await fetchAIRecommendations(currentTrack, 1);
     }
 
     function preloadNextTrack() {
-      // Kept for backward compatibility; calls downloadAllQueueTracks
       downloadAllQueueTracks();
     }
 
     function playNextTrack() {
-      if (aiQueue.length > 0) {
-        const next = aiQueue.shift();
-        if (currentTrack) {
-          playHistory.push(currentTrack);
-          if (playHistory.length > 20) playHistory.shift();
-        }
-        startStreamingTrack(next);
-        renderAIQueue();
-
-        // Ngay khi chuyển bài mới: nạp thêm 1 bài mới từ AI và tự động tải về bài đó
-        fetchMoreAIRec(1);
-      } else {
-        showToast('ℹ️ Đang tìm thêm bài hát mới từ AI...');
-        if (currentTrack) fetchAIQueue(currentTrack, 8);
+      // 1. Advance to next track in growing aiTrackList
+      if (currentAIIndex + 1 < aiTrackList.length) {
+        currentAIIndex++;
+        const next = aiTrackList[currentAIIndex];
+        startStreamingTrack(next, currentAIIndex);
+        showToast(`⏭️ Đang phát bài #${currentAIIndex + 1}: "${next.title}"`);
+        
+        // Fetch 1 more track from AI to grow list further!
+        fetchOneMoreAIRec();
+        return;
       }
+
+      // 2. If at end of aiTrackList, ask AI for more!
+      if (autoPlayAI && currentTrack) {
+        showToast('ℹ️ Đang tìm thêm bài hát mới từ AI...');
+        fetchAIRecommendations(currentTrack, 4, true);
+        return;
+      }
+
+      // 3. Fallback: Search results
+      if (lastSearchResults && lastSearchResults.length > 0 && currentTrack) {
+        const curIdx = lastSearchResults.findIndex(it => it.id === currentTrack.id);
+        if (curIdx !== -1 && curIdx + 1 < lastSearchResults.length) {
+          const nextItem = lastSearchResults[curIdx + 1];
+          showToast(`⏭️ Chuyển bài tiếp theo: "${nextItem.title}"`);
+          actionPlay(nextItem.id, nextItem.title, nextItem.channel, nextItem.thumbnail, nextItem.is_downloaded);
+          return;
+        }
+      }
+
+      showToast('ℹ️ Đã đến bài cuối cùng trong danh sách');
     }
 
     function playPrevTrack() {
-      if (playHistory.length > 0) {
-        const prev = playHistory.pop();
-        if (currentTrack) aiQueue.unshift(currentTrack);
-        startStreamingTrack(prev);
-        renderAIQueue();
-      } else {
-        showToast('ℹ️ Không có bài hát trước đó trong lịch sử');
+      // 1. Return to previous track in growing aiTrackList
+      if (currentAIIndex > 0) {
+        currentAIIndex--;
+        const prev = aiTrackList[currentAIIndex];
+        startStreamingTrack(prev, currentAIIndex);
+        showToast(`⏮️ Quay lại bài #${currentAIIndex + 1}: "${prev.title}"`);
+        return;
       }
+
+      // 2. Fallback: Search results
+      if (lastSearchResults && lastSearchResults.length > 0 && currentTrack) {
+        const curIdx = lastSearchResults.findIndex(it => it.id === currentTrack.id);
+        if (curIdx > 0) {
+          const prevItem = lastSearchResults[curIdx - 1];
+          showToast(`⏮️ Bài trước đó: "${prevItem.title}"`);
+          actionPlay(prevItem.id, prevItem.title, prevItem.channel, prevItem.thumbnail, prevItem.is_downloaded);
+          return;
+        }
+      }
+
+      showToast('ℹ️ Đang ở bài đầu tiên trong danh sách');
     }
 
     function playQueueIndex(idx) {
-      if (idx < 0 || idx >= aiQueue.length) return;
-      const selected = aiQueue.splice(idx, 1)[0];
-      if (currentTrack) {
-        playHistory.push(currentTrack);
-        if (playHistory.length > 20) playHistory.shift();
+      if (idx < 0 || idx >= aiTrackList.length) return;
+      currentAIIndex = idx;
+      const selected = aiTrackList[idx];
+      startStreamingTrack(selected, idx);
+
+      const remaining = aiTrackList.length - 1 - currentAIIndex;
+      if (autoPlayAI && remaining < 4) {
+        fetchAIRecommendations(selected, 4);
       }
-      startStreamingTrack(selected);
-      renderAIQueue();
-      fetchMoreAIRec(1);
     }
 
     function refreshAIQueue() {
       if (!currentTrack) return;
-      aiQueue = [];
-      showToast('🔄 Đang đổi danh sách 8 bài hát AI mới...');
-      fetchAIQueue(currentTrack, 8);
+      aiTrackList = [{ ...currentTrack }];
+      currentAIIndex = 0;
+      showToast('🔄 Đang đổi danh sách gợi ý AI mới...');
+      fetchAIRecommendations(currentTrack, 8);
     }
 
     function renderAIQueue() {
@@ -4677,10 +4775,10 @@
       const miniPill = document.getElementById('mini-ai-pill');
 
       if (counterEl) {
-        counterEl.textContent = `Hàng đợi: ${aiQueue.length}/8 bài hát (Tự tải về sẵn)`;
+        counterEl.textContent = `Danh sách: ${aiTrackList.length} bài hát (Đang phát bài #${currentAIIndex + 1})`;
       }
       if (miniPill) {
-        miniPill.textContent = `✨ AI: ${aiQueue.length} bài`;
+        miniPill.textContent = `✨ AI: ${aiTrackList.length} bài`;
         miniPill.style.display = autoPlayAI ? 'inline-flex' : 'none';
       }
 
@@ -4691,36 +4789,46 @@
         return;
       }
 
-      if (aiQueue.length === 0) {
+      if (aiTrackList.length === 0) {
         container.innerHTML = isFetchingAI 
-          ? '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">⏳ AI đang tìm kiếm 8 bài hát phù hợp nhất...</div>'
-          : '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">Hàng đợi trống. Nhấn Đổi bài để nạp gợi ý AI.</div>';
+          ? '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">⏳ AI đang tìm kiếm các bài hát phù hợp nhất...</div>'
+          : '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">Danh sách trống. Nhấn Đổi bài để nạp gợi ý AI.</div>';
         return;
       }
 
       let html = '';
-      aiQueue.forEach((t, i) => {
+      aiTrackList.forEach((t, i) => {
         let badgeHtml = '';
-        if (t.is_downloaded) {
-          badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Đã tải sẵn (0s)</span>';
-        } else if (t.downloading) {
-          badgeHtml = '<span class="ai-queue-badge-status status-preloading">⚡ Đang tải ngầm...</span>';
+        let rowClass = 'ai-queue-row';
+
+        if (i === currentAIIndex) {
+          rowClass += ' active';
+          badgeHtml = '<span class="ai-queue-badge-status" style="background:rgba(99,102,241,0.25); color:#818cf8; border-color:#6366f1; font-weight:700;">🎧 Đang phát</span>';
+        } else if (i < currentAIIndex) {
+          rowClass += ' played';
+          badgeHtml = '<span class="ai-queue-badge-status" style="opacity:0.75;">✓ Đã phát</span>';
         } else {
-          badgeHtml = `<span class="ai-queue-badge-status status-waiting">⏳ Hàng chờ #${i + 1}</span>`;
+          if (t.is_downloaded) {
+            badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Sẵn sàng (0s)</span>';
+          } else if (t.downloading) {
+            badgeHtml = '<span class="ai-queue-badge-status status-preloading">⚡ Đang tải ngầm...</span>';
+          } else {
+            badgeHtml = `<span class="ai-queue-badge-status status-waiting">⏳ Hàng chờ #${i + 1}</span>`;
+          }
         }
 
-        const thumb = t.thumb || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`;
+        const thumb = t.thumb || t.thumbnail || `https://i.ytimg.com/vi/${t.id || t.file_id}/hqdefault.jpg`;
         html += `
-          <div class="ai-queue-row" onclick="playQueueIndex(${i})" title="Bấm để phát ngay bài này">
-            <div class="ai-queue-row-idx">${i + 1}</div>
+          <div class="${rowClass}" onclick="playQueueIndex(${i})" title="Bấm để phát bài này (#${i + 1})">
+            <div class="ai-queue-row-idx">${i === currentAIIndex ? '▶' : i + 1}</div>
             <img class="ai-queue-row-thumb" src="${thumb}" alt="thumb">
             <div class="ai-queue-row-info">
-              <div class="ai-queue-row-title">${t.title}</div>
+              <div class="ai-queue-row-title" style="${i === currentAIIndex ? 'color:var(--primary-light); font-weight:800;' : ''}">${t.title}</div>
               <div class="ai-queue-row-channel">${t.channel || 'YouTube'} • ${t.duration || '0:00'}</div>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
               ${badgeHtml}
-              <button class="btn" onclick="event.stopPropagation(); saveTrackToAIPlaylist({ id: '${t.id}', title: '${escapeQuotes(t.title)}', channel: '${escapeQuotes(t.channel||'YouTube')}', thumb: '${thumb}' })" style="padding:4px 8px; font-size:0.75rem; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); border-radius:6px; cursor:pointer;" title="Thêm bài này vào AI Playlist">⭐</button>
+              <button class="btn" onclick="event.stopPropagation(); saveTrackToAIPlaylist({ id: '${t.id || t.file_id}', title: '${escapeQuotes(t.title)}', channel: '${escapeQuotes(t.channel||'YouTube')}', thumb: '${thumb}' })" style="padding:4px 8px; font-size:0.75rem; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); border-radius:6px; cursor:pointer;" title="Thêm bài này vào AI Playlist">⭐</button>
             </div>
           </div>
         `;
@@ -5459,23 +5567,6 @@
 
     // ══════════════════════════════════════════
     // PASSWORD LOCK SCREEN LOGIC
-    // ══════════════════════════════════════════
-    const FASTTUBE_AUTH_KEY = 'fasttube_auth';
-
-    function getCookie(name) {
-      const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
-      return match ? decodeURIComponent(match[2]) : '';
-    }
-
-    function setCookie(name, value, days) {
-      const maxAge = (days || 365) * 86400;
-      document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-    }
-
-    function getStoredPassword() {
-      return localStorage.getItem(FASTTUBE_AUTH_KEY) || getCookie(FASTTUBE_AUTH_KEY) || '';
-    }
-
     function isUnlocked() {
       return !!getStoredPassword();
     }
@@ -5593,21 +5684,6 @@
       }
     }
 
-    // Global fetch wrapper: always attach auth headers and credentials
-    const _origFetch = window.fetch.bind(window);
-    window.fetch = async function(url, opts) {
-      const pw = getStoredPassword();
-      opts = opts || {};
-      opts.credentials = opts.credentials || 'same-origin';
-      if (typeof url === 'string' && (url.startsWith('/api') || url.startsWith('/stream'))) {
-        opts.headers = Object.assign({}, opts.headers || {}, pw ? { 'x-access-password': pw } : {});
-      }
-      const resp = await _origFetch(url, opts);
-      if (resp.status === 401 && typeof url === 'string' && !url.includes('/api/auth/verify')) {
-        showLockScreen('Vui lòng nhập mật khẩu để tiếp tục.');
-      }
-      return resp;
-    };
 
     // Initialize
     const savedTheme = localStorage.getItem('fasttube_theme') || 'dark';

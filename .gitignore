@@ -20,3 +20,6 @@ logs/
 
 # Local user playlists
 playlists.json
+
+# Deploy archives
+*.zip
