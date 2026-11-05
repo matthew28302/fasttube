@@ -965,6 +965,163 @@ async def api_playlist_generate(payload: PlaylistPayload, request: Request):
         _ACTIVE_PLAYLIST_CANCEL_EVENTS.pop(req_token, None)
 
 
+class AutoplayRecommendationPayload(BaseModel):
+    current_title: str
+    current_id: Optional[str] = None
+    current_channel: Optional[str] = None
+    history: list[str] = []
+    count: int = 8
+    model: str = "openai/gpt-oss-20b"
+    web_search: bool = True
+
+
+@app.post("/api/ai/autoplay_recommendations")
+async def api_autoplay_recommendations(payload: AutoplayRecommendationPayload, request: Request):
+    await rate_limiter.check(request, "autoplay_rec", max_requests=60, window_s=60)
+    current_title = (payload.current_title or "").strip()
+    if not current_title:
+        raise HTTPException(status_code=400, detail="Missing current_title")
+
+    current_id = (payload.current_id or "").strip()
+    current_channel = (payload.current_channel or "").strip()
+    history = [str(h).strip() for h in (payload.history or []) if str(h).strip()]
+    count = max(1, min(int(payload.count or 8), 12))
+
+    key = os.getenv("GROQ_API_KEY") or _read_env_file().get("GROQ_API_KEY") or ""
+    req_model = (payload.model or "openai/gpt-oss-20b").strip()
+    use_web_search = bool(payload.web_search)
+
+    if req_model == "qwen/qwen3.8-27b":
+        model_candidates = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
+    elif req_model == "openai/gpt-oss-120b":
+        model_candidates = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
+    else:
+        model_candidates = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b", "openai/gpt-oss-120b"]
+
+    history_filter_set = {h.lower() for h in history}
+    if current_title.lower() not in history_filter_set:
+        history_filter_set.add(current_title.lower())
+
+    history_sample = list(history_filter_set)[-15:]
+    history_notice = "\nDO NOT suggest any of these songs already in queue or played:\n" + "\n".join(f"- {h}" for h in history_sample) if history_sample else ""
+
+    system_msg = (
+        "You are an expert music curator, DJ, and recommendation engine. "
+        "The listener is currently enjoying this track:\n"
+        f"Title: {current_title}\n"
+        f"Artist / Channel: {current_channel or 'Unknown'}\n\n"
+        "TASK:\n"
+        f"Suggest exactly {count} genuine, officially released songs that share a similar musical vibe, genre, rhythm, or related artist style to create a harmonious and engaging auto-play flow.\n"
+        "RULES:\n"
+        "1. Suggest ONLY REAL, EXISTING songs (no made up titles).\n"
+        f"2. {history_notice}\n"
+        "3. Provide clean titles: 'Song Title - Artist Name'.\n"
+        f"4. Return STRICTLY a raw JSON array of strings containing exactly {count} songs.\n"
+        "5. Example output: [\"Bài Ca Này - Ca Sĩ A\", \"Song Name - Artist B\"]. No markdown or commentary."
+    )
+
+    songs = []
+    if key:
+        for model_name in model_candidates:
+            req_body = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": f"Recommend {count} songs related to '{current_title}'. Return as JSON array."},
+                ],
+                "temperature": 0.2,
+                "max_tokens": 512,
+            }
+            if use_web_search and model_name in ("openai/gpt-oss-20b", "openai/gpt-oss-120b"):
+                req_body["tools"] = [{"type": "browser_search"}]
+
+            try:
+                r = await asyncio.to_thread(
+                    _requests.post,
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                    json=req_body,
+                    timeout=15 if use_web_search else 8,
+                )
+                if r.status_code == 400 and "tools" in req_body:
+                    del req_body["tools"]
+                    r = await asyncio.to_thread(
+                        _requests.post,
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                        json=req_body,
+                        timeout=8,
+                    )
+                if r.status_code == 200:
+                    data = r.json()
+                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    parsed = _parse_songs_json(content)
+                    if parsed:
+                        songs = [s for s in parsed if s.lower() not in history_filter_set][:count]
+                        if len(songs) >= 1:
+                            logger.info("AI Autoplay recommendations generated via %s: %d songs", model_name, len(songs))
+                            break
+            except Exception as e:
+                logger.warning("Groq autoplay recommendation failed (%s): %s", model_name, e)
+                continue
+
+    # Fallback to YouTube Innertube search if AI returned empty
+    if not songs:
+        try:
+            fallback_query = f"{current_title} liên quan"
+            hints = await asyncio.to_thread(fast_search_youtube_list, fallback_query, limit=count + 6)
+            for h in hints:
+                htitle = h.get("title", "")
+                hid = h.get("id", "")
+                if hid == current_id or htitle.lower() in history_filter_set:
+                    continue
+                songs.append(htitle)
+                if len(songs) >= count:
+                    break
+        except Exception as e:
+            logger.warning("Fallback autoplay search failed: %s", e)
+
+    # Resolve each song into full YouTube track metadata concurrently
+    base_url = _base_url(request)
+    async def _resolve_single_track(song_query: str) -> Optional[dict]:
+        try:
+            matches = await asyncio.to_thread(fast_search_youtube_list, song_query, limit=1)
+            if not matches:
+                return None
+            m = matches[0]
+            vid = m.get("id")
+            if not vid or vid == current_id:
+                return None
+            is_dl = bool(find_all_by_file_id(settings.music_dir, vid))
+            return {
+                "id": vid,
+                "title": m.get("title") or song_query,
+                "channel": m.get("channel") or "YouTube",
+                "thumb": m.get("thumb") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                "duration": m.get("duration") or "0:00",
+                "stream_url": f"{base_url}/stream/{vid}",
+                "is_downloaded": is_dl,
+            }
+        except Exception:
+            return None
+
+    resolved_tasks = [_resolve_single_track(s) for s in songs]
+    raw_results = await asyncio.gather(*resolved_tasks, return_exceptions=True)
+
+    tracks = []
+    seen_ids = {current_id}
+    for res in raw_results:
+        if isinstance(res, dict) and res.get("id") and res["id"] not in seen_ids:
+            seen_ids.add(res["id"])
+            tracks.append(res)
+
+    return {
+        "success": True,
+        "tracks": tracks,
+        "count": len(tracks),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Saved playlists + download a list
 # ---------------------------------------------------------------------------

@@ -1551,6 +1551,465 @@
       height: 4px;
     }
 
+    /* ─── VINYL RECORD & NOW PLAYING FULLSCREEN / MINIMIZE STYLES ─── */
+    @keyframes spinVinyl {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .vinyl-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0 16px;
+      perspective: 1000px;
+    }
+    .vinyl-wrapper {
+      position: relative;
+      width: 250px;
+      height: 250px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .vinyl-disc {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #080a10 0%, #151824 45%, #050608 70%, #1a1e30 95%, #030408 100%);
+      box-shadow: 
+        0 18px 45px rgba(0, 0, 0, 0.85),
+        0 0 0 8px rgba(255, 255, 255, 0.04),
+        0 0 45px rgba(99, 102, 241, 0.28);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: spinVinyl 18s linear infinite;
+      animation-play-state: paused;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .vinyl-disc.playing {
+      animation-play-state: running;
+      box-shadow: 
+        0 20px 55px rgba(0, 0, 0, 0.9),
+        0 0 0 8px rgba(99, 102, 241, 0.15),
+        0 0 50px rgba(99, 102, 241, 0.45);
+    }
+    .vinyl-disc::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      box-shadow: 
+        inset 0 0 0 7px rgba(0, 0, 0, 0.75),
+        inset 0 0 0 8px rgba(255, 255, 255, 0.05),
+        inset 0 0 0 18px rgba(0, 0, 0, 0.75),
+        inset 0 0 0 19px rgba(255, 255, 255, 0.05),
+        inset 0 0 0 30px rgba(0, 0, 0, 0.75),
+        inset 0 0 0 31px rgba(255, 255, 255, 0.05);
+      pointer-events: none;
+    }
+    .vinyl-label {
+      width: 105px;
+      height: 105px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
+      border: 3px solid #232942;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.9);
+      z-index: 2;
+    }
+    .vinyl-label img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .vinyl-hole {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle, #f1f5f9 20%, #64748b 75%, #0f172a 100%);
+      border-radius: 50%;
+      border: 2px solid #07090e;
+      z-index: 3;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Small spinning disc on mini bottom player */
+    .player-thumb.spinning {
+      border-radius: 50% !important;
+      animation: spinVinyl 14s linear infinite;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.45);
+    }
+    .player-thumb.paused {
+      animation-play-state: paused;
+    }
+
+    /* Universal Now Playing Modal / Screen */
+    .nowplaying-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      background: rgba(7, 9, 15, 0.95);
+      backdrop-filter: blur(28px) saturate(1.4);
+      -webkit-backdrop-filter: blur(28px) saturate(1.4);
+      z-index: 1050;
+      box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+      animation: modalFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nowplaying-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nowplaying-container {
+      width: 100%;
+      max-width: 860px;
+      margin: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 35px 80px rgba(0, 0, 0, 0.9), 0 0 60px rgba(99, 102, 241, 0.15);
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .nowplaying-topbar {
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(14, 18, 28, 0.85);
+      gap: 12px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .np-minimize-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 6px 13px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .np-minimize-btn:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+    .np-badge-title {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--text-secondary);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .np-main-content {
+      padding: 20px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .np-info-box {
+      text-align: center;
+      padding: 0 10px;
+    }
+    .np-song-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      line-height: 1.4;
+      margin-bottom: 6px;
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .np-song-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 0.86rem;
+      font-weight: 600;
+    }
+    .np-controls-box {
+      background: rgba(14, 18, 28, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .np-scrub-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .np-scrub-bar {
+      flex: 1;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .np-scrub-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+      width: 0%;
+      border-radius: 99px;
+      transition: width 0.1s linear;
+    }
+    .np-buttons-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+    .np-btn-play {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #4338ca);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+      transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .np-btn-play:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 26px rgba(99, 102, 241, 0.6);
+    }
+    .np-btn-action {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s, background 0.15s;
+    }
+    .np-btn-action:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .np-btn-action.active {
+      color: var(--primary-light);
+    }
+
+    /* AI AutoPlay Queue Section */
+    .ai-queue-card {
+      background: rgba(14, 18, 28, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ai-queue-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .ai-queue-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-sparkle-pill {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25));
+      border: 1px solid rgba(99, 102, 241, 0.5);
+      color: #a5b4fc;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .ai-queue-sub {
+      color: var(--text-dim);
+      font-size: 0.76rem;
+    }
+    .ai-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .ai-toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .ai-toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(255, 255, 255, 0.15);
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 24px;
+      border: 1px solid var(--border-subtle);
+    }
+    .ai-toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+    }
+    .ai-toggle-switch input:checked + .ai-toggle-slider {
+      background-color: var(--primary);
+      border-color: var(--primary-light);
+    }
+    .ai-toggle-switch input:checked + .ai-toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    .ai-queue-items-container {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 250px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+    }
+    .ai-queue-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.18s, border-color 0.18s;
+    }
+    .ai-queue-row:hover {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .ai-queue-row-idx {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      width: 16px;
+      text-align: center;
+    }
+    .ai-queue-row-thumb {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .ai-queue-row-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .ai-queue-row-title {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ai-queue-row-channel {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .ai-queue-badge-status {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 99px;
+      flex-shrink: 0;
+    }
+    .status-preloading {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      animation: pulseGlow 1.4s infinite;
+    }
+    .status-ready {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-waiting {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-dim);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5)); }
+    }
+
+    .mini-ai-pill {
+      background: rgba(99, 102, 241, 0.18);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #c7d2fe;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      margin-left: 6px;
+    }
+    .mini-ai-pill:hover {
+      background: rgba(99, 102, 241, 0.3);
+    }
+
     /* Modal dialogs */
     .video-modal {
       display: none;
@@ -2737,30 +3196,31 @@
     </div>
   </main>
 
-  <!-- Sticky Bottom Media Player -->
+  <!-- Sticky Bottom Media Player (Mini Player) -->
   <div class="player-bar" id="player-bar">
-    <div class="player-info">
+    <div class="player-info" onclick="if(!event.target.closest('button, input')) openNowPlayingModal()" style="cursor:pointer;" title="Bấm để mở to màn hình phát (Now Playing / Đĩa Than)">
       <img id="player-thumb" class="player-thumb" src="" alt="Thumbnail">
       <div class="player-meta">
         <div class="player-title" id="player-title">Chưa chọn bài hát</div>
         <div class="player-channel">
           <span id="player-channel">YouTube</span>
           <span class="player-tag" id="player-format-tag">M4A</span>
+          <span id="mini-ai-pill" class="mini-ai-pill" onclick="event.stopPropagation(); openNowPlayingModal();" title="Bấm để xem danh sách 8 bài AI">✨ AI: 8 bài</span>
         </div>
       </div>
     </div>
 
     <div class="player-controls">
       <div class="control-btns">
-        <button class="control-btn" title="Lùi 10s" onclick="seekRelative(-10)">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path></svg>
+        <button class="control-btn" title="Bài trước (Previous)" onclick="playPrevTrack()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
         </button>
         <button class="control-btn control-btn-main" id="player-play-btn" onclick="togglePlay()">
           <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           <svg id="icon-pause" style="display:none;" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
         </button>
-        <button class="control-btn" title="Tiến 10s" onclick="seekRelative(10)">
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"></path></svg>
+        <button class="control-btn" title="Bài tiếp theo (Next - AI)" onclick="playNextTrack()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
         </button>
         <button class="control-btn" id="player-loop-btn" title="Lặp lại" onclick="toggleLoop()">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
@@ -2777,14 +3237,14 @@
     </div>
 
     <div class="player-extra">
-      <button class="control-btn" id="btn-video-popout" title="Xem Video" onclick="openVideoModal()" style="display:none;">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+      <button class="control-btn" id="btn-maximize-popout" title="Mở to màn hình phát (Now Playing / Đĩa Than)" onclick="openNowPlayingModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
       </button>
       <button class="control-btn" title="Sao chép link Stream" onclick="copyStreamUrl()">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </button>
       <button class="control-btn" title="Tải file về máy" onclick="downloadCurrent()">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       </button>
       <div class="volume-container">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
@@ -2815,14 +3275,105 @@
     </div>
   </div>
 
-  <!-- Video Modal -->
-  <div class="video-modal" id="video-modal" onclick="if(event.target===this) closeVideoModal()">
-    <div class="video-modal-content">
-      <div class="video-modal-header">
-        <div class="video-modal-title" id="video-modal-title">Xem Video</div>
-        <button class="close-btn" onclick="closeVideoModal()">&times;</button>
+  <!-- Universal Now Playing Fullscreen / Popout Screen -->
+  <div class="nowplaying-modal" id="nowplaying-modal" onclick="if(event.target===this) minimizePlayer()">
+    <div class="nowplaying-container">
+      <!-- Top bar with Minimize / Back button -->
+      <div class="nowplaying-topbar">
+        <button class="np-minimize-btn" onclick="minimizePlayer()" title="Thu nhỏ lại thanh phát nhạc (Picture-in-Picture / Mini Player)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          <span>Thu nhỏ</span>
+        </button>
+        <div class="np-badge-title" id="np-badge-title">
+          <span>🎧 ĐANG PHÁT</span>
+          <span class="player-tag" id="np-format-tag" style="font-size:0.7rem; padding:2px 8px;">M4A</span>
+        </div>
+        <button class="close-btn" onclick="minimizePlayer()" title="Thu nhỏ">&times;</button>
       </div>
-      <video id="modal-video-element" class="video-player-frame" controls playsinline preload="auto"></video>
+
+      <div class="np-main-content">
+        <!-- Stage 1: Audio Spinning Vinyl Disc (Hiển thị khi là Audio) -->
+        <div id="np-audio-stage" class="vinyl-stage">
+          <div class="vinyl-wrapper">
+            <div class="vinyl-disc" id="np-vinyl-disc">
+              <div class="vinyl-label">
+                <img id="np-vinyl-thumb" src="" alt="Album Artwork">
+              </div>
+              <div class="vinyl-hole"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage 2: Video Player Frame (Hiển thị khi là Video) -->
+        <div id="np-video-stage" style="display:none; width:100%; border-radius:16px; overflow:hidden; background:#000;">
+          <video id="modal-video-element" class="video-player-frame" controls playsinline preload="auto" style="width:100%; max-height:55dvh; display:block;"></video>
+        </div>
+
+        <!-- Song info -->
+        <div class="np-info-box">
+          <div class="np-song-title" id="np-song-title">Chưa chọn bài hát</div>
+          <div class="np-song-meta">
+            <span id="np-song-channel">YouTube</span>
+            <span>•</span>
+            <span id="np-song-duration">0:00</span>
+          </div>
+        </div>
+
+        <!-- Main Scrubber & Controls -->
+        <div class="np-controls-box">
+          <div class="np-scrub-row">
+            <span id="np-cur-time" style="font-size:0.8rem; font-weight:700; color:var(--text-dim); min-width:36px;">0:00</span>
+            <div class="np-scrub-bar" onclick="seekAbsolute(event)">
+              <div class="np-scrub-fill" id="np-scrub-fill"></div>
+            </div>
+            <span id="np-dur-time" style="font-size:0.8rem; font-weight:700; color:var(--text-dim); min-width:36px; text-align:right;">0:00</span>
+          </div>
+
+          <div class="np-buttons-row">
+            <button class="np-btn-action" title="Lặp lại" id="np-loop-btn" onclick="toggleLoop()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+            </button>
+            <button class="np-btn-action" title="Bài trước đó (Previous)" onclick="playPrevTrack()">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+            </button>
+            <button class="np-btn-play" id="np-play-btn" onclick="togglePlay()" title="Phát / Tạm dừng">
+              <svg id="np-icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <svg id="np-icon-pause" style="display:none;" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+            </button>
+            <button class="np-btn-action" title="Bài tiếp theo (Next - AI)" onclick="playNextTrack()">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+            </button>
+            <button class="np-btn-action" title="Tải bài này về máy" onclick="downloadCurrent()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- AI AutoPlay Next (8 bài hát tiếp theo) -->
+        <div class="ai-queue-card">
+          <div class="ai-queue-header">
+            <div class="ai-queue-title-wrap">
+              <span class="ai-sparkle-pill">✨ AutoPlay Next AI</span>
+              <span class="ai-queue-sub" id="ai-queue-counter">Duy trì 8 bài hát tương tự</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,0.06);" onclick="refreshAIQueue()" title="Làm mới hàng đợi AI">
+                🔄 Đổi bài
+              </button>
+              <label class="ai-toggle-switch" title="Bật/Tắt tự động phát tiếp theo bằng AI">
+                <input type="checkbox" id="ai-autoplay-toggle" checked onchange="toggleAIAutoPlay(this.checked)">
+                <span class="ai-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="ai-queue-items-container" id="ai-queue-list">
+            <div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">
+              ⏳ Bật AutoPlay để AI tự động chọn 8 bài hát tiếp theo...
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3213,33 +3764,106 @@
       }
     }
 
-    // Media Player Logic
+    // ──────────────────────────────────────────────────────────────────────────
+    // Media Player & Universal Now Playing View (Vinyl Spin / Video) & AI AutoPlay
+    // ──────────────────────────────────────────────────────────────────────────
+    let autoPlayAI = localStorage.getItem('fasttube_ai_autoplay') !== 'false';
+    let aiQueue = [];       // Holds exactly up to 8 AI recommended tracks
+    let playHistory = [];   // History of played tracks for Previous button
+    let isFetchingAI = false;
+
+    // Synchronize initial toggle switch
+    setTimeout(() => {
+      const toggle = document.getElementById('ai-autoplay-toggle');
+      if (toggle) toggle.checked = autoPlayAI;
+    }, 200);
+
+    function toggleAIAutoPlay(enable) {
+      autoPlayAI = !!enable;
+      localStorage.setItem('fasttube_ai_autoplay', autoPlayAI ? 'true' : 'false');
+      const toggle = document.getElementById('ai-autoplay-toggle');
+      if (toggle) toggle.checked = autoPlayAI;
+      showToast(autoPlayAI ? '✨ Đã bật chế độ AI AutoPlay (duy trì 8 bài)' : 'Đã tắt AI AutoPlay');
+
+      if (autoPlayAI && aiQueue.length === 0 && currentTrack) {
+        fetchAIQueue(currentTrack, 8);
+      }
+      renderAIQueue();
+    }
+
+    function openNowPlayingModal() {
+      const modal = document.getElementById('nowplaying-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+      }
+    }
+
+    function minimizePlayer() {
+      const modal = document.getElementById('nowplaying-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+      }
+      // Note: Audio and Video KEEP PLAYING seamlessly in the mini player!
+      showToast('🔽 Đã thu nhỏ xuống thanh phát nhạc');
+    }
+
+    // Alias for legacy calls
+    function openVideoModal() { openNowPlayingModal(); }
+    function closeVideoModal() { minimizePlayer(); }
+
     function startStreamingTrack(track) {
       currentTrack = track;
       const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : '';
       let streamUrl = track.stream_url || `/stream/${track.id}${cleanExt ? '?ext=' + cleanExt : ''}`;
-      // Cache-bust so a re-downloaded (different quality) file is not served stale.
       streamUrl += (streamUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
 
-      document.getElementById('player-thumb').src = track.thumb || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
+      const thumbUrl = track.thumb || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
+      const fmtLabel = (cleanExt || track.fmt || 'M4A').toUpperCase();
+
+      // 1. Update Sticky Bottom Player Bar (Mini Player)
+      document.getElementById('player-thumb').src = thumbUrl;
       document.getElementById('player-title').textContent = track.title;
       document.getElementById('player-channel').textContent = track.channel || 'YouTube';
-      document.getElementById('player-format-tag').textContent = (cleanExt || track.fmt || 'M4A').toUpperCase();
+      document.getElementById('player-format-tag').textContent = fmtLabel;
       document.getElementById('player-bar').classList.add('active');
 
+      // 2. Update Universal Now Playing Modal
+      document.getElementById('np-song-title').textContent = track.title;
+      document.getElementById('np-song-channel').textContent = track.channel || 'YouTube';
+      document.getElementById('np-format-tag').textContent = fmtLabel;
+      document.getElementById('np-vinyl-thumb').src = thumbUrl;
+
       const isVideo = (track.fmt || '').startsWith('mp4') || (track.fmt || '').includes('video');
-      const popoutBtn = document.getElementById('btn-video-popout');
-      popoutBtn.style.display = isVideo ? 'flex' : 'none';
+      const audioStage = document.getElementById('np-audio-stage');
+      const videoStage = document.getElementById('np-video-stage');
+      const badgeTitle = document.getElementById('np-badge-title');
 
       if (isVideo) {
         audio.pause();
+        audioStage.style.display = 'none';
+        videoStage.style.display = 'block';
+        badgeTitle.innerHTML = `<span>🎬 ĐANG PHÁT VIDEO</span><span class="player-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
         modalVideo.src = streamUrl;
-        openVideoModal();
-        modalVideo.play().catch(e => console.log('Autoplay:', e));
+        modalVideo.play().catch(e => console.log('Autoplay video error:', e));
+        document.getElementById('player-thumb').classList.remove('spinning');
       } else {
-        closeVideoModal();
+        modalVideo.pause();
+        videoStage.style.display = 'none';
+        audioStage.style.display = 'flex';
+        badgeTitle.innerHTML = `<span>💿 ĐANG PHÁT NHẠC</span><span class="player-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
         audio.src = streamUrl;
-        audio.play().catch(e => console.log('Autoplay:', e));
+        audio.play().catch(e => console.log('Autoplay audio error:', e));
+        document.getElementById('player-thumb').classList.add('spinning');
+      }
+
+      // Open Now Playing view so user enjoys the full experience
+      openNowPlayingModal();
+
+      // Trigger AI AutoPlay recommendations if enabled
+      if (autoPlayAI) {
+        fetchAIQueue(track, 8);
       }
     }
 
@@ -3254,8 +3878,37 @@
     }
 
     function updatePlayIcons(isPlaying) {
+      // Bottom mini player icons
       document.getElementById('icon-play').style.display = isPlaying ? 'none' : 'block';
       document.getElementById('icon-pause').style.display = isPlaying ? 'block' : 'none';
+
+      // Now Playing view icons
+      const npPlay = document.getElementById('np-icon-play');
+      const npPause = document.getElementById('np-icon-pause');
+      if (npPlay) npPlay.style.display = isPlaying ? 'none' : 'block';
+      if (npPause) npPause.style.display = isPlaying ? 'block' : 'none';
+
+      // Spinning Vinyl Disc animation state
+      const vinylDisc = document.getElementById('np-vinyl-disc');
+      const miniThumb = document.getElementById('player-thumb');
+      const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+
+      if (vinylDisc) {
+        if (isPlaying && !isVideo) {
+          vinylDisc.classList.add('playing');
+        } else {
+          vinylDisc.classList.remove('playing');
+        }
+      }
+
+      if (miniThumb) {
+        if (isPlaying && !isVideo) {
+          miniThumb.classList.add('spinning');
+          miniThumb.classList.remove('paused');
+        } else {
+          miniThumb.classList.add('paused');
+        }
+      }
     }
 
     function seekRelative(sec) {
@@ -3280,9 +3933,21 @@
       const dur = activeMedia.duration || 0;
       const pct = dur > 0 ? (cur / dur) * 100 : 0;
 
+      // Bottom bar
       document.getElementById('progress-fill').style.width = `${pct}%`;
       document.getElementById('player-cur-time').textContent = formatTime(cur);
       document.getElementById('player-dur-time').textContent = formatTime(dur);
+
+      // Now Playing view scrubber
+      const npFill = document.getElementById('np-scrub-fill');
+      const npCur = document.getElementById('np-cur-time');
+      const npDur = document.getElementById('np-dur-time');
+      const npDurSong = document.getElementById('np-song-duration');
+
+      if (npFill) npFill.style.width = `${pct}%`;
+      if (npCur) npCur.textContent = formatTime(cur);
+      if (npDur) npDur.textContent = formatTime(dur);
+      if (npDurSong && dur > 0) npDurSong.textContent = formatTime(dur);
     }
 
     function onTrackEnded() {
@@ -3291,15 +3956,28 @@
         const activeMedia = isVideo ? modalVideo : audio;
         activeMedia.currentTime = 0;
         activeMedia.play();
-      } else {
-        updatePlayIcons(false);
+        return;
       }
+
+      // Check AutoPlay Next AI
+      if (autoPlayAI && aiQueue.length > 0) {
+        showToast('✨ Tự động chuyển bài tiếp theo từ AI...');
+        playNextTrack();
+        return;
+      }
+
+      updatePlayIcons(false);
     }
 
     function toggleLoop() {
       isLooping = !isLooping;
       const btn = document.getElementById('player-loop-btn');
-      btn.style.color = isLooping ? 'var(--primary-light)' : 'var(--text-secondary)';
+      const npBtn = document.getElementById('np-loop-btn');
+      if (btn) btn.style.color = isLooping ? 'var(--primary-light)' : 'var(--text-secondary)';
+      if (npBtn) {
+        if (isLooping) npBtn.classList.add('active');
+        else npBtn.classList.remove('active');
+      }
       showToast(isLooping ? '🔁 Đã bật chế độ lặp lại' : 'Tắt chế độ lặp lại');
     }
 
@@ -3323,15 +4001,219 @@
       actionDownload(currentTrack.id, currentTrack.title);
     }
 
-    function openVideoModal() {
-      if (!currentTrack) return;
-      document.getElementById('video-modal-title').textContent = currentTrack.title;
-      document.getElementById('video-modal').classList.add('active');
+    // ──────────────────────────────────────────────────────────────────────────
+    // AI AutoPlay Queue & Background Pre-downloading (Load Ahead)
+    // ──────────────────────────────────────────────────────────────────────────
+    async function fetchAIQueue(track, targetCount = 8) {
+      if (!track || isFetchingAI) return;
+      isFetchingAI = true;
+      const queueList = document.getElementById('ai-queue-list');
+      if (aiQueue.length === 0 && queueList) {
+        queueList.innerHTML = '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">⏳ AI đang tìm kiếm 8 bài hát phù hợp nhất...</div>';
+      }
+
+      try {
+        const historyTitles = playHistory.map(p => p.title).concat(aiQueue.map(q => q.title));
+        if (track && track.title) historyTitles.push(track.title);
+
+        const resp = await fetch('/api/ai/autoplay_recommendations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            current_title: track.title,
+            current_id: track.id,
+            current_channel: track.channel || '',
+            history: historyTitles,
+            count: targetCount,
+            model: 'openai/gpt-oss-20b',
+            web_search: true
+          })
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.tracks && data.tracks.length > 0) {
+            // Deduplicate and append to queue
+            const existingIds = new Set(aiQueue.map(t => t.id));
+            if (track && track.id) existingIds.add(track.id);
+
+            for (const t of data.tracks) {
+              if (!existingIds.has(t.id)) {
+                existingIds.add(t.id);
+                t.fmt = selectedFormat;
+                aiQueue.push(t);
+              }
+            }
+            aiQueue = aiQueue.slice(0, 8); // Keep queue at exact 8 tracks
+            renderAIQueue();
+
+            // Pre-download the next track immediately
+            preloadNextTrack();
+          }
+        }
+      } catch (e) {
+        console.warn('AI recommendation fetch error:', e);
+      } finally {
+        isFetchingAI = false;
+        renderAIQueue();
+      }
     }
 
-    function closeVideoModal() {
-      document.getElementById('video-modal').classList.remove('active');
-      modalVideo.pause();
+    async function fetchMoreAIRec(count = 1) {
+      if (!currentTrack || isFetchingAI) return;
+      if (aiQueue.length >= 8) return; // Queue is full
+      const needed = 8 - aiQueue.length;
+      await fetchAIQueue(currentTrack, Math.max(count, needed));
+    }
+
+    function preloadNextTrack() {
+      if (!aiQueue || aiQueue.length === 0) return;
+      const nextTrack = aiQueue[0];
+      if (nextTrack.is_downloaded || nextTrack.preloading) return;
+
+      nextTrack.preloading = true;
+      renderAIQueue();
+
+      // Trigger background download to VPS disk
+      fetch('/api/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-access-password': getStoredPassword()
+        },
+        body: JSON.stringify({
+          id: nextTrack.id,
+          title: nextTrack.title,
+          format: selectedFormat
+        })
+      })
+      .then(r => r.json())
+      .then(res => {
+        nextTrack.is_downloaded = true;
+        nextTrack.preloading = false;
+        renderAIQueue();
+        console.log('Preloaded next track ready:', nextTrack.title);
+      })
+      .catch(err => {
+        nextTrack.preloading = false;
+        renderAIQueue();
+        console.warn('Preload next track failed:', err);
+      });
+    }
+
+    function playNextTrack() {
+      if (aiQueue.length > 0) {
+        const next = aiQueue.shift();
+        if (currentTrack) {
+          playHistory.push(currentTrack);
+          if (playHistory.length > 20) playHistory.shift();
+        }
+        startStreamingTrack(next);
+        renderAIQueue();
+
+        // Immediately preload the new next track and fetch 1 more from AI
+        preloadNextTrack();
+        fetchMoreAIRec(1);
+      } else {
+        showToast('ℹ️ Đang tìm thêm bài hát mới từ AI...');
+        if (currentTrack) fetchAIQueue(currentTrack, 8);
+      }
+    }
+
+    function playPrevTrack() {
+      if (playHistory.length > 0) {
+        const prev = playHistory.pop();
+        if (currentTrack) aiQueue.unshift(currentTrack);
+        startStreamingTrack(prev);
+        renderAIQueue();
+      } else {
+        showToast('ℹ️ Không có bài hát trước đó trong lịch sử');
+      }
+    }
+
+    function playQueueIndex(idx) {
+      if (idx < 0 || idx >= aiQueue.length) return;
+      const selected = aiQueue.splice(idx, 1)[0];
+      if (currentTrack) {
+        playHistory.push(currentTrack);
+        if (playHistory.length > 20) playHistory.shift();
+      }
+      startStreamingTrack(selected);
+      renderAIQueue();
+      preloadNextTrack();
+      fetchMoreAIRec(1);
+    }
+
+    function refreshAIQueue() {
+      if (!currentTrack) return;
+      aiQueue = [];
+      showToast('🔄 Đang đổi danh sách 8 bài hát AI mới...');
+      fetchAIQueue(currentTrack, 8);
+    }
+
+    function renderAIQueue() {
+      const container = document.getElementById('ai-queue-list');
+      const counterEl = document.getElementById('ai-queue-counter');
+      const miniPill = document.getElementById('mini-ai-pill');
+
+      if (counterEl) {
+        counterEl.textContent = `Hàng đợi: ${aiQueue.length}/8 bài hát`;
+      }
+      if (miniPill) {
+        miniPill.textContent = `✨ AI: ${aiQueue.length} bài`;
+        miniPill.style.display = autoPlayAI ? 'inline-flex' : 'none';
+      }
+
+      if (!container) return;
+
+      if (!autoPlayAI) {
+        container.innerHTML = '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">Đã tắt AutoPlay. Gạt công tắc phía trên để AI tự động chọn nhạc.</div>';
+        return;
+      }
+
+      if (aiQueue.length === 0) {
+        container.innerHTML = isFetchingAI 
+          ? '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">⏳ AI đang tìm kiếm 8 bài hát phù hợp nhất...</div>'
+          : '<div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">Hàng đợi trống. Nhấn Đổi bài để nạp gợi ý AI.</div>';
+        return;
+      }
+
+      let html = '';
+      aiQueue.forEach((t, i) => {
+        let badgeHtml = '';
+        if (i === 0) {
+          if (t.is_downloaded) {
+            badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Đã tải trước (0s)</span>';
+          } else if (t.preloading) {
+            badgeHtml = '<span class="ai-queue-badge-status status-preloading">⚡ Đang tải trước...</span>';
+          } else {
+            badgeHtml = '<span class="ai-queue-badge-status status-waiting">⏳ Tiếp theo</span>';
+          }
+        } else {
+          if (t.is_downloaded) {
+            badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Sẵn sàng</span>';
+          } else {
+            badgeHtml = `<span class="ai-queue-badge-status status-waiting">#${i + 1} Chờ</span>`;
+          }
+        }
+
+        const thumb = t.thumb || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`;
+        html += `
+          <div class="ai-queue-row" onclick="playQueueIndex(${i})" title="Bấm để phát ngay bài này">
+            <div class="ai-queue-row-idx">${i + 1}</div>
+            <img class="ai-queue-row-thumb" src="${thumb}" alt="thumb">
+            <div class="ai-queue-row-info">
+              <div class="ai-queue-row-title">${t.title}</div>
+              <div class="ai-queue-row-channel">${t.channel || 'YouTube'} • ${t.duration || '0:00'}</div>
+            </div>
+            ${badgeHtml}
+          </div>
+        `;
+      });
+      container.innerHTML = html;
     }
 
     function formatTime(s) {
