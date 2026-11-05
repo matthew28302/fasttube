@@ -4070,12 +4070,13 @@
           showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
         }
         _updateCardBadge(id, data.format);
-        startStreamingTrack({ id: data.file_id, title: data.title, channel, thumb, fmt });
+        startStreamingTrack({ id: data.file_id || id, title: data.title || title, channel, thumb, fmt: data.format || fmt, is_downloaded: true }, -1, true);
       } catch (err) {
         if (err.name === 'AbortError') {
           return; // Silently handled or notified
         }
         showToast(`❌ Lỗi phát: ${err.message}`);
+        console.error('Playback error:', err);
       } finally {
         if (currentLoadingTrack && currentLoadingTrack.id === id) {
           currentLoadingTrack = null;
@@ -4142,7 +4143,7 @@
     }
 
     function _updateCardBadge(id, formatName) {
-      if (!formatName) return;
+      if (!formatName || !id) return;
       const card = document.getElementById(`card-${id}`);
       if (!card) return;
       const thumbWrap = card.querySelector('.card-thumb-wrap');
@@ -4156,9 +4157,12 @@
         thumbWrap.prepend(badge);
       } else {
         const txt = badge.querySelector('span');
-        if (txt && !txt.textContent.includes(fmtUpper)) {
-          const raw = txt.textContent.replace('Đã tải (', '').replace(')', '').trim();
-          txt.textContent = `Đã tải (${raw ? raw + ', ' + fmtUpper : fmtUpper})`;
+        if (txt) {
+          const content = txt.textContent || '';
+          if (!content.includes(fmtUpper)) {
+            const raw = content.replace('Đã tải (', '').replace(')', '').trim();
+            txt.textContent = `Đã tải (${raw ? raw + ', ' + fmtUpper : fmtUpper})`;
+          }
         }
       }
     }
@@ -4213,7 +4217,7 @@
     function openVideoModal() { openNowPlayingModal(); }
     function closeVideoModal() { minimizePlayer(); }
 
-    function startStreamingTrack(track, queueIndex = -1) {
+    function startStreamingTrack(track, queueIndex = -1, isNewSelection = false) {
       if (!track) return;
       currentTrack = track;
       const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : ((track.fmt || '').includes('video') ? 'mp4' : 'm4a');
@@ -4228,32 +4232,61 @@
       const thumbUrl = track.thumb || track.thumbnail || `https://i.ytimg.com/vi/${track.id || track.file_id}/hqdefault.jpg`;
       const fmtLabel = (cleanExt || track.fmt || (isVideo ? 'MP4' : 'M4A')).toUpperCase();
 
-      // 1. Update Sticky Bottom Player Bar (Mini Player)
-      document.getElementById('player-thumb').src = thumbUrl;
-      document.getElementById('player-title').textContent = track.title;
-      document.getElementById('player-channel').textContent = track.channel || 'YouTube';
-      document.getElementById('player-format-tag').textContent = fmtLabel;
-      document.getElementById('player-bar').classList.add('active');
+      // 1. Update Sticky Bottom Player Bar (Mini Player) - with safe null-checks
+      const pThumb = document.getElementById('player-thumb');
+      const pTitle = document.getElementById('player-title');
+      const pChannel = document.getElementById('player-channel');
+      const pFmtTag = document.getElementById('player-format-tag');
+      const pBar = document.getElementById('player-bar');
 
-      // 2. Update Universal Now Playing Modal
-      document.getElementById('np-song-title').textContent = track.title;
-      document.getElementById('np-song-channel').textContent = track.channel || 'YouTube';
-      document.getElementById('np-format-tag').textContent = fmtLabel;
-      document.getElementById('np-vinyl-thumb').src = thumbUrl;
+      if (pThumb) pThumb.src = thumbUrl;
+      if (pTitle) pTitle.textContent = track.title || 'Đang phát';
+      if (pChannel) pChannel.textContent = track.channel || 'YouTube';
+      if (pFmtTag) pFmtTag.textContent = fmtLabel;
+      if (pBar) pBar.classList.add('active');
+
+      // 2. Update Universal Now Playing Modal - with safe null-checks
+      const npTitle = document.getElementById('np-song-title');
+      const npChannel = document.getElementById('np-song-channel');
+      const npVinylThumb = document.getElementById('np-vinyl-thumb');
+
+      if (npTitle) npTitle.textContent = track.title || 'Đang phát';
+      if (npChannel) npChannel.textContent = track.channel || 'YouTube';
+      if (npVinylThumb) npVinylThumb.src = thumbUrl;
 
       const audioStage = document.getElementById('np-audio-stage');
       const videoStage = document.getElementById('np-video-stage');
       const badgeTitle = document.getElementById('np-badge-title');
 
+      if (badgeTitle) {
+        badgeTitle.innerHTML = isVideo 
+          ? `<span>🎬 ĐANG PHÁT VIDEO</span><span class="player-tag" id="np-format-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`
+          : `<span>💿 ĐANG PHÁT NHẠC</span><span class="player-tag" id="np-format-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
+      }
+
+      // Reset progress indicators immediately to 0:00 for the new track
+      const progFill = document.getElementById('progress-fill');
+      const curTime = document.getElementById('player-cur-time');
+      const durTime = document.getElementById('player-dur-time');
+      const npScrubFill = document.getElementById('np-scrub-fill');
+      const npCurTime = document.getElementById('np-cur-time');
+      const npDurTime = document.getElementById('np-dur-time');
+
+      if (progFill) progFill.style.width = '0%';
+      if (curTime) curTime.textContent = '0:00';
+      if (durTime && track.duration) durTime.textContent = track.duration;
+      if (npScrubFill) npScrubFill.style.width = '0%';
+      if (npCurTime) npCurTime.textContent = '0:00';
+      if (npDurTime && track.duration) npDurTime.textContent = track.duration;
+
       if (isVideo) {
         audio.pause();
-        audioStage.style.display = 'none';
-        videoStage.style.display = 'block';
-        badgeTitle.innerHTML = `<span>🎬 ĐANG PHÁT VIDEO</span><span class="player-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
+        if (audioStage) audioStage.style.display = 'none';
+        if (videoStage) videoStage.style.display = 'block';
         
         modalVideo.pause();
+        modalVideo.currentTime = 0;
         modalVideo.src = streamUrl;
-        modalVideo.load();
         const p = modalVideo.play();
         if (p !== undefined) {
           p.catch(e => {
@@ -4267,21 +4300,23 @@
             });
           });
         }
-        document.getElementById('player-thumb').classList.remove('spinning');
+        if (pThumb) pThumb.classList.remove('spinning');
       } else {
         modalVideo.pause();
-        videoStage.style.display = 'none';
-        audioStage.style.display = 'flex';
-        badgeTitle.innerHTML = `<span>💿 ĐANG PHÁT NHẠC</span><span class="player-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
+        if (videoStage) videoStage.style.display = 'none';
+        if (audioStage) audioStage.style.display = 'flex';
         
         audio.pause();
+        audio.currentTime = 0;
         audio.src = streamUrl;
-        audio.load();
         const p = audio.play();
         if (p !== undefined) {
-          p.catch(e => console.warn('Autoplay audio error:', e));
+          p.catch(e => {
+            console.warn('Autoplay audio error:', e);
+            updatePlayIcons(false);
+          });
         }
-        document.getElementById('player-thumb').classList.add('spinning');
+        if (pThumb) pThumb.classList.add('spinning');
       }
 
       // Open Now Playing view
@@ -4289,27 +4324,34 @@
 
       // Maintain growing AI playlist
       const trackId = track.id || track.file_id;
-      if (queueIndex >= 0) {
+      if (isNewSelection) {
+        // When user explicitly selects a new song to play:
+        // Start a fresh growing list with this song as #1
+        aiTrackList = [{ ...track, id: trackId, is_downloaded: true }];
+        currentAIIndex = 0;
+        isFetchingAI = false; // Reset lock so new song gets recommendations immediately!
+        if (autoPlayAI) {
+          fetchAIRecommendations(track, 8);
+        }
+      } else if (queueIndex >= 0) {
         currentAIIndex = queueIndex;
+        // Check remaining upcoming tracks. If less than 4 ahead, fetch more to grow list!
+        const remainingAhead = aiTrackList.length - 1 - currentAIIndex;
+        if (autoPlayAI && remainingAhead < 4) {
+          fetchAIRecommendations(track, Math.max(3, 8 - remainingAhead));
+        }
       } else {
         const foundIdx = aiTrackList.findIndex(t => (t.id || t.file_id) === trackId);
         if (foundIdx >= 0) {
           currentAIIndex = foundIdx;
         } else {
-          if (aiTrackList.length === 0) {
-            aiTrackList = [{ ...track, id: trackId }];
-            currentAIIndex = 0;
-          } else {
-            aiTrackList.push({ ...track, id: trackId });
-            currentAIIndex = aiTrackList.length - 1;
-          }
+          aiTrackList.push({ ...track, id: trackId });
+          currentAIIndex = aiTrackList.length - 1;
         }
-      }
-
-      // Check remaining upcoming tracks. If less than 6 ahead, fetch more to grow list!
-      const remainingAhead = aiTrackList.length - 1 - currentAIIndex;
-      if (autoPlayAI && remainingAhead < 6) {
-        fetchAIRecommendations(track, Math.max(4, 8 - remainingAhead));
+        const remainingAhead = aiTrackList.length - 1 - currentAIIndex;
+        if (autoPlayAI && remainingAhead < 4) {
+          fetchAIRecommendations(track, Math.max(3, 8 - remainingAhead));
+        }
       }
 
       renderAIQueue();
@@ -4327,8 +4369,10 @@
 
     function updatePlayIcons(isPlaying) {
       // Bottom mini player icons
-      document.getElementById('icon-play').style.display = isPlaying ? 'none' : 'block';
-      document.getElementById('icon-pause').style.display = isPlaying ? 'block' : 'none';
+      const icPlay = document.getElementById('icon-play');
+      const icPause = document.getElementById('icon-pause');
+      if (icPlay) icPlay.style.display = isPlaying ? 'none' : 'block';
+      if (icPause) icPause.style.display = isPlaying ? 'block' : 'none';
 
       // Now Playing view icons
       const npPlay = document.getElementById('np-icon-play');
@@ -4382,9 +4426,13 @@
       const pct = dur > 0 ? (cur / dur) * 100 : 0;
 
       // Bottom bar
-      document.getElementById('progress-fill').style.width = `${pct}%`;
-      document.getElementById('player-cur-time').textContent = formatTime(cur);
-      document.getElementById('player-dur-time').textContent = formatTime(dur);
+      const pFill = document.getElementById('progress-fill');
+      const pCur = document.getElementById('player-cur-time');
+      const pDur = document.getElementById('player-dur-time');
+
+      if (pFill) pFill.style.width = `${pct}%`;
+      if (pCur) pCur.textContent = formatTime(cur);
+      if (pDur) pDur.textContent = formatTime(dur);
 
       // Now Playing view scrubber
       const npFill = document.getElementById('np-scrub-fill');
@@ -4683,7 +4731,15 @@
     }
 
     async function fetchOneMoreAIRec() {
-      if (!currentTrack || isFetchingAI) return;
+      if (!currentTrack) return;
+      if (isFetchingAI) {
+        setTimeout(() => {
+          if (currentTrack && !isFetchingAI) {
+            fetchAIRecommendations(currentTrack, 1);
+          }
+        }, 1500);
+        return;
+      }
       await fetchAIRecommendations(currentTrack, 1);
     }
 
@@ -4696,7 +4752,7 @@
       if (currentAIIndex + 1 < aiTrackList.length) {
         currentAIIndex++;
         const next = aiTrackList[currentAIIndex];
-        startStreamingTrack(next, currentAIIndex);
+        startStreamingTrack(next, currentAIIndex, false);
         showToast(`⏭️ Đang phát bài #${currentAIIndex + 1}: "${next.title}"`);
         
         // Fetch 1 more track from AI to grow list further!
@@ -4730,7 +4786,7 @@
       if (currentAIIndex > 0) {
         currentAIIndex--;
         const prev = aiTrackList[currentAIIndex];
-        startStreamingTrack(prev, currentAIIndex);
+        startStreamingTrack(prev, currentAIIndex, false);
         showToast(`⏮️ Quay lại bài #${currentAIIndex + 1}: "${prev.title}"`);
         return;
       }
@@ -4753,7 +4809,7 @@
       if (idx < 0 || idx >= aiTrackList.length) return;
       currentAIIndex = idx;
       const selected = aiTrackList[idx];
-      startStreamingTrack(selected, idx);
+      startStreamingTrack(selected, idx, false);
 
       const remaining = aiTrackList.length - 1 - currentAIIndex;
       if (autoPlayAI && remaining < 4) {
