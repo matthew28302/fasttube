@@ -2203,6 +2203,137 @@
       background: #10b981;
       box-shadow: 0 0 8px #10b981;
     }
+
+    /* Loop / Repeat Active State */
+    .np-btn-action.active,
+    .control-btn.active {
+      color: #38bdf8 !important;
+      background: rgba(56, 189, 248, 0.22) !important;
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+    }
+
+    /* Smart Multi-Criteria Filter Card */
+    .smart-filter-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 20px;
+      padding: 22px;
+      margin: 10px auto 26px;
+      max-width: 920px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .filter-section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .filter-chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .filter-chip {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      font-size: 0.81rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-chip:hover {
+      border-color: var(--primary);
+      color: var(--text-main);
+      background: rgba(99, 102, 241, 0.12);
+    }
+    .filter-chip.active {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+      color: #ffffff !important;
+      border-color: transparent !important;
+      box-shadow: 0 3px 12px rgba(99, 102, 241, 0.4);
+    }
+    .filter-chip.active-secondary {
+      background: linear-gradient(135deg, #ec4899, #f43f5e) !important;
+      color: #ffffff !important;
+      border-color: transparent !important;
+      box-shadow: 0 3px 12px rgba(244, 63, 94, 0.4);
+    }
+    .filter-chip-remove {
+      font-size: 1.05rem;
+      line-height: 1;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+    .filter-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .filter-text-input {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 9px 14px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .filter-text-input:focus {
+      border-color: var(--primary);
+    }
+    .filter-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 680px) {
+      .filter-grid-2col {
+        grid-template-columns: 1fr;
+      }
+    }
+    .filter-random-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      user-select: none;
+    }
+    .filter-random-toggle input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #6366f1;
+      cursor: pointer;
+    }
+    .filter-actions-row {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 4px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
     .playlist-preset-chips {
       display: flex;
       gap: 8px;
@@ -2833,6 +2964,40 @@
         max-height: 65dvh !important;
       }
 
+      /* Universal Now Playing View on Mobile & iPhone */
+      .nowplaying-modal {
+        padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+        background: rgba(10, 14, 23, 0.96) !important;
+      }
+      .nowplaying-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: auto !important;
+        border-radius: 18px !important;
+        max-height: 96dvh !important;
+      }
+      .nowplaying-topbar {
+        padding: 10px 14px !important;
+      }
+      .np-main-content {
+        padding: 12px 14px 18px !important;
+        gap: 12px !important;
+      }
+      .vinyl-stage {
+        padding: 10px 0 !important;
+      }
+      .vinyl-disc {
+        width: 170px !important;
+        height: 170px !important;
+      }
+      .vinyl-label {
+        width: 76px !important;
+        height: 76px !important;
+      }
+      #np-video-stage video {
+        max-height: 42dvh !important;
+      }
+
       /* Toast */
       .toast-container {
         top: max(10px, env(safe-area-inset-top)) !important;
@@ -3095,9 +3260,164 @@
 
     <!-- PLAYLIST TAB -->
     <section id="view-playlist" style="display: none;">
-      <div class="hero">
-        <h1 class="hero-clean-title">Tạo Playlist AI</h1>
+      <div class="hero" style="margin-bottom: 20px;">
+        <h1 class="hero-clean-title">✨ AI Playlist Studio</h1>
+        <p style="color:var(--text-secondary); font-size:0.92rem; margin-top:4px;">Tạo danh sách phát thông minh theo ca sĩ, thể loại, năm phát hành và chế độ ngẫu nhiên</p>
+      </div>
 
+      <!-- Mode Switcher -->
+      <div style="display:flex; justify-content:center; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
+        <button id="pl-mode-filter-btn" class="filter-chip active" onclick="switchPlaylistMode('filter')" style="padding:8px 18px; font-size:0.88rem;">
+          🎯 Bộ Lọc Đa Tiêu Chí (Đề xuất)
+        </button>
+        <button id="pl-mode-custom-btn" class="filter-chip" onclick="switchPlaylistMode('custom')" style="padding:8px 18px; font-size:0.88rem;">
+          ✍️ Tự Nhập Mô Tả (Custom Prompt)
+        </button>
+        <button class="filter-chip" onclick="toggleSavedDrawer()" style="padding:8px 18px; font-size:0.88rem; background:rgba(234,179,8,0.12); color:#facc15; border-color:rgba(234,179,8,0.3);">
+          📂 Xem Playlist Đã Lưu
+        </button>
+      </div>
+
+      <!-- Mode 1: Smart Filter Box (Mặc định) -->
+      <div id="pl-smart-filter-box" class="smart-filter-card">
+        <!-- 1. Ca sĩ / Nghệ sĩ (Mặc định lọc theo ca sĩ) -->
+        <div>
+          <div class="filter-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            <span>1. Ca Sĩ / Nghệ Sĩ (Mặc định lọc theo ca sĩ • Chọn được nhiều)</span>
+            <span id="filter-artists-count" style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;"></span>
+          </div>
+          
+          <div class="filter-chip-group" id="filter-artists-chips">
+            <span class="filter-chip" data-val="Sơn Tùng M-TP" onclick="toggleFilterArtist(this, 'Sơn Tùng M-TP')">🎤 Sơn Tùng M-TP</span>
+            <span class="filter-chip" data-val="Soobin" onclick="toggleFilterArtist(this, 'Soobin')">🎤 Soobin</span>
+            <span class="filter-chip" data-val="HIEUTHUHAI" onclick="toggleFilterArtist(this, 'HIEUTHUHAI')">🎤 HIEUTHUHAI</span>
+            <span class="filter-chip" data-val="Vũ." onclick="toggleFilterArtist(this, 'Vũ.')">🎤 Vũ.</span>
+            <span class="filter-chip" data-val="Đen Vâu" onclick="toggleFilterArtist(this, 'Đen Vâu')">🎤 Đen Vâu</span>
+            <span class="filter-chip" data-val="Thanh Hưng" onclick="toggleFilterArtist(this, 'Thanh Hưng')">🎤 Thanh Hưng</span>
+            <span class="filter-chip" data-val="Erik" onclick="toggleFilterArtist(this, 'Erik')">🎤 Erik</span>
+            <span class="filter-chip" data-val="Đức Phúc" onclick="toggleFilterArtist(this, 'Đức Phúc')">🎤 Đức Phúc</span>
+            <span class="filter-chip" data-val="Mono" onclick="toggleFilterArtist(this, 'Mono')">🎤 Mono</span>
+            <span class="filter-chip" data-val="Trung Quân" onclick="toggleFilterArtist(this, 'Trung Quân')">🎤 Trung Quân</span>
+            <span class="filter-chip" data-val="Hà Anh Tuấn" onclick="toggleFilterArtist(this, 'Hà Anh Tuấn')">🎤 Hà Anh Tuấn</span>
+            <span class="filter-chip" data-val="Charlie Puth" onclick="toggleFilterArtist(this, 'Charlie Puth')">🌟 Charlie Puth</span>
+            <span class="filter-chip" data-val="Taylor Swift" onclick="toggleFilterArtist(this, 'Taylor Swift')">🌟 Taylor Swift</span>
+            <span class="filter-chip" data-val="BTS" onclick="toggleFilterArtist(this, 'BTS')">🌟 BTS</span>
+            <span class="filter-chip" data-val="BLACKPINK" onclick="toggleFilterArtist(this, 'BLACKPINK')">🌟 BLACKPINK</span>
+          </div>
+
+          <!-- Custom Artist Input -->
+          <div class="filter-input-row">
+            <input type="text" id="filter-custom-artist" class="filter-text-input" placeholder="Nhập tên ca sĩ khác rồi bấm Thêm (ví dụ: Hoàng Dũng, Min, Jack...)" onkeydown="if(event.key==='Enter') addCustomArtist()">
+            <button type="button" class="btn btn-play" onclick="addCustomArtist()" style="padding:8px 16px; font-size:0.84rem; white-space:nowrap;">
+              ➕ Thêm ca sĩ
+            </button>
+          </div>
+          <div id="filter-selected-artists-badges" style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;"></div>
+        </div>
+
+        <!-- 2. Thể loại (Genres - Chọn nhiều) -->
+        <div>
+          <div class="filter-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <span>2. Thể Loại / Dòng Nhạc (Chọn 1 hoặc nhiều)</span>
+            <span id="filter-genres-count" style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;"></span>
+          </div>
+          <div class="filter-chip-group" id="filter-genres-chips">
+            <span class="filter-chip" data-val="Ballad" onclick="toggleFilterGenre(this, 'Ballad')">💔 Ballad</span>
+            <span class="filter-chip" data-val="Remix" onclick="toggleFilterGenre(this, 'Remix')">⚡ Remix / Vinahouse</span>
+            <span class="filter-chip" data-val="UK Drill" onclick="toggleFilterGenre(this, 'UK Drill')">🔥 UK Drill</span>
+            <span class="filter-chip" data-val="Rock & Roll" onclick="toggleFilterGenre(this, 'Rock & Roll')">🎸 Rock & Roll</span>
+            <span class="filter-chip" data-val="V-Pop" onclick="toggleFilterGenre(this, 'V-Pop')">🇻🇳 V-Pop</span>
+            <span class="filter-chip" data-val="K-Pop" onclick="toggleFilterGenre(this, 'K-Pop')">🇰🇷 K-Pop</span>
+            <span class="filter-chip" data-val="US-UK" onclick="toggleFilterGenre(this, 'US-UK')">🌍 US-UK</span>
+            <span class="filter-chip" data-val="R&B" onclick="toggleFilterGenre(this, 'R&B')">🎷 R&B / Soul</span>
+            <span class="filter-chip" data-val="EDM" onclick="toggleFilterGenre(this, 'EDM')">🎧 EDM / Dance</span>
+            <span class="filter-chip" data-val="Lofi Chill" onclick="toggleFilterGenre(this, 'Lofi Chill')">🌧️ Lofi Chill</span>
+            <span class="filter-chip" data-val="Indie" onclick="toggleFilterGenre(this, 'Indie')">🍃 Indie Việt</span>
+            <span class="filter-chip" data-val="Bolero" onclick="toggleFilterGenre(this, 'Bolero')">📻 Bolero / Trữ Tình</span>
+            <span class="filter-chip" data-val="Rap / Hip-hop" onclick="toggleFilterGenre(this, 'Rap / Hip-hop')">🎤 Rap / Hip-Hop</span>
+            <span class="filter-chip" data-val="Acoustic" onclick="toggleFilterGenre(this, 'Acoustic')">☕ Acoustic Mộc</span>
+          </div>
+        </div>
+
+        <!-- 3. Thời gian / Năm phát hành & Tâm trạng -->
+        <div class="filter-grid-2col">
+          <div>
+            <div class="filter-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <span>3. Năm Phát Hành / Thời Gian</span>
+            </div>
+            <div class="filter-chip-group" id="filter-year-chips">
+              <span class="filter-chip active" data-val="2026" onclick="setFilterYear(this, '2026')">✨ 2026 (Mới nhất)</span>
+              <span class="filter-chip" data-val="2025" onclick="setFilterYear(this, '2025')">2025</span>
+              <span class="filter-chip" data-val="2024" onclick="setFilterYear(this, '2024')">2024</span>
+              <span class="filter-chip" data-val="2020 - 2023" onclick="setFilterYear(this, '2020 - 2023')">2020-2023</span>
+              <span class="filter-chip" data-val="2010s" onclick="setFilterYear(this, '2010s')">2010s Hoài Niệm</span>
+              <span class="filter-chip" data-val="" onclick="setFilterYear(this, '')">Tất cả thời gian</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="filter-section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+              <span>4. Tâm Trạng / Vibe</span>
+            </div>
+            <div class="filter-chip-group" id="filter-mood-chips">
+              <span class="filter-chip active" data-val="" onclick="setFilterMood(this, '')">Bất kỳ</span>
+              <span class="filter-chip" data-val="Chill thư giãn" onclick="setFilterMood(this, 'Chill thư giãn')">🌿 Chill thư giãn</span>
+              <span class="filter-chip" data-val="Sôi động bay lắc" onclick="setFilterMood(this, 'Sôi động bay lắc')">🔥 Sôi động</span>
+              <span class="filter-chip" data-val="Tâm trạng suy buồn" onclick="setFilterMood(this, 'Tâm trạng suy buồn')">💧 Suy buồn</span>
+              <span class="filter-chip" data-val="Tập gym thể thao" onclick="setFilterMood(this, 'Tập gym thể thao')">⚡ Tập gym</span>
+              <span class="filter-chip" data-val="Lãng mạn ngọt ngào" onclick="setFilterMood(this, 'Lãng mạn ngọt ngào')">💖 Lãng mạn</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Tùy chọn Random & Cấu hình -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; padding:12px 16px; background:rgba(255,255,255,0.03); border-radius:14px; border:1px solid var(--border-subtle);">
+          <label class="filter-random-toggle" title="Chọn ngẫu nhiên kết quả các bài hát từ các ca sĩ và thể loại đã chọn để danh sách phong phú nhất">
+            <input type="checkbox" id="filter-random-checkbox" checked>
+            <span>🎲 Random ngẫu nhiên bài hát (Xáo trộn đa dạng)</span>
+          </label>
+
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Số lượng:</span>
+              <select id="filter-limit" class="prompt-select" style="padding:6px 10px; font-size:0.82rem;">
+                <option value="8" selected>8 bài (Chuẩn)</option>
+                <option value="12">12 bài</option>
+                <option value="16">16 bài</option>
+                <option value="20">20 bài</option>
+              </select>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Định dạng:</span>
+              <select id="filter-format" class="prompt-select" style="padding:6px 10px; font-size:0.82rem;">
+                <option value="m4a" selected>⚡ M4A 128k (Nhạc nhanh)</option>
+                <option value="mp3_320">🎵 MP3 320k (Nét căng)</option>
+                <option value="mp4_720">🎬 MP4 720p HD (Video)</option>
+                <option value="mp4_1080">🎬 MP4 1080p FHD (Video)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Row -->
+        <div class="filter-actions-row">
+          <button type="button" class="btn" onclick="resetSmartFilter()" style="padding:10px 18px; background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); color:var(--text-secondary); border-radius:12px; font-weight:600; cursor:pointer;">
+            🔄 Đặt lại bộ lọc
+          </button>
+          <button type="button" class="search-btn" id="btn-smart-gen-playlist" onclick="generateSmartPlaylist()" style="padding:11px 26px; font-size:0.95rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+            <span>✨ Tạo Playlist Theo Bộ Lọc</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mode 2: Custom Prompt Box -->
+      <div id="pl-custom-prompt-box" style="display:none; margin-bottom:24px;">
         <div class="playlist-preset-chips">
           <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Top 10 bài nhạc UK Drill sôi động mới nhất')">🔥 UK Drill sôi động</span>
           <span class="playlist-preset-chip" onclick="quickPlaylistPrompt('Nhạc lofi acoustic chill mưa rơi đêm muộn')">🌧️ Lofi chill đêm muộn</span>
@@ -3136,51 +3456,55 @@
         </div>
       </div>
 
-        <div class="playlist-header-bar" style="display: flex; justify-content: space-between; align-items: center; margin: 28px 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 12px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <div id="playlist-current-heading" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Danh sách bài hát</div>
-            <span class="section-badge" id="playlist-badge" style="display:none;">0 bài</span>
-          </div>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="btn btn-play" onclick="toggleSavedDrawer()" style="padding: 9px 18px;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-              <span>Xem Playlist Đã Lưu</span>
-            </button>
-          </div>
+      <div class="playlist-header-bar" style="display: flex; justify-content: space-between; align-items: center; margin: 28px 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div id="playlist-current-heading" style="font-size: 1.25rem; font-weight: 800; color: var(--text-main);">Danh sách bài hát</div>
+          <span class="section-badge" id="playlist-badge" style="display:none;">0 bài</span>
         </div>
-
-        <div id="playlist-status" style="text-align:center; color:var(--text-secondary); margin:14px 0; font-weight:600;"></div>
-        
-        <div id="playlist-controls" class="playlist-control-bar" style="display:none;">
-          <!-- Nút Tải toàn bộ playlist duy nhất trên đầu -->
-          <button class="btn btn-download" id="btn-dl-all-playlist" style="display:none; padding:11px 24px; font-size:0.95rem;" onclick="triggerDownloadAllPlaylist()">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span id="btn-dl-all-label">Tải toàn bộ playlist này</span>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn btn-play" onclick="saveGeneratedToAIPlaylist()" id="btn-save-gen-playlist" style="display:none; padding: 9px 18px; background:rgba(234,179,8,0.15); color:#facc15; border-color:rgba(234,179,8,0.3);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <span>Lưu Vào AI Playlist</span>
           </button>
-
-          <!-- Các nút phát nhạc khi playlist đã sẵn sàng -->
-          <div id="playlist-play-controls" style="display:none; gap:10px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-play" onclick="playPlaylist(false)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <span>Phát tất cả</span>
-            </button>
-            <button class="btn btn-play" onclick="playPlaylist(true)">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-              <span>Xáo trộn</span>
-            </button>
-            <button class="btn btn-play" onclick="prevPlaylist()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
-              <span>Trước</span>
-            </button>
-            <button class="btn btn-play" onclick="nextPlaylist()">
-              <span>Tiếp</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-            </button>
-          </div>
+          <button class="btn btn-play" onclick="toggleSavedDrawer()" style="padding: 9px 18px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            <span>Xem Playlist Đã Lưu</span>
+          </button>
         </div>
+      </div>
 
-        <div class="results-grid" id="playlist-grid"></div>
-      </section>
+      <div id="playlist-status" style="text-align:center; color:var(--text-secondary); margin:14px 0; font-weight:600;"></div>
+      
+      <div id="playlist-controls" class="playlist-control-bar" style="display:none;">
+        <!-- Nút Tải toàn bộ playlist duy nhất trên đầu -->
+        <button class="btn btn-download" id="btn-dl-all-playlist" style="display:none; padding:11px 24px; font-size:0.95rem;" onclick="triggerDownloadAllPlaylist()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span id="btn-dl-all-label">Tải toàn bộ playlist này</span>
+        </button>
+
+        <!-- Các nút phát nhạc khi playlist đã sẵn sàng -->
+        <div id="playlist-play-controls" style="display:none; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button class="btn btn-play" onclick="playPlaylist(false)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Phát tất cả</span>
+          </button>
+          <button class="btn btn-play" onclick="playPlaylist(true)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+            <span>Xáo trộn</span>
+          </button>
+          <button class="btn btn-play" onclick="prevPlaylist()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
+            <span>Trước</span>
+          </button>
+          <button class="btn btn-play" onclick="nextPlaylist()">
+            <span>Tiếp</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="results-grid" id="playlist-grid"></div>
+    </section>
 
     <!-- Saved Playlists Drawer -->
     <div id="saved-drawer">
@@ -3240,6 +3564,9 @@
       <button class="control-btn" id="btn-maximize-popout" title="Mở to màn hình phát (Now Playing / Đĩa Than)" onclick="openNowPlayingModal()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
       </button>
+      <button class="control-btn" title="Thêm vào AI Playlist" onclick="saveCurrentToAIPlaylist()" style="color:#facc15;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      </button>
       <button class="control-btn" title="Sao chép link Stream" onclick="copyStreamUrl()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </button>
@@ -3288,7 +3615,13 @@
           <span>🎧 ĐANG PHÁT</span>
           <span class="player-tag" id="np-format-tag" style="font-size:0.7rem; padding:2px 8px;">M4A</span>
         </div>
-        <button class="close-btn" onclick="minimizePlayer()" title="Thu nhỏ">&times;</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="np-minimize-btn" onclick="saveCurrentToAIPlaylist()" title="Thêm bài này vào tab AI Playlist" style="background:rgba(234,179,8,0.15); border-color:rgba(234,179,8,0.3); color:#facc15;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            <span>+ AI List</span>
+          </button>
+          <button class="close-btn" onclick="minimizePlayer()" title="Thu nhỏ">&times;</button>
+        </div>
       </div>
 
       <div class="np-main-content">
@@ -3354,9 +3687,17 @@
           <div class="ai-queue-header">
             <div class="ai-queue-title-wrap">
               <span class="ai-sparkle-pill">✨ AutoPlay Next AI</span>
-              <span class="ai-queue-sub" id="ai-queue-counter">Duy trì 8 bài hát tương tự</span>
+              <span class="ai-queue-sub" id="ai-queue-counter">Duy trì 8 bài hát (Tự tải về sẵn)</span>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="saveQueueToAIPlaylist()" title="Lưu danh sách 8 bài này vào Tab AI Playlist">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span>Lưu list</span>
+              </button>
+              <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="downloadAllQueueTracks()" title="Tải toàn bộ 8 bài về server ngay">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Tải hết</span>
+              </button>
               <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,0.06);" onclick="refreshAIQueue()" title="Làm mới hàng đợi AI">
                 🔄 Đổi bài
               </button>
@@ -3390,6 +3731,7 @@
     let isLooping = false;
     let searchDebounceTimer = null;
     let libraryItems = [];
+    let lastSearchResults = [];
 
     const audio = document.getElementById('native-audio');
     const modalVideo = document.getElementById('modal-video-element');
@@ -3510,6 +3852,7 @@
       if (!Array.isArray(items)) {
         items = [];
       }
+      lastSearchResults = [...items];
       const area = document.getElementById('results-area');
       const grid = document.getElementById('results-grid');
       const count = document.getElementById('results-count');
@@ -3815,12 +4158,13 @@
 
     function startStreamingTrack(track) {
       currentTrack = track;
-      const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : '';
+      const isVideo = (track.fmt || '').startsWith('mp4') || (track.fmt || '').includes('video');
+      const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : (isVideo ? 'mp4' : 'm4a');
       let streamUrl = track.stream_url || `/stream/${track.id}${cleanExt ? '?ext=' + cleanExt : ''}`;
       streamUrl += (streamUrl.includes('?') ? '&' : '?') + '_cb=' + Date.now();
 
       const thumbUrl = track.thumb || `https://i.ytimg.com/vi/${track.id}/hqdefault.jpg`;
-      const fmtLabel = (cleanExt || track.fmt || 'M4A').toUpperCase();
+      const fmtLabel = (cleanExt || track.fmt || (isVideo ? 'MP4' : 'M4A')).toUpperCase();
 
       // 1. Update Sticky Bottom Player Bar (Mini Player)
       document.getElementById('player-thumb').src = thumbUrl;
@@ -3835,7 +4179,6 @@
       document.getElementById('np-format-tag').textContent = fmtLabel;
       document.getElementById('np-vinyl-thumb').src = thumbUrl;
 
-      const isVideo = (track.fmt || '').startsWith('mp4') || (track.fmt || '').includes('video');
       const audioStage = document.getElementById('np-audio-stage');
       const videoStage = document.getElementById('np-video-stage');
       const badgeTitle = document.getElementById('np-badge-title');
@@ -3845,24 +4188,45 @@
         audioStage.style.display = 'none';
         videoStage.style.display = 'block';
         badgeTitle.innerHTML = `<span>🎬 ĐANG PHÁT VIDEO</span><span class="player-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
+        
+        modalVideo.pause();
         modalVideo.src = streamUrl;
-        modalVideo.play().catch(e => console.log('Autoplay video error:', e));
+        modalVideo.load(); // Vital for Safari iOS and modern browser media pipelines
+        const p = modalVideo.play();
+        if (p !== undefined) {
+          p.catch(e => {
+            console.warn('Autoplay video error, trying fallback:', e);
+            modalVideo.muted = true;
+            modalVideo.play().then(() => {
+              setTimeout(() => { modalVideo.muted = false; }, 400);
+            }).catch(err => {
+              console.warn('Muted autoplay video also rejected:', err);
+              updatePlayIcons(false);
+            });
+          });
+        }
         document.getElementById('player-thumb').classList.remove('spinning');
       } else {
         modalVideo.pause();
         videoStage.style.display = 'none';
         audioStage.style.display = 'flex';
         badgeTitle.innerHTML = `<span>💿 ĐANG PHÁT NHẠC</span><span class="player-tag" style="font-size:0.7rem; padding:2px 8px;">${fmtLabel}</span>`;
+        
+        audio.pause();
         audio.src = streamUrl;
-        audio.play().catch(e => console.log('Autoplay audio error:', e));
+        audio.load();
+        const p = audio.play();
+        if (p !== undefined) {
+          p.catch(e => console.warn('Autoplay audio error:', e));
+        }
         document.getElementById('player-thumb').classList.add('spinning');
       }
 
-      // Open Now Playing view so user enjoys the full experience
+      // Open Now Playing view
       openNowPlayingModal();
 
-      // Trigger AI AutoPlay recommendations if enabled
-      if (autoPlayAI) {
+      // Trigger AI AutoPlay recommendations if enabled and queue is empty
+      if (autoPlayAI && (!aiQueue || aiQueue.length === 0)) {
         fetchAIQueue(track, 8);
       }
     }
@@ -3951,19 +4315,47 @@
     }
 
     function onTrackEnded() {
+      const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
+      const activeMedia = isVideo ? modalVideo : audio;
+
+      // 1. Repeat / Loop Track (Ưu tiên lặp lại bài hát đang phát)
       if (isLooping) {
-        const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
-        const activeMedia = isVideo ? modalVideo : audio;
         activeMedia.currentTime = 0;
-        activeMedia.play();
+        activeMedia.play().catch(e => console.log('Loop play error:', e));
         return;
       }
 
-      // Check AutoPlay Next AI
-      if (autoPlayAI && aiQueue.length > 0) {
+      // 2. Playlist Queue Playback (Nếu đang phát playlist thì tự nhảy sang bài kế tiếp)
+      if (playlistQueue && playlistQueue.length > 0) {
+        playlistIndex++;
+        if (playlistIndex < playlistQueue.length) {
+          showToast(`⏭️ Đang phát bài tiếp theo trong Playlist (${playlistIndex + 1}/${playlistQueue.length})...`);
+          playCurrentPlaylist();
+          return;
+        } else {
+          showToast('✅ Đã phát hết danh sách playlist');
+          playlistQueue = [];
+          updatePlayIcons(false);
+          return;
+        }
+      }
+
+      // 3. AI AutoPlay Mode (Tự động phát bài tiếp theo từ 8 bài đã tải sẵn)
+      if (autoPlayAI && aiQueue && aiQueue.length > 0) {
         showToast('✨ Tự động chuyển bài tiếp theo từ AI...');
         playNextTrack();
         return;
+      }
+
+      // 4. Fallback: Search Results (Nếu đang nghe từ kết quả tìm kiếm, tự chuyển video kế tiếp)
+      if (lastSearchResults && lastSearchResults.length > 0 && currentTrack) {
+        const curIdx = lastSearchResults.findIndex(it => it.id === currentTrack.id);
+        if (curIdx !== -1 && curIdx + 1 < lastSearchResults.length) {
+          const nextItem = lastSearchResults[curIdx + 1];
+          showToast(`⏭️ Tự động chuyển bài tiếp theo: "${nextItem.title}"`);
+          actionPlay(nextItem.id, nextItem.title, nextItem.channel, nextItem.thumbnail, nextItem.is_downloaded);
+          return;
+        }
       }
 
       updatePlayIcons(false);
@@ -3971,14 +4363,22 @@
 
     function toggleLoop() {
       isLooping = !isLooping;
+      audio.loop = isLooping;
+      modalVideo.loop = isLooping;
+
       const btn = document.getElementById('player-loop-btn');
       const npBtn = document.getElementById('np-loop-btn');
-      if (btn) btn.style.color = isLooping ? 'var(--primary-light)' : 'var(--text-secondary)';
-      if (npBtn) {
-        if (isLooping) npBtn.classList.add('active');
-        else npBtn.classList.remove('active');
-      }
-      showToast(isLooping ? '🔁 Đã bật chế độ lặp lại' : 'Tắt chế độ lặp lại');
+      [btn, npBtn].forEach(b => {
+        if (!b) return;
+        if (isLooping) {
+          b.classList.add('active');
+          b.title = 'Đang bật lặp lại bài hát này (Bấm để tắt)';
+        } else {
+          b.classList.remove('active');
+          b.title = 'Lặp lại bài hát';
+        }
+      });
+      showToast(isLooping ? '🔂 Đã bật chế độ lặp lại bài hát này' : 'Tắt chế độ lặp lại');
     }
 
     function changeVolume(val) {
@@ -4002,8 +4402,156 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AI AutoPlay Queue & Background Pre-downloading (Load Ahead)
+    // Save to AI Playlist Helpers
     // ──────────────────────────────────────────────────────────────────────────
+    async function saveCurrentToAIPlaylist() {
+      if (!currentTrack) {
+        showToast('⚠️ Chưa có bài hát nào đang phát');
+        return;
+      }
+      await saveTrackToAIPlaylist(currentTrack);
+    }
+
+    async function saveTrackToAIPlaylist(track) {
+      try {
+        const res = await fetch('/api/ai/playlist/save_track', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            id: track.id || track.file_id,
+            title: track.title,
+            channel: track.channel || 'YouTube',
+            thumb: track.thumb || track.thumbnail || `https://i.ytimg.com/vi/${track.id || track.file_id}/hqdefault.jpg`,
+            fmt: track.fmt || selectedFormat,
+            playlist_name: '⭐ AI Playlist Cá Nhân'
+          })
+        });
+        if (res.ok) {
+          showToast(`⭐ Đã thêm "${track.title}" vào Tab AI Playlist!`);
+          loadSavedPlaylists();
+        } else {
+          showToast('❌ Không thể lưu vào AI Playlist');
+        }
+      } catch (e) {
+        showToast(`❌ Lỗi: ${e.message}`);
+      }
+    }
+
+    async function saveQueueToAIPlaylist() {
+      if (!aiQueue || aiQueue.length === 0) {
+        showToast('⚠️ Hàng đợi AI đang trống');
+        return;
+      }
+      try {
+        const listName = currentTrack ? `✨ AI Mix: ${currentTrack.title.substring(0, 30)}` : '✨ AI Smart Playlist';
+        const allTracks = currentTrack ? [currentTrack, ...aiQueue] : [...aiQueue];
+        const res = await fetch('/api/ai/playlist/save_all', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            name: listName,
+            tracks: allTracks
+          })
+        });
+        if (res.ok) {
+          showToast(`💾 Đã lưu toàn bộ ${allTracks.length} bài vào Tab AI Playlist!`);
+          loadSavedPlaylists();
+        } else {
+          showToast('❌ Không thể lưu danh sách vào AI Playlist');
+        }
+      } catch (e) {
+        showToast(`❌ Lỗi: ${e.message}`);
+      }
+    }
+
+    async function saveGeneratedToAIPlaylist() {
+      if (!playlistItems || playlistItems.length === 0) {
+        showToast('⚠️ Chưa có danh sách bài hát nào để lưu');
+        return;
+      }
+      const heading = document.getElementById('playlist-current-heading');
+      const name = heading ? heading.textContent.replace('Playlist: ', '') : '✨ AI Smart Playlist';
+      try {
+        const res = await fetch('/api/ai/playlist/save_all', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            name: name,
+            tracks: playlistItems.map(p => ({
+              id: p.file_id || p.id,
+              title: p.title,
+              channel: p.channel || 'YouTube',
+              thumb: p.thumb || p.thumbnail || `https://i.ytimg.com/vi/${p.file_id || p.id}/hqdefault.jpg`
+            }))
+          })
+        });
+        if (res.ok) {
+          showToast(`💾 Đã lưu toàn bộ playlist vào Tab AI Playlist!`);
+          loadSavedPlaylists();
+        } else {
+          showToast('❌ Không thể lưu vào AI Playlist');
+        }
+      } catch (e) {
+        showToast(`❌ Lỗi: ${e.message}`);
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // AI AutoPlay Queue & Automatic 8-Track Pre-downloading
+    // ──────────────────────────────────────────────────────────────────────────
+    let isDownloadingQueue = false;
+
+    async function downloadAllQueueTracks() {
+      if (isDownloadingQueue || !aiQueue || aiQueue.length === 0) return;
+      isDownloadingQueue = true;
+
+      try {
+        for (let i = 0; i < aiQueue.length; i++) {
+          const track = aiQueue[i];
+          if (!track || track.is_downloaded || track.downloading) continue;
+
+          track.downloading = true;
+          renderAIQueue();
+
+          try {
+            const resp = await fetch('/api/download', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-access-password': getStoredPassword()
+              },
+              body: JSON.stringify({
+                id: track.id,
+                title: track.title,
+                format: selectedFormat
+              })
+            });
+            if (resp.ok) {
+              track.is_downloaded = true;
+              track.downloading = false;
+            } else {
+              track.downloading = false;
+            }
+          } catch (err) {
+            track.downloading = false;
+          }
+          renderAIQueue();
+        }
+      } finally {
+        isDownloadingQueue = false;
+        renderAIQueue();
+      }
+    }
+
     async function fetchAIQueue(track, targetCount = 8) {
       if (!track || isFetchingAI) return;
       isFetchingAI = true;
@@ -4050,8 +4598,8 @@
             aiQueue = aiQueue.slice(0, 8); // Keep queue at exact 8 tracks
             renderAIQueue();
 
-            // Pre-download the next track immediately
-            preloadNextTrack();
+            // Tự động tải về toàn bộ 8 bài hát trong danh sách AI
+            downloadAllQueueTracks();
           }
         }
       } catch (e) {
@@ -4067,41 +4615,12 @@
       if (aiQueue.length >= 8) return; // Queue is full
       const needed = 8 - aiQueue.length;
       await fetchAIQueue(currentTrack, Math.max(count, needed));
+      downloadAllQueueTracks();
     }
 
     function preloadNextTrack() {
-      if (!aiQueue || aiQueue.length === 0) return;
-      const nextTrack = aiQueue[0];
-      if (nextTrack.is_downloaded || nextTrack.preloading) return;
-
-      nextTrack.preloading = true;
-      renderAIQueue();
-
-      // Trigger background download to VPS disk
-      fetch('/api/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-access-password': getStoredPassword()
-        },
-        body: JSON.stringify({
-          id: nextTrack.id,
-          title: nextTrack.title,
-          format: selectedFormat
-        })
-      })
-      .then(r => r.json())
-      .then(res => {
-        nextTrack.is_downloaded = true;
-        nextTrack.preloading = false;
-        renderAIQueue();
-        console.log('Preloaded next track ready:', nextTrack.title);
-      })
-      .catch(err => {
-        nextTrack.preloading = false;
-        renderAIQueue();
-        console.warn('Preload next track failed:', err);
-      });
+      // Kept for backward compatibility; calls downloadAllQueueTracks
+      downloadAllQueueTracks();
     }
 
     function playNextTrack() {
@@ -4114,8 +4633,7 @@
         startStreamingTrack(next);
         renderAIQueue();
 
-        // Immediately preload the new next track and fetch 1 more from AI
-        preloadNextTrack();
+        // Ngay khi chuyển bài mới: nạp thêm 1 bài mới từ AI và tự động tải về bài đó
         fetchMoreAIRec(1);
       } else {
         showToast('ℹ️ Đang tìm thêm bài hát mới từ AI...');
@@ -4143,7 +4661,6 @@
       }
       startStreamingTrack(selected);
       renderAIQueue();
-      preloadNextTrack();
       fetchMoreAIRec(1);
     }
 
@@ -4160,7 +4677,7 @@
       const miniPill = document.getElementById('mini-ai-pill');
 
       if (counterEl) {
-        counterEl.textContent = `Hàng đợi: ${aiQueue.length}/8 bài hát`;
+        counterEl.textContent = `Hàng đợi: ${aiQueue.length}/8 bài hát (Tự tải về sẵn)`;
       }
       if (miniPill) {
         miniPill.textContent = `✨ AI: ${aiQueue.length} bài`;
@@ -4184,20 +4701,12 @@
       let html = '';
       aiQueue.forEach((t, i) => {
         let badgeHtml = '';
-        if (i === 0) {
-          if (t.is_downloaded) {
-            badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Đã tải trước (0s)</span>';
-          } else if (t.preloading) {
-            badgeHtml = '<span class="ai-queue-badge-status status-preloading">⚡ Đang tải trước...</span>';
-          } else {
-            badgeHtml = '<span class="ai-queue-badge-status status-waiting">⏳ Tiếp theo</span>';
-          }
+        if (t.is_downloaded) {
+          badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Đã tải sẵn (0s)</span>';
+        } else if (t.downloading) {
+          badgeHtml = '<span class="ai-queue-badge-status status-preloading">⚡ Đang tải ngầm...</span>';
         } else {
-          if (t.is_downloaded) {
-            badgeHtml = '<span class="ai-queue-badge-status status-ready">✓ Sẵn sàng</span>';
-          } else {
-            badgeHtml = `<span class="ai-queue-badge-status status-waiting">#${i + 1} Chờ</span>`;
-          }
+          badgeHtml = `<span class="ai-queue-badge-status status-waiting">⏳ Hàng chờ #${i + 1}</span>`;
         }
 
         const thumb = t.thumb || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`;
@@ -4209,7 +4718,10 @@
               <div class="ai-queue-row-title">${t.title}</div>
               <div class="ai-queue-row-channel">${t.channel || 'YouTube'} • ${t.duration || '0:00'}</div>
             </div>
-            ${badgeHtml}
+            <div style="display:flex; align-items:center; gap:6px;">
+              ${badgeHtml}
+              <button class="btn" onclick="event.stopPropagation(); saveTrackToAIPlaylist({ id: '${t.id}', title: '${escapeQuotes(t.title)}', channel: '${escapeQuotes(t.channel||'YouTube')}', thumb: '${thumb}' })" style="padding:4px 8px; font-size:0.75rem; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); border-radius:6px; cursor:pointer;" title="Thêm bài này vào AI Playlist">⭐</button>
+            </div>
           </div>
         `;
       });
@@ -4235,6 +4747,219 @@
         toast.style.transition = 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
         setTimeout(() => toast.remove(), 300);
       }, 3500);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Smart Multi-Criteria Playlist Filter State & Logic
+    // ──────────────────────────────────────────────────────────────────────────
+    const smartFilter = {
+      artists: [],
+      genres: [],
+      year: '2026',
+      mood: '',
+      is_random: true,
+      limit: 8,
+      format: 'm4a'
+    };
+
+    function switchPlaylistMode(mode) {
+      const isFilter = mode === 'filter';
+      const filterBtn = document.getElementById('pl-mode-filter-btn');
+      const customBtn = document.getElementById('pl-mode-custom-btn');
+      if (filterBtn) filterBtn.classList.toggle('active', isFilter);
+      if (customBtn) customBtn.classList.toggle('active', !isFilter);
+
+      const filterBox = document.getElementById('pl-smart-filter-box');
+      const customBox = document.getElementById('pl-custom-prompt-box');
+      if (filterBox) filterBox.style.display = isFilter ? 'flex' : 'none';
+      if (customBox) customBox.style.display = isFilter ? 'none' : 'block';
+    }
+
+    function toggleFilterArtist(el, artist) {
+      const idx = smartFilter.artists.indexOf(artist);
+      if (idx > -1) {
+        smartFilter.artists.splice(idx, 1);
+        if (el) el.classList.remove('active');
+      } else {
+        smartFilter.artists.push(artist);
+        if (el) el.classList.add('active');
+      }
+      updateFilterArtistsUI();
+    }
+
+    function addCustomArtist() {
+      const input = document.getElementById('filter-custom-artist');
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) return;
+      if (!smartFilter.artists.includes(val)) {
+        smartFilter.artists.push(val);
+        updateFilterArtistsUI();
+      }
+      input.value = '';
+    }
+
+    function removeFilterArtist(artist) {
+      const idx = smartFilter.artists.indexOf(artist);
+      if (idx > -1) {
+        smartFilter.artists.splice(idx, 1);
+        document.querySelectorAll('#filter-artists-chips .filter-chip').forEach(c => {
+          if (c.dataset.val === artist) c.classList.remove('active');
+        });
+        updateFilterArtistsUI();
+      }
+    }
+
+    function updateFilterArtistsUI() {
+      const container = document.getElementById('filter-selected-artists-badges');
+      const countEl = document.getElementById('filter-artists-count');
+      if (countEl) {
+        countEl.textContent = smartFilter.artists.length > 0 ? `(Đã chọn ${smartFilter.artists.length} ca sĩ)` : '';
+      }
+      if (!container) return;
+      container.innerHTML = smartFilter.artists.map(a => `
+        <span class="filter-chip active-secondary" style="font-size:0.78rem; padding:4px 10px;">
+          <span>${a}</span>
+          <span class="filter-chip-remove" onclick="removeFilterArtist('${escapeQuotes(a)}')">&times;</span>
+        </span>
+      `).join('');
+    }
+
+    function toggleFilterGenre(el, genre) {
+      const idx = smartFilter.genres.indexOf(genre);
+      if (idx > -1) {
+        smartFilter.genres.splice(idx, 1);
+        if (el) el.classList.remove('active');
+      } else {
+        smartFilter.genres.push(genre);
+        if (el) el.classList.add('active');
+      }
+      const countEl = document.getElementById('filter-genres-count');
+      if (countEl) {
+        countEl.textContent = smartFilter.genres.length > 0 ? `(Đã chọn ${smartFilter.genres.length} thể loại)` : '';
+      }
+    }
+
+    function setFilterYear(el, year) {
+      smartFilter.year = year;
+      document.querySelectorAll('#filter-year-chips .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.val === year);
+      });
+    }
+
+    function setFilterMood(el, mood) {
+      smartFilter.mood = mood;
+      document.querySelectorAll('#filter-mood-chips .filter-chip').forEach(c => {
+        c.classList.toggle('active', c.dataset.val === mood);
+      });
+    }
+
+    function resetSmartFilter() {
+      smartFilter.artists = [];
+      smartFilter.genres = [];
+      smartFilter.year = '2026';
+      smartFilter.mood = '';
+      smartFilter.is_random = true;
+      document.querySelectorAll('#filter-artists-chips .filter-chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#filter-genres-chips .filter-chip').forEach(c => c.classList.remove('active'));
+      setFilterYear(null, '2026');
+      setFilterMood(null, '');
+      const chk = document.getElementById('filter-random-checkbox');
+      if (chk) chk.checked = true;
+      const inp = document.getElementById('filter-custom-artist');
+      if (inp) inp.value = '';
+      updateFilterArtistsUI();
+      const countGenres = document.getElementById('filter-genres-count');
+      if (countGenres) countGenres.textContent = '';
+      showToast('🔄 Đã đặt lại bộ lọc');
+    }
+
+    async function generateSmartPlaylist() {
+      const btn = document.getElementById('btn-smart-gen-playlist');
+      const status = document.getElementById('playlist-status');
+      const grid = document.getElementById('playlist-grid');
+      const saveBtn = document.getElementById('btn-save-gen-playlist');
+
+      smartFilter.is_random = document.getElementById('filter-random-checkbox') ? document.getElementById('filter-random-checkbox').checked : true;
+      smartFilter.limit = parseInt(document.getElementById('filter-limit')?.value || 8);
+      smartFilter.format = document.getElementById('filter-format')?.value || 'm4a';
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner" style="width:15px;height:15px;border-width:2px;margin-right:6px;"></div><span>Đang tuyển chọn nhạc...</span>`;
+      }
+      status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> AI đang áp dụng bộ lọc (Ca sĩ: ${smartFilter.artists.length ? smartFilter.artists.join(', ') : 'Mặc định'}, Thể loại: ${smartFilter.genres.length ? smartFilter.genres.join(', ') : 'Đa dạng'}, Năm: ${smartFilter.year || 'Tất cả'})...`;
+      grid.innerHTML = '';
+      document.getElementById('playlist-controls').style.display = 'none';
+      if (saveBtn) saveBtn.style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/ai/smart_playlist', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            genres: smartFilter.genres,
+            artists: smartFilter.artists,
+            year: smartFilter.year,
+            mood: smartFilter.mood,
+            is_random: smartFilter.is_random,
+            limit: smartFilter.limit,
+            format: smartFilter.format,
+            model: 'openai/gpt-oss-20b',
+            web_search: true
+          })
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.detail || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        const rawTracks = data.tracks || [];
+        if (!rawTracks.length) {
+          throw new Error('AI không tìm thấy bài hát nào phù hợp với bộ lọc.');
+        }
+
+        playlistItems = rawTracks.map(t => ({
+          file_id: t.id,
+          title: t.title,
+          channel: t.channel || 'YouTube',
+          thumbnail: t.thumb || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`,
+          source_query: smartFilter.artists.join(', ') || smartFilter.genres.join(', ') || 'Bộ lọc AI'
+        }));
+
+        let headingText = 'Playlist: ';
+        if (smartFilter.genres.length) headingText += smartFilter.genres.join(', ') + ' ';
+        if (smartFilter.artists.length) headingText += '• ' + smartFilter.artists.join(', ') + ' ';
+        if (smartFilter.year) headingText += `(${smartFilter.year})`;
+        if (smartFilter.is_random) headingText += ' [Random]';
+
+        document.getElementById('playlist-current-heading').textContent = headingText.trim();
+        const b = document.getElementById('playlist-badge');
+        b.style.display = 'inline-block';
+        b.textContent = `${playlistItems.length} bài`;
+
+        document.getElementById('playlist-controls').style.display = 'flex';
+        document.getElementById('btn-dl-all-playlist').style.display = 'none';
+        document.getElementById('playlist-play-controls').style.display = 'flex';
+        if (saveBtn) saveBtn.style.display = 'inline-flex';
+
+        renderPlaylist(playlistItems);
+        status.innerHTML = `<span style="color:#10b981; font-weight:700;">✨ Đã tuyển chọn thành công ${playlistItems.length} bài hát theo đúng tiêu chí!</span>`;
+        showToast(`✨ Đã tạo playlist AI: ${playlistItems.length} bài hát`);
+      } catch (err) {
+        status.innerHTML = `<span style="color:var(--accent-rose); font-weight:700;">❌ Lỗi tạo playlist: ${err.message}</span>`;
+        showToast(`❌ ${err.message}`);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg><span>✨ Tạo Playlist Theo Bộ Lọc</span>`;
+        }
+      }
     }
 
     // Playlist AI state
@@ -4629,10 +5354,13 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
               <span>${it.source_query ? 'Gợi ý AI: ' + it.source_query : 'YouTube Music'}</span>
             </div>
-            <div class="card-actions" style="grid-template-columns: 1fr 44px;">
+            <div class="card-actions" style="grid-template-columns: 1fr 40px 40px;">
               <button class="btn btn-play" onclick="playPlaylistIndex(${idx})">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>Phát bài này</span>
+                <span>Phát</span>
+              </button>
+              <button class="btn" onclick="saveTrackToAIPlaylist({ id: '${it.file_id}', title: '${escapeQuotes(it.title)}' })" title="Lưu vào AI Playlist" style="background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                ⭐
               </button>
               <a class="btn btn-download" style="text-decoration:none;" href="/stream/${it.file_id}?download=1" download title="Lưu về máy">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -4657,24 +5385,21 @@
       playCurrentPlaylist();
     }
 
-    function _playlistEndedHandler() {
-      playlistIndex++;
-      playCurrentPlaylist();
-    }
     function playCurrentPlaylist() {
-      if (playlistIndex >= playlistQueue.length) {
+      if (!playlistQueue || playlistIndex >= playlistQueue.length) {
         showToast('✅ Đã phát hết danh sách playlist');
         playlistQueue = [];
         return;
       }
       const it = playlistQueue[playlistIndex];
-      const audioEl = document.getElementById('native-audio');
-      const modalEl = document.getElementById('modal-video-element');
-      audioEl.removeEventListener('ended', _playlistEndedHandler);
-      modalEl.removeEventListener('ended', _playlistEndedHandler);
-      startStreamingTrack({ id: it.file_id, title: it.title, channel: 'Playlist AI', thumb: `https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg`, fmt: 'm4a' });
-      audioEl.addEventListener('ended', _playlistEndedHandler);
-      modalEl.addEventListener('ended', _playlistEndedHandler);
+      const fmt = document.getElementById('filter-format')?.value || document.getElementById('playlist-format')?.value || selectedFormat || 'm4a';
+      startStreamingTrack({
+        id: it.file_id || it.id,
+        title: it.title,
+        channel: it.channel || 'Playlist AI',
+        thumb: it.thumbnail || it.thumb || `https://i.ytimg.com/vi/${it.file_id || it.id}/hqdefault.jpg`,
+        fmt: fmt
+      });
     }
     function nextPlaylist() {
       if (!playlistQueue.length) return;

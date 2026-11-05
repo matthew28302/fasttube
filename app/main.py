@@ -1123,6 +1123,251 @@ async def api_autoplay_recommendations(payload: AutoplayRecommendationPayload, r
 
 
 # ---------------------------------------------------------------------------
+# AI Smart Multi-Criteria Playlist & Save to AI Playlist Endpoints
+# ---------------------------------------------------------------------------
+
+class SmartPlaylistPayload(BaseModel):
+    prompt: str = ""
+    genres: list[str] = []
+    artists: list[str] = []
+    year: str = ""
+    mood: str = ""
+    is_random: bool = True
+    limit: int = 8
+    format: str = "m4a"
+    model: str = "openai/gpt-oss-20b"
+    web_search: bool = True
+
+
+@app.post("/api/ai/smart_playlist")
+async def api_ai_smart_playlist(payload: SmartPlaylistPayload, request: Request):
+    await rate_limiter.check(request, "smart_playlist", max_requests=30, window_s=60)
+    limit = max(1, min(int(payload.limit or 8), 25))
+    
+    filter_criteria = []
+    if payload.genres:
+        filter_criteria.append(f"Genres/Styles: {', '.join(payload.genres)}")
+    if payload.artists:
+        filter_criteria.append(f"Artists/Performers: {', '.join(payload.artists)}")
+    if payload.year:
+        filter_criteria.append(f"Release Year/Era: {payload.year}")
+    if payload.mood:
+        filter_criteria.append(f"Mood/Theme: {payload.mood}")
+    if payload.is_random:
+        filter_criteria.append("Selection Mode: Randomly sample diverse and hit songs across the chosen criteria")
+    if payload.prompt:
+        filter_criteria.append(f"Additional Request: {payload.prompt}")
+        
+    criteria_summary = "\n".join(f"- {c}" for c in filter_criteria) if filter_criteria else "- General trending hits"
+
+    system_msg = (
+        "You are an elite music producer, discography archivist, and AI playlist curator. "
+        "The user wants an authentic, high-quality playlist strictly matching these criteria:\n"
+        f"{criteria_summary}\n\n"
+        "STRICT GUIDELINES:\n"
+        "1. You MUST suggest ONLY 100% REAL, GENUINE, OFFICIALLY RELEASED songs that actually exist in reality.\n"
+        "2. If specific artists are specified, you MUST strictly prioritize songs performed by those exact artists.\n"
+        "3. If release year/era is specified (e.g. 2026, 2025), prioritize songs released in or active during that period.\n"
+        "4. If genres are specified (e.g. Ballad, Drill, Rock Roll, Vpop, Kpop, Remix), ensure the songs fit those genres.\n"
+        "5. If selection mode is random, produce a vibrant, non-boring mix.\n"
+        f"6. Return STRICTLY a raw JSON array of strings containing exactly {limit} songs, formatted as 'Song Title - Artist Name'.\n"
+        "7. Example: [\"Song 1 - Artist A\", \"Song 2 - Artist B\"]. No markdown backticks, no extra text."
+    )
+
+    key = os.getenv("GROQ_API_KEY") or _read_env_file().get("GROQ_API_KEY") or ""
+    req_model = (payload.model or "openai/gpt-oss-20b").strip()
+    use_web_search = bool(payload.web_search)
+
+    if req_model == "qwen/qwen3.8-27b":
+        model_candidates = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
+    elif req_model == "openai/gpt-oss-120b":
+        model_candidates = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
+    else:
+        model_candidates = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b", "openai/gpt-oss-120b"]
+
+    songs = []
+    if key:
+        for model_name in model_candidates:
+            req_body = {
+                "model": model_name,
+                "messages": [
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": f"Create a playlist of {limit} songs matching the criteria. Return JSON array."},
+                ],
+                "temperature": 0.4 if payload.is_random else 0.15,
+                "max_tokens": 1024,
+            }
+            if use_web_search and model_name in ("openai/gpt-oss-20b", "openai/gpt-oss-120b"):
+                req_body["tools"] = [{"type": "browser_search"}]
+
+            try:
+                r = await asyncio.to_thread(
+                    _requests.post,
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                    json=req_body,
+                    timeout=20 if use_web_search else 10,
+                )
+                if r.status_code == 400 and "tools" in req_body:
+                    del req_body["tools"]
+                    r = await asyncio.to_thread(
+                        _requests.post,
+                        "https://api.groq.com/openai/v1/chat/completions",
+                        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                        json=req_body,
+                        timeout=10,
+                    )
+                if r.status_code == 200:
+                    data = r.json()
+                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    parsed = _parse_songs_json(content)
+                    if parsed:
+                        songs = parsed[:limit]
+                        logger.info("Smart playlist generated via %s: %d songs", model_name, len(songs))
+                        break
+            except Exception as e:
+                logger.warning("Groq smart playlist failed (%s): %s", model_name, e)
+                continue
+
+    # Fallback to search query if AI returned empty
+    if not songs:
+        fallback_query = " ".join(payload.artists + payload.genres + ([payload.year] if payload.year else [])) or payload.prompt or "Nhạc hot Việt Nam"
+        try:
+            hints = await asyncio.to_thread(fast_search_youtube_list, fallback_query, limit=limit + 4)
+            songs = [h["title"] for h in hints if h.get("title")][:limit]
+        except Exception as e:
+            logger.warning("Smart playlist fallback search error: %s", e)
+
+    base_url = _base_url(request)
+    async def _resolve_track(song_query: str) -> Optional[dict]:
+        try:
+            matches = await asyncio.to_thread(fast_search_youtube_list, song_query, limit=1)
+            if not matches:
+                return None
+            m = matches[0]
+            vid = m.get("id")
+            if not vid:
+                return None
+            is_dl = bool(find_all_by_file_id(settings.music_dir, vid))
+            return {
+                "id": vid,
+                "title": m.get("title") or song_query,
+                "channel": m.get("channel") or "YouTube",
+                "thumb": m.get("thumb") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+                "duration": m.get("duration") or "0:00",
+                "stream_url": f"{base_url}/stream/{vid}",
+                "is_downloaded": is_dl,
+            }
+        except Exception:
+            return None
+
+    tasks = [_resolve_track(s) for s in songs]
+    raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    tracks = []
+    seen = set()
+    for res in raw_results:
+        if isinstance(res, dict) and res.get("id") and res["id"] not in seen:
+            seen.add(res["id"])
+            tracks.append(res)
+
+    return {
+        "success": True,
+        "tracks": tracks,
+        "count": len(tracks),
+        "filter_summary": criteria_summary,
+    }
+
+
+class SaveTrackToAIPayload(BaseModel):
+    id: str
+    title: str
+    channel: Optional[str] = "YouTube"
+    thumb: Optional[str] = ""
+    fmt: Optional[str] = "m4a"
+    playlist_name: Optional[str] = "⭐ AI Playlist Cá Nhân"
+
+
+@app.post("/api/ai/playlist/save_track")
+def api_ai_save_track(payload: SaveTrackToAIPayload):
+    pls = _load_playlists()
+    pl_name = (payload.playlist_name or "⭐ AI Playlist Cá Nhân").strip()
+    target_pl = next((p for p in pls if p.get("name") == pl_name), None)
+
+    track_entry = {
+        "title": payload.title,
+        "query": f"{payload.title} - {payload.channel}",
+        "file_id": payload.id,
+        "thumbnail": payload.thumb or f"https://i.ytimg.com/vi/{payload.id}/hqdefault.jpg",
+    }
+
+    if not target_pl:
+        import time as _t
+        target_pl = {
+            "id": str(int(_t.time() * 1000)),
+            "name": pl_name,
+            "songs": [payload.title],
+            "items": [track_entry],
+            "created_at": _t.time(),
+            "is_ai": True,
+        }
+        pls.insert(0, target_pl)
+    else:
+        # Check duplicate
+        exists = any(str(it.get("file_id")) == str(payload.id) for it in target_pl.get("items", []))
+        if not exists:
+            target_pl.setdefault("items", []).append(track_entry)
+            target_pl.setdefault("songs", []).append(payload.title)
+
+    _save_playlists(pls)
+    return {"ok": True, "playlist": target_pl}
+
+
+class SaveAllToAIPayload(BaseModel):
+    name: str
+    tracks: list[dict] = []
+
+
+@app.post("/api/ai/playlist/save_all")
+def api_ai_save_all(payload: SaveAllToAIPayload):
+    name = (payload.name or "").strip() or "✨ AI Smart Playlist"
+    tracks = payload.tracks or []
+    if not tracks:
+        raise HTTPException(status_code=400, detail="Không có bài hát nào để lưu")
+
+    import time as _t
+    pls = _load_playlists()
+    items = []
+    songs = []
+    seen = set()
+    for t in tracks:
+        vid = t.get("id") or t.get("file_id")
+        if not vid or vid in seen:
+            continue
+        seen.add(vid)
+        title = t.get("title", "")
+        songs.append(title)
+        items.append({
+            "title": title,
+            "query": f"{title} - {t.get('channel', '')}",
+            "file_id": vid,
+            "thumbnail": t.get("thumb") or t.get("thumbnail") or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg",
+        })
+
+    entry = {
+        "id": str(int(_t.time() * 1000)),
+        "name": name,
+        "songs": songs,
+        "items": items,
+        "created_at": _t.time(),
+        "is_ai": True,
+    }
+    pls.insert(0, entry)
+    _save_playlists(pls)
+    return {"ok": True, "playlist": entry}
+
+
+# ---------------------------------------------------------------------------
 # Saved playlists + download a list
 # ---------------------------------------------------------------------------
 
