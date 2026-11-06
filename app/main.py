@@ -344,7 +344,7 @@ def _resolve_format(fmt: str) -> tuple[str, str, bool, str, str]:
 
 @app.post("/api/download")
 async def api_download(payload: DownloadPayload, request: Request):
-    await rate_limiter.check(request, "download", max_requests=15, window_s=60)
+    await rate_limiter.check(request, "download", max_requests=120, window_s=60)
     t0 = time.perf_counter()
     target_id = (payload.id or "").strip()
     target_url = (payload.url or "").strip()
