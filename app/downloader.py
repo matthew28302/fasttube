@@ -214,12 +214,20 @@ def _fast_inprocess_download(
     target_codec: Optional[str] = None,
     merge_output_format: Optional[str] = None,
 ) -> Optional[DownloadResult]:
-    client = (player_client or "visionos").strip()
+    client = (player_client or "android").strip()
     # Provide cookies whenever available to authenticate requests
     use_cookie = cookie_file if cookie_file else None
 
-    if not merge_output_format and "/18" not in format_spec and "/best" not in format_spec:
-        format_spec = f"{format_spec}/18/best"
+    if not merge_output_format:
+        format_parts = [p.strip() for p in format_spec.split("/")]
+        if "18" not in format_parts and "best" not in format_parts:
+            format_spec = f"{format_spec}/18/best"
+
+    # Multi-client fallback chain and player_skip=webpage,configs to bypass BotGuard / datacenter IP bot walls
+    client_list = [client] if client else ["android"]
+    for fb in ["tv_samsung", "android", "web", "tv", "ios"]:
+        if fb not in client_list:
+            client_list.append(fb)
 
     js_eng = _detect_js_engine()
     opts = {
@@ -237,7 +245,8 @@ def _fast_inprocess_download(
         "no_warnings": not ytdlp_verbose,
         "extractor_args": {
             "youtube": {
-                "player_client": [client],
+                "player_client": client_list,
+                "player_skip": ["webpage", "configs"],
                 "skip": ["hls", "web_embedded"],
             }
         },
@@ -642,19 +651,19 @@ def download_from_youtube(
         if m == "opus":
             if prefer_abr_128:
                 return [
-                    "249/250/bestaudio[acodec=opus][abr<=64]/bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio",
-                    m4a_first,
-                    base_small,
-                    base_any,
+                    "249/250/bestaudio[acodec=opus][abr<=64]/bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio/18/best",
+                    f"{m4a_first}/18/best",
+                    f"{base_small}/18/best",
+                    f"{base_any}/18/best",
                 ]
             else:
                 return [
-                    "251/bestaudio[acodec=opus]/250/249/bestaudio[ext=m4a]/bestaudio",
-                    base_any,
-                    m4a_first,
+                    "251/bestaudio[acodec=opus]/250/249/bestaudio[ext=m4a]/bestaudio/18/best",
+                    f"{base_any}/18/best",
+                    f"{m4a_first}/18/best",
                 ]
-        # mp3/auto mode: download audio-only then (optionally) transcode
-        return [m4a_first, base_small, base_any]
+        # mp3/auto mode: download audio-only then (optionally) transcode, with format 18 as bulletproof fallback
+        return [f"{m4a_first}/18/best", f"{base_small}/18/best", f"{base_any}/18/best"]
 
     def _video_fallback_formats() -> list[str]:
         # Last resort: download any available format (including HLS streams) and extract audio with ffmpeg.
@@ -711,12 +720,17 @@ def download_from_youtube(
             "--print-json",
             source,
         ]
+        # Speed & anti-bot bypass: we skip HLS and skip webpage/configs BotGuard checks
+        yt_extractor_args = ["player_skip=webpage,configs"]
         if skip_hls:
-            # Speed: we only want audio-only DASH formats, never HLS streams.
-            # Skipping HLS removes the ~2s "Downloading m3u8 information" step.
-            # Video fallback (relax_retries) calls with skip_hls=False so HLS stays available there.
-            cmd.insert(1, "--extractor-args")
-            cmd.insert(2, "youtube:skip=hls")
+            yt_extractor_args.append("skip=hls")
+        client_to_use = player_client or ytdlp_player_client
+        if client_to_use:
+            yt_extractor_args.append(f"player_client={client_to_use},android,web,tv")
+        else:
+            yt_extractor_args.append("player_client=tv_samsung,android,web,tv,ios")
+        cmd.insert(1, "--extractor-args")
+        cmd.insert(2, f"youtube:{';'.join(yt_extractor_args)}")
         if not force_mp3 and (audio_mode or "").strip().lower() == "m4a":
             # Speed: 140/m4a downloaded from YouTube is already a valid m4a
             # (ffprobe-verified: same duration/size with and without fixup).
@@ -774,10 +788,6 @@ def download_from_youtube(
             cmd.insert(2, "ejs:github")
         if "--no-check-certificates" not in cmd:
             cmd.insert(1, "--no-check-certificates")
-        client_to_use = player_client or ytdlp_player_client
-        if client_to_use:
-            cmd.insert(1, "--extractor-args")
-            cmd.insert(2, f"youtube:player_client={client_to_use}")
         mode_str = (audio_mode or "").strip().lower()
         if mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p"):
             cmd.insert(1, "--merge-output-format")
@@ -805,25 +815,26 @@ def download_from_youtube(
         last_cmd: list[str] | None = None
         last_rc: int | None = None
 
-        # When cookies exist, prioritize authenticated Smart TV & Web clients.
-        # When cookies are absent, rely on visionos / ios / android client engines.
+        # When cookies exist, prioritize authenticated Smart TV & Web/Android clients.
+        # When cookies are absent, rely on android / visionos / tv client engines.
         if cookie_file:
             player_clients: list[tuple[str | None, bool]] = [
                 ("tv_samsung", True),
-                ("web", True),
-                ("mweb", True),
-                ("tv_embedded", True),
-                ("ios", True),
                 ("android", True),
+                ("web", True),
+                ("tv", True),
+                ("mweb", True),
+                ("ios", True),
                 ("visionos", False),
                 (None, True),
             ]
         else:
             player_clients: list[tuple[str | None, bool]] = [
-                ("visionos", False),
-                ("ios", False),
                 ("android", False),
+                ("visionos", False),
                 ("tv_samsung", False),
+                ("tv", False),
+                ("ios", False),
                 ("web", False),
                 (None, False),
             ]
@@ -928,20 +939,19 @@ def download_from_youtube(
             fmt_candidates = _format_candidates()
             best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio"
             # Client candidates ordered by YouTube bot-challenge bypass ability:
-            # 1. visionos: Bypasses YouTube bot walls and BotGuard without cookies
-            # 2. ios: Uses native iOS YouTube app endpoints
-            # 3. android: Android app endpoints
-            # 4. tv_samsung: Smart TV endpoints (optionally with cookies)
+            # 1. tv_samsung / android: Bypasses YouTube bot walls with Innertube APIs
+            # 2. web / tv / ios: Alternative authenticated endpoints
+            # 3. visionos: Bypasses BotGuard without cookies
             if cookie_file:
-                client_candidates = ["tv_samsung", "web", "mweb", "tv_embedded", "ios", "android", "visionos"]
+                client_candidates = ["tv_samsung", "android", "web", "tv", "ios", "mweb", "visionos"]
             else:
-                client_candidates = ["visionos", "ios", "android", "tv_samsung"]
+                client_candidates = ["android", "visionos", "tv_samsung", "tv", "ios", "web"]
             if ytdlp_player_client and ytdlp_player_client not in client_candidates:
                 client_candidates.insert(0, ytdlp_player_client)
 
             for cand_client in client_candidates:
                 try:
-                    c_file = cookie_file if cand_client in ("tv_samsung", "web", "mweb", "tv_embedded", "ios", "android", "tv") else None
+                    c_file = cookie_file if cand_client in ("tv_samsung", "web", "mweb", "ios", "android", "tv") else None
                     fast_res = _fast_inprocess_download(
                         source_url=source,
                         music_dir=music_dir,
