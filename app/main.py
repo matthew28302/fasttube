@@ -653,6 +653,10 @@ def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> F
         raise HTTPException(status_code=400, detail="Invalid extension")
     hit = find_by_file_id(settings.music_dir, file_id, ext=ext)
     if not hit or not hit.path.exists():
+        # Fast fallback: check if ANY audio/video format for this file_id already exists on disk
+        hit = find_by_file_id(settings.music_dir, file_id, ext=None)
+
+    if not hit or not hit.path.exists():
         # Auto on-demand download so missing/purged files or direct links never return a broken JSON download
         try:
             target = f"https://www.youtube.com/watch?v={file_id}"

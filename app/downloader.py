@@ -214,9 +214,9 @@ def _fast_inprocess_download(
     target_codec: Optional[str] = None,
     merge_output_format: Optional[str] = None,
 ) -> Optional[DownloadResult]:
-    client = (player_client or "android").strip()
-    # visionos/android_vr do not support cookies; passing cookies causes yt-dlp to skip them
-    use_cookie = cookie_file if (cookie_file and client not in ("visionos", "android_vr", "android", "ios")) else None
+    client = (player_client or "visionos").strip()
+    # visionos/ios/android bypass YouTube's datacenter bot block without cookies
+    use_cookie = cookie_file if (cookie_file and client in ("tv_samsung", "web", "tv")) else None
 
     if not merge_output_format and "/18" not in format_spec and "/best" not in format_spec:
         format_spec = f"{format_spec}/18/best"
@@ -305,10 +305,18 @@ class DownloadResult:
 def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
     if not cookies_dir.exists():
         return None
+    if os.getenv("FASTTUBE_IGNORE_COOKIES", "").strip() in ("1", "true", "yes"):
+        return None
     # Prefer *.txt cookie export (Netscape format) from browser.
     for p in sorted(cookies_dir.iterdir()):
         if p.is_file() and p.suffix.lower() == ".txt":
-            return p
+            try:
+                lines = [l.strip() for l in p.read_text(encoding="utf-8", errors="ignore").splitlines()]
+                data_lines = [l for l in lines if l and not l.startswith("#")]
+                if len(data_lines) >= 3:
+                    return p
+            except Exception:
+                pass
     return None
 
 
@@ -731,28 +739,16 @@ def download_from_youtube(
         last_cmd: list[str] | None = None
         last_rc: int | None = None
 
-        # In FAST_MODE: do not iterate across many clients. Keep overhead minimal.
-        if cookie_file:
-            player_clients: list[tuple[str | None, bool]] = [
-                ("tv_samsung", True),
-                (None, True),
-                ("web", True),
-            ]
-        elif fast_mode:
-            player_clients = [
-                ("android", False),
-                ("visionos", False),
-                ("tv_samsung", True),
-                (None, True),
-            ]
-        else:
-            player_clients = [
-                ("android", False),
-                ("visionos", False),
-                ("tv_samsung", True),
-                ("web", True),
-                ("tv", True),
-            ]
+        # Ordered by YouTube bot-challenge bypass ability:
+        # visionos, ios, android bypass datacenter bot barriers without cookies
+        player_clients: list[tuple[str | None, bool]] = [
+            ("visionos", False),
+            ("ios", False),
+            ("android", False),
+            ("tv_samsung", bool(cookie_file)),
+            ("web", bool(cookie_file)),
+            (None, False),
+        ]
         attempt = 0
         for fmt_try in fmt_list:
             for client, use_cookies in player_clients:
@@ -777,7 +773,7 @@ def download_from_youtube(
                     )
                     mode_str = (audio_mode or "").strip().lower()
                     is_vid = mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p")
-                    timeout_limit = 1800.0 if is_vid else 900.0
+                    timeout_limit = 120.0 if is_vid else 45.0
                     t_end = time.perf_counter() + timeout_limit
                     timed_out = False
                     while proc.poll() is None:
@@ -853,50 +849,38 @@ def download_from_youtube(
         try:
             fmt_candidates = _format_candidates()
             best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio"
-            # When cookies are present, client MUST support cookies (tv_samsung or web).
-            # visionos/android/android_vr explicitly ignore cookies and trigger bot blocks on datacenters.
-            if cookie_file:
-                if not ytdlp_player_client or ytdlp_player_client in ("visionos", "android_vr", "android", "ios"):
-                    primary_client = "tv_samsung"
-                else:
-                    primary_client = ytdlp_player_client
-            else:
-                primary_client = ytdlp_player_client or "android"
+            # Client candidates ordered by YouTube bot-challenge bypass ability:
+            # 1. visionos: Bypasses YouTube bot walls and BotGuard without cookies
+            # 2. ios: Uses native iOS YouTube app endpoints
+            # 3. android: Android app endpoints
+            # 4. tv_samsung: Smart TV endpoints (optionally with cookies)
+            client_candidates = ["visionos", "ios", "android", "tv_samsung"]
+            if ytdlp_player_client and ytdlp_player_client not in client_candidates:
+                client_candidates.insert(0, ytdlp_player_client)
 
-            fast_res = _fast_inprocess_download(
-                source_url=source,
-                music_dir=music_dir,
-                cookie_file=cookie_file,
-                format_spec=best_fmt,
-                player_client=primary_client,
-                concurrent_fragments=concurrent_fragments,
-                ytdlp_cache_dir=ytdlp_cache_dir,
-                ytdlp_verbose=ytdlp_verbose,
-                force_mp3=(t_codec == "mp3"),
-                audio_bitrate=audio_bitrate,
-                target_codec=t_codec,
-                merge_output_format=merge_fmt,
-            )
-            # Fallback to the other client if the first fails
-            if not fast_res:
-                alt_client = "android" if primary_client == "tv_samsung" else "tv_samsung"
-                fast_res = _fast_inprocess_download(
-                    source_url=source,
-                    music_dir=music_dir,
-                    cookie_file=cookie_file if alt_client != "android" else None,
-                    format_spec=best_fmt,
-                    player_client=alt_client,
-                    concurrent_fragments=concurrent_fragments,
-                    ytdlp_cache_dir=ytdlp_cache_dir,
-                    ytdlp_verbose=ytdlp_verbose,
-                    force_mp3=(t_codec == "mp3"),
-                    audio_bitrate=audio_bitrate,
-                    target_codec=t_codec,
-                    merge_output_format=merge_fmt,
-                )
-            if fast_res:
-                logger.info("fast in-process download succeeded | id=%s title=%r path=%s", fast_res.file_id, fast_res.title, fast_res.path)
-                return fast_res
+            for cand_client in client_candidates:
+                try:
+                    c_file = cookie_file if cand_client in ("tv_samsung", "web", "tv") else None
+                    fast_res = _fast_inprocess_download(
+                        source_url=source,
+                        music_dir=music_dir,
+                        cookie_file=c_file,
+                        format_spec=best_fmt,
+                        player_client=cand_client,
+                        concurrent_fragments=concurrent_fragments,
+                        ytdlp_cache_dir=ytdlp_cache_dir,
+                        ytdlp_verbose=ytdlp_verbose,
+                        force_mp3=(t_codec == "mp3"),
+                        audio_bitrate=audio_bitrate,
+                        target_codec=t_codec,
+                        merge_output_format=merge_fmt,
+                    )
+                    if fast_res:
+                        logger.info("fast in-process download succeeded via %s | id=%s title=%r", cand_client, fast_res.file_id, fast_res.title)
+                        return fast_res
+                except Exception as cand_err:
+                    logger.warning("in-process client %s error: %s", cand_client, cand_err)
+                    continue
         except Exception as e:
             logger.warning("fast in-process download failed, falling back to subprocess: %s", e)
 

@@ -637,6 +637,48 @@
       background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
     }
 
+    /* Light mode adaptations for tracklist */
+    [data-theme="light"] .track-row {
+      background: #ffffff;
+      border: 1.5px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    [data-theme="light"] .track-row:hover {
+      background: #f8fafc;
+      border-color: #6366f1;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.12);
+    }
+    [data-theme="light"] .tr-title {
+      color: #0f172a;
+    }
+    [data-theme="light"] .tr-sub {
+      color: #64748b;
+    }
+    [data-theme="light"] .tr-index {
+      color: #94a3b8;
+    }
+    [data-theme="light"] .tr-btn-dl {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #334155;
+    }
+    [data-theme="light"] .tr-btn-dl:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    [data-theme="light"] .tr-format-select {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      color: #0f172a;
+    }
+    [data-theme="light"] .view-mode-toggle {
+      background: #ffffff;
+      border-color: #cbd5e1;
+    }
+    [data-theme="light"] .view-mode-btn {
+      color: #64748b;
+    }
+
     /* -------------------------------------------------------------
        THEME: GRAY / SLATE (Calm Neutral Dark Mode)
        ------------------------------------------------------------- */
@@ -1298,6 +1340,255 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
       gap: 22px;
+    }
+
+    /* View Mode Switcher (Danh sách vs Lưới thẻ) */
+    .view-mode-toggle {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      padding: 3px;
+      gap: 3px;
+    }
+    .view-mode-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .view-mode-btn:hover {
+      color: var(--text-main);
+    }
+    .view-mode-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.35);
+    }
+
+    /* Tracklist Container (Spotify / Apple Music style) */
+    .tracklist-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* Single Track Row */
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      position: relative;
+    }
+    .track-row:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-hover);
+      transform: translateX(4px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18), 0 0 16px rgba(99, 102, 241, 0.08);
+    }
+    .track-row.loading-active {
+      border-color: var(--accent-amber);
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    /* Row index */
+    .tr-index {
+      width: 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      flex-shrink: 0;
+    }
+    .tr-play-icon {
+      display: none;
+      color: var(--primary-light);
+    }
+    .track-row:hover .tr-num {
+      display: none;
+    }
+    .track-row:hover .tr-play-icon {
+      display: inline-block;
+    }
+
+    /* Row Thumbnail */
+    .tr-thumb-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      position: relative;
+      background: #090c14;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+    .tr-thumb {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .tr-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .track-row:hover .tr-thumb-overlay {
+      opacity: 1;
+    }
+
+    /* Row Info */
+    .tr-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .tr-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.2s;
+    }
+    .track-row:hover .tr-title {
+      color: var(--primary-light);
+    }
+    .tr-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+    .tr-channel {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+    .tr-sep {
+      opacity: 0.5;
+    }
+    .tr-duration {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .tr-badge-downloaded {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      padding: 1px 7px;
+      border-radius: 99px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    /* Row Actions */
+    .tr-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .tr-format-select {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 6px 24px 6px 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+    }
+    .tr-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 9px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tr-btn-play {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #ffffff;
+      box-shadow: 0 3px 12px rgba(99, 102, 241, 0.25);
+    }
+    .tr-btn-play:hover {
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
+      transform: translateY(-1px);
+    }
+    .tr-btn-dl {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+    .tr-btn-dl:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    /* Soundbars equalizer animation for playing track in queue */
+    .ai-soundbars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 14px;
+      width: 14px;
+    }
+    .ai-soundbars .bar {
+      width: 3px;
+      background: #818cf8;
+      border-radius: 1px;
+      animation: soundwave 1s ease-in-out infinite alternate;
+    }
+    .ai-soundbars .b1 { height: 6px; animation-delay: 0.1s; }
+    .ai-soundbars .b2 { height: 14px; animation-delay: 0.3s; }
+    .ai-soundbars .b3 { height: 9px; animation-delay: 0.2s; }
+    @keyframes soundwave {
+      0% { height: 3px; }
+      100% { height: 14px; }
     }
 
     /* Modern Media Card */
@@ -3524,11 +3815,22 @@
       <div id="results-area" style="display: none;">
         <div class="section-header">
           <div class="section-title">
-            Kết quả tìm kiếm
-            <span class="section-badge" id="results-count">0 video</span>
+            <span>Kết quả tìm kiếm</span>
+            <span class="section-badge" id="results-count">0 bài hát</span>
+          </div>
+          <!-- View Mode Switcher (Danh sách vs Lưới thẻ) -->
+          <div class="view-mode-toggle" title="Chọn chế độ hiển thị kết quả">
+            <button class="view-mode-btn active" id="btn-view-list" onclick="setViewMode('list')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              <span>Danh sách</span>
+            </button>
+            <button class="view-mode-btn" id="btn-view-grid" onclick="setViewMode('grid')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span>Lưới thẻ</span>
+            </button>
           </div>
         </div>
-        <div class="results-grid" id="results-grid"></div>
+        <div class="tracklist-container" id="results-grid"></div>
       </div>
     </section>
 
@@ -4189,6 +4491,20 @@
       }
     }
 
+    let currentViewMode = localStorage.getItem('fasttube_view_mode') || 'list';
+
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      localStorage.setItem('fasttube_view_mode', mode);
+      const btnList = document.getElementById('btn-view-list');
+      const btnGrid = document.getElementById('btn-view-grid');
+      if (btnList) btnList.classList.toggle('active', mode === 'list');
+      if (btnGrid) btnGrid.classList.toggle('active', mode === 'grid');
+      if (lastSearchResults && lastSearchResults.length > 0) {
+        renderResults(lastSearchResults);
+      }
+    }
+
     function renderResults(items) {
       if (!Array.isArray(items)) {
         items = [];
@@ -4199,9 +4515,16 @@
       const count = document.getElementById('results-count');
 
       area.style.display = 'block';
-      count.textContent = `${items.length} kết quả`;
+      count.textContent = `${items.length} bài hát`;
+
+      // Synchronize View Switcher buttons
+      const btnList = document.getElementById('btn-view-list');
+      const btnGrid = document.getElementById('btn-view-grid');
+      if (btnList) btnList.classList.toggle('active', currentViewMode === 'list');
+      if (btnGrid) btnGrid.classList.toggle('active', currentViewMode === 'grid');
 
       if (items.length === 0) {
+        grid.className = 'results-grid';
         grid.innerHTML = `
           <div class="empty-state" style="grid-column: 1 / -1;">
             <div class="empty-icon">🔍</div>
@@ -4212,65 +4535,119 @@
         return;
       }
 
-      grid.innerHTML = items.map(it => {
-        const fmtsLabel = (it.downloaded_formats && it.downloaded_formats.length > 0)
-          ? it.downloaded_formats.join(', ')
-          : 'Đã có';
-        return `
-        <div class="card" id="card-${it.id}">
-          <div class="card-thumb-wrap" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded})">
-            <img class="card-thumb" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
-            ${it.is_downloaded ? `
-              <div class="card-badge-local" title="Đã có sẵn file: ${fmtsLabel}">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span>Đã tải (${fmtsLabel})</span>
-              </div>
-            ` : ''}
-            <div class="thumb-play-overlay">
-              <div class="thumb-play-circle">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      if (currentViewMode === 'list') {
+        grid.className = 'tracklist-container';
+        grid.innerHTML = items.map((it, idx) => {
+          const fmtsLabel = (it.downloaded_formats && it.downloaded_formats.length > 0)
+            ? it.downloaded_formats.join(', ')
+            : 'Đã có';
+          return `
+          <div class="track-row" id="card-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
+            <div class="tr-index">
+              <span class="tr-num">${idx + 1}</span>
+              <span class="tr-play-icon">▶</span>
+            </div>
+            <div class="tr-thumb-wrap">
+              <img class="tr-thumb" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
+              <div class="tr-thumb-overlay">▶</div>
+            </div>
+            <div class="tr-info">
+              <div class="tr-title" title="${it.title}">${it.title}</div>
+              <div class="tr-sub">
+                <span class="tr-channel">${it.channel || 'YouTube'}</span>
+                <span class="tr-sep">•</span>
+                <span class="tr-duration">${it.duration || '0:00'}</span>
+                ${it.is_downloaded ? `<span class="tr-badge-downloaded">✓ Sẵn sàng (${fmtsLabel})</span>` : ''}
               </div>
             </div>
-            <span class="card-duration">${it.duration || 'Video'}</span>
+            <div class="tr-actions" onclick="event.stopPropagation();">
+              <select class="tr-format-select" id="fmt-${it.id}">
+                <optgroup label="🎧 Âm thanh">
+                  <option value="m4a" ${selectedFormat==='m4a'?'selected':''}>M4A 128k (2s)</option>
+                  <option value="mp3_320" ${selectedFormat==='mp3_320'?'selected':''}>MP3 320kbps</option>
+                  <option value="mp3_128" ${selectedFormat==='mp3_128'?'selected':''}>MP3 128kbps</option>
+                  <option value="flac" ${selectedFormat==='flac'?'selected':''}>FLAC Lossless</option>
+                  <option value="opus" ${selectedFormat==='opus'?'selected':''}>Opus WebM</option>
+                </optgroup>
+                <optgroup label="🎬 Video">
+                  <option value="mp4_1080" ${selectedFormat==='mp4_1080'?'selected':''}>MP4 1080p</option>
+                  <option value="mp4_720" ${selectedFormat==='mp4_720'?'selected':''}>MP4 720p</option>
+                  <option value="mp4_480" ${selectedFormat==='mp4_480'?'selected':''}>MP4 480p</option>
+                </optgroup>
+              </select>
+              <button class="tr-btn tr-btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')" title="Xem / Nghe ngay">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Phát</span>
+              </button>
+              <button class="tr-btn tr-btn-dl" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')" title="Tải về máy">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </button>
+            </div>
           </div>
-          <div class="card-body">
-            <h3 class="card-title" title="${it.title}">${it.title}</h3>
-            <div class="card-channel">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
-              <span>${it.channel || 'YouTube'}</span>
+          `;
+        }).join('');
+      } else {
+        grid.className = 'results-grid';
+        grid.innerHTML = items.map(it => {
+          const fmtsLabel = (it.downloaded_formats && it.downloaded_formats.length > 0)
+            ? it.downloaded_formats.join(', ')
+            : 'Đã có';
+          return `
+          <div class="card" id="card-${it.id}">
+            <div class="card-thumb-wrap" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
+              <img class="card-thumb" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
+              ${it.is_downloaded ? `
+                <div class="card-badge-local" title="Đã có sẵn file: ${fmtsLabel}">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Đã tải (${fmtsLabel})</span>
+                </div>
+              ` : ''}
+              <div class="thumb-play-overlay">
+                <div class="thumb-play-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                </div>
+              </div>
+              <span class="card-duration">${it.duration || 'Video'}</span>
             </div>
-            
-            <select class="card-format-select" id="fmt-${it.id}">
-              <optgroup label="🎧 Âm thanh (Audio)">
-                <option value="m4a" ${selectedFormat==='m4a'?'selected':''}>⚡ M4A 128k (Tải nhanh 2s)</option>
-                <option value="mp3_320" ${selectedFormat==='mp3_320'?'selected':''}>🎵 MP3 320kbps (Chất lượng cao)</option>
-                <option value="mp3_128" ${selectedFormat==='mp3_128'?'selected':''}>🎵 MP3 128kbps (Tiết kiệm)</option>
-                <option value="flac" ${selectedFormat==='flac'?'selected':''}>🎼 FLAC Lossless</option>
-                <option value="wav" ${selectedFormat==='wav'?'selected':''}>🎼 WAV Uncompressed</option>
-                <option value="opus" ${selectedFormat==='opus'?'selected':''}>⚡ Opus (160k - WebM)</option>
-              </optgroup>
-              <optgroup label="🎬 Video (MP4 chuẩn)">
-                <option value="mp4_1080" ${selectedFormat==='mp4_1080'?'selected':''}>🎬 MP4 1080p Full HD</option>
-                <option value="mp4_720" ${selectedFormat==='mp4_720'?'selected':''}>🎬 MP4 720p HD</option>
-                <option value="mp4_480" ${selectedFormat==='mp4_480'?'selected':''}>🎬 MP4 480p SD</option>
-                <option value="mp4_360" ${selectedFormat==='mp4_360'?'selected':''}>🎬 MP4 360p Low</option>
-              </optgroup>
-            </select>
+            <div class="card-body">
+              <h3 class="card-title" title="${it.title}">${it.title}</h3>
+              <div class="card-channel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+                <span>${it.channel || 'YouTube'}</span>
+              </div>
+              
+              <select class="card-format-select" id="fmt-${it.id}">
+                <optgroup label="🎧 Âm thanh (Audio)">
+                  <option value="m4a" ${selectedFormat==='m4a'?'selected':''}>⚡ M4A 128k (Tải nhanh 2s)</option>
+                  <option value="mp3_320" ${selectedFormat==='mp3_320'?'selected':''}>🎵 MP3 320kbps (Chất lượng cao)</option>
+                  <option value="mp3_128" ${selectedFormat==='mp3_128'?'selected':''}>🎵 MP3 128kbps (Tiết kiệm)</option>
+                  <option value="flac" ${selectedFormat==='flac'?'selected':''}>🎼 FLAC Lossless</option>
+                  <option value="wav" ${selectedFormat==='wav'?'selected':''}>🎼 WAV Uncompressed</option>
+                  <option value="opus" ${selectedFormat==='opus'?'selected':''}>⚡ Opus (160k - WebM)</option>
+                </optgroup>
+                <optgroup label="🎬 Video (MP4 chuẩn)">
+                  <option value="mp4_1080" ${selectedFormat==='mp4_1080'?'selected':''}>🎬 MP4 1080p Full HD</option>
+                  <option value="mp4_720" ${selectedFormat==='mp4_720'?'selected':''}>🎬 MP4 720p HD</option>
+                  <option value="mp4_480" ${selectedFormat==='mp4_480'?'selected':''}>🎬 MP4 480p SD</option>
+                  <option value="mp4_360" ${selectedFormat==='mp4_360'?'selected':''}>🎬 MP4 360p Low</option>
+                </optgroup>
+              </select>
 
-            <div class="card-actions">
-              <button class="btn btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded})">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                <span>Xem / Nghe</span>
-              </button>
-              <button class="btn btn-download" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Tải về</span>
-              </button>
+              <div class="card-actions">
+                <button class="btn btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                  <span>Xem / Nghe</span>
+                </button>
+                <button class="btn btn-download" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Tải về</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      `;
-      }).join('');
+        `;
+        }).join('');
+      }
     }
 
     function escapeQuotes(str) {
@@ -4299,7 +4676,7 @@
       }
     }
 
-    async function actionPlay(id, title, channel, thumb, isDownloaded) {
+    async function actionPlay(id, title, channel, thumb, isDownloaded, duration = '') {
       // 1. If clicking the currently loading video -> STOP IT
       if (currentLoadingTrack && currentLoadingTrack.id === id) {
         cancelCurrentLoading(true);
@@ -4317,20 +4694,23 @@
       const btn = document.getElementById(`btn-play-${id}`);
       const origHtml = btn ? btn.innerHTML : `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg><span>Xem / Nghe</span>`;
       const card = document.getElementById(`card-${id}`);
-      const thumbWrap = card ? card.querySelector('.card-thumb-wrap') : null;
+      const thumbWrap = card ? (card.querySelector('.card-thumb-wrap') || card.querySelector('.tr-thumb-wrap')) : null;
 
       const controller = new AbortController();
 
       if (btn) {
         btn.classList.add('btn-loading-cancel');
-        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0;"></div><span>Dừng tải</span>`;
-        btn.title = 'Bấm để dừng tải video này';
+        btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;border-width:2px;margin:0;"></div><span>Dừng</span>`;
+        btn.title = 'Bấm để dừng tải bài này';
       }
       if (thumbWrap) {
         thumbWrap.classList.add('loading-active');
       }
+      if (card) {
+        card.classList.add('loading-active');
+      }
 
-      currentLoadingTrack = { id, controller, title, btn, origHtml, thumbWrap };
+      currentLoadingTrack = { id, controller, title, btn, origHtml, thumbWrap, card };
       if (fmt.startsWith('mp4')) {
         showToast(`⏳ Đang tải video '${title}' [${fmt.toUpperCase()}]... (Phim dài/video HD có thể mất 30s-1p)`);
       } else {
@@ -4355,7 +4735,15 @@
           showToast(`⚡ Sẵn sàng phát: '${title}' (${elapsed}s)`);
         }
         _updateCardBadge(id, data.format);
-        startStreamingTrack({ id: data.file_id || id, title: data.title || title, channel, thumb, fmt: data.format || fmt, is_downloaded: true }, -1, true);
+        startStreamingTrack({
+          id: data.file_id || id,
+          title: data.title || title,
+          channel: channel || 'YouTube',
+          thumb: thumb,
+          fmt: data.format || fmt,
+          duration: data.duration || duration || '0:00',
+          is_downloaded: true
+        }, -1, true);
       } catch (err) {
         if (err.name === 'AbortError') {
           return; // Silently handled or notified
@@ -4372,6 +4760,9 @@
           }
           if (thumbWrap) {
             thumbWrap.classList.remove('loading-active');
+          }
+          if (card) {
+            card.classList.remove('loading-active');
           }
         }
       }
@@ -4431,10 +4822,27 @@
       if (!formatName || !id) return;
       const card = document.getElementById(`card-${id}`);
       if (!card) return;
+      const fmtUpper = formatName.toUpperCase();
+
+      // Case 1: Tracklist row
+      const sub = card.querySelector('.tr-sub');
+      if (sub) {
+        let badge = sub.querySelector('.tr-badge-downloaded');
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'tr-badge-downloaded';
+          badge.textContent = `✓ Đã có (${fmtUpper})`;
+          sub.appendChild(badge);
+        } else {
+          badge.textContent = `✓ Đã có (${fmtUpper})`;
+        }
+        return;
+      }
+
+      // Case 2: Grid card
       const thumbWrap = card.querySelector('.card-thumb-wrap');
       if (!thumbWrap) return;
       let badge = thumbWrap.querySelector('.card-badge-local');
-      const fmtUpper = formatName.toUpperCase();
       if (!badge) {
         badge = document.createElement('div');
         badge.className = 'card-badge-local';
@@ -4443,11 +4851,9 @@
       } else {
         const txt = badge.querySelector('span');
         if (txt) {
-          const content = txt.textContent || '';
-          if (!content.includes(fmtUpper)) {
-            const raw = content.replace('Đã tải (', '').replace(')', '').trim();
-            txt.textContent = `Đã tải (${raw ? raw + ', ' + fmtUpper : fmtUpper})`;
-          }
+          txt.textContent = `Đã tải (${fmtUpper})`;
+        } else {
+          badge.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg><span>Đã tải (${fmtUpper})</span>`;
         }
       }
     }
@@ -4577,18 +4983,21 @@
       if (isVideo) {
         audio.pause();
         audio.removeAttribute('src');
+        try { audio.currentTime = 0; } catch (e) {}
         if (audioStage) audioStage.style.display = 'none';
         if (videoStage) videoStage.style.display = 'block';
         
         modalVideo.pause();
+        try { modalVideo.currentTime = 0; } catch (e) {}
         modalVideo.src = streamUrl;
         modalVideo.load();
         const p = modalVideo.play();
         if (p !== undefined) {
-          p.catch(e => {
+          p.then(() => updatePlayIcons(true)).catch(e => {
             console.warn('Autoplay video error, trying muted fallback:', e);
             modalVideo.muted = true;
             modalVideo.play().then(() => {
+              updatePlayIcons(true);
               setTimeout(() => { modalVideo.muted = false; }, 400);
             }).catch(err => {
               console.warn('Muted autoplay video also rejected:', err);
@@ -4600,15 +5009,17 @@
       } else {
         modalVideo.pause();
         modalVideo.removeAttribute('src');
+        try { modalVideo.currentTime = 0; } catch (e) {}
         if (videoStage) videoStage.style.display = 'none';
         if (audioStage) audioStage.style.display = 'flex';
         
         audio.pause();
+        try { audio.currentTime = 0; } catch (e) {}
         audio.src = streamUrl;
         audio.load();
         const p = audio.play();
         if (p !== undefined) {
-          p.catch(e => {
+          p.then(() => updatePlayIcons(true)).catch(e => {
             console.warn('Autoplay audio error:', e);
             updatePlayIcons(false);
           });
@@ -4659,10 +5070,18 @@
     function togglePlay() {
       const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
       const activeMedia = isVideo ? modalVideo : audio;
+      if (!activeMedia.src) return;
       if (activeMedia.paused) {
-        activeMedia.play();
+        if (activeMedia.ended || (activeMedia.duration > 0 && activeMedia.currentTime >= activeMedia.duration - 0.5)) {
+          try { activeMedia.currentTime = 0; } catch (e) {}
+        }
+        activeMedia.play().then(() => updatePlayIcons(true)).catch(err => {
+          console.warn('Play error:', err);
+          updatePlayIcons(false);
+        });
       } else {
         activeMedia.pause();
+        updatePlayIcons(false);
       }
     }
 
@@ -4950,12 +5369,20 @@
               body: JSON.stringify({
                 id: track.id || track.file_id,
                 title: track.title,
-                format: selectedFormat
+                format: track.fmt || selectedFormat
               })
             });
             if (resp.ok) {
-              track.is_downloaded = true;
-              track.downloading = false;
+              const resData = await resp.json();
+              if (resData.success) {
+                track.is_downloaded = true;
+                track.downloading = false;
+                if (resData.duration) track.duration = resData.duration;
+                if (resData.format) track.fmt = resData.format;
+                if (resData.stream_url) track.stream_url = resData.stream_url;
+              } else {
+                track.downloading = false;
+              }
             } else {
               track.downloading = false;
             }
@@ -5017,8 +5444,7 @@
             downloadAllQueueTracks();
 
             if (autoPlayIfArrived && newTracks.length > 0 && currentAIIndex + 1 < aiTrackList.length) {
-              currentAIIndex++;
-              startStreamingTrack(aiTrackList[currentAIIndex], currentAIIndex);
+              playTrackFromQueue(currentAIIndex + 1);
             }
           }
         }
@@ -5047,13 +5473,64 @@
       downloadAllQueueTracks();
     }
 
+    async function playTrackFromQueue(idx) {
+      if (idx < 0 || idx >= aiTrackList.length) return;
+      currentAIIndex = idx;
+      const track = aiTrackList[idx];
+      if (!track) return;
+
+      renderAIQueue();
+
+      // If not downloaded yet, ensure it is downloaded cleanly first
+      if (!track.is_downloaded) {
+        track.downloading = true;
+        renderAIQueue();
+        showToast(`⏳ Đang chuẩn bị bài #${idx + 1}: "${track.title}"...`);
+        try {
+          const resp = await fetch('/api/download', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: track.id || track.file_id,
+              title: track.title,
+              format: track.fmt || selectedFormat
+            })
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.success) {
+              track.is_downloaded = true;
+              track.downloading = false;
+              if (data.duration) track.duration = data.duration;
+              if (data.format) track.fmt = data.format;
+              if (data.stream_url) track.stream_url = data.stream_url;
+            }
+          }
+        } catch (e) {
+          console.warn('Queue track download failed:', e);
+        } finally {
+          track.downloading = false;
+          renderAIQueue();
+        }
+      }
+
+      startStreamingTrack(track, idx, false);
+
+      // Check remaining upcoming tracks. If less than 4 ahead, fetch more to grow list!
+      const remainingAhead = aiTrackList.length - 1 - currentAIIndex;
+      if (autoPlayAI && remainingAhead < 4) {
+        fetchAIRecommendations(track, Math.max(3, 8 - remainingAhead));
+      }
+
+      // Resume background downloading of next tracks
+      downloadAllQueueTracks();
+    }
+
     function playNextTrack() {
       // 1. Advance to next track in growing aiTrackList
       if (currentAIIndex + 1 < aiTrackList.length) {
-        currentAIIndex++;
-        const next = aiTrackList[currentAIIndex];
-        startStreamingTrack(next, currentAIIndex, false);
-        showToast(`⏭️ Đang phát bài #${currentAIIndex + 1}: "${next.title}"`);
+        playTrackFromQueue(currentAIIndex + 1);
+        showToast(`⏭️ Đang phát bài #${currentAIIndex + 1}: "${aiTrackList[currentAIIndex].title}"`);
         
         // Fetch 1 more track from AI to grow list further!
         fetchOneMoreAIRec();
@@ -5073,7 +5550,7 @@
         if (curIdx !== -1 && curIdx + 1 < lastSearchResults.length) {
           const nextItem = lastSearchResults[curIdx + 1];
           showToast(`⏭️ Chuyển bài tiếp theo: "${nextItem.title}"`);
-          actionPlay(nextItem.id, nextItem.title, nextItem.channel, nextItem.thumbnail, nextItem.is_downloaded);
+          actionPlay(nextItem.id, nextItem.title, nextItem.channel, nextItem.thumbnail, nextItem.is_downloaded, nextItem.duration || '');
           return;
         }
       }
@@ -5084,10 +5561,8 @@
     function playPrevTrack() {
       // 1. Return to previous track in growing aiTrackList
       if (currentAIIndex > 0) {
-        currentAIIndex--;
-        const prev = aiTrackList[currentAIIndex];
-        startStreamingTrack(prev, currentAIIndex, false);
-        showToast(`⏮️ Quay lại bài #${currentAIIndex + 1}: "${prev.title}"`);
+        playTrackFromQueue(currentAIIndex - 1);
+        showToast(`⏮️ Quay lại bài #${currentAIIndex + 1}: "${aiTrackList[currentAIIndex].title}"`);
         return;
       }
 
@@ -5097,7 +5572,7 @@
         if (curIdx > 0) {
           const prevItem = lastSearchResults[curIdx - 1];
           showToast(`⏮️ Bài trước đó: "${prevItem.title}"`);
-          actionPlay(prevItem.id, prevItem.title, prevItem.channel, prevItem.thumbnail, prevItem.is_downloaded);
+          actionPlay(prevItem.id, prevItem.title, prevItem.channel, prevItem.thumbnail, prevItem.is_downloaded, prevItem.duration || '');
           return;
         }
       }
@@ -5106,15 +5581,7 @@
     }
 
     function playQueueIndex(idx) {
-      if (idx < 0 || idx >= aiTrackList.length) return;
-      currentAIIndex = idx;
-      const selected = aiTrackList[idx];
-      startStreamingTrack(selected, idx, false);
-
-      const remaining = aiTrackList.length - 1 - currentAIIndex;
-      if (autoPlayAI && remaining < 4) {
-        fetchAIRecommendations(selected, 4);
-      }
+      playTrackFromQueue(idx);
     }
 
     function refreshAIQueue() {
@@ -5159,7 +5626,7 @@
 
         if (i === currentAIIndex) {
           rowClass += ' active';
-          badgeHtml = '<span class="ai-queue-badge-status" style="background:rgba(99,102,241,0.25); color:#818cf8; border-color:#6366f1; font-weight:700;">🎧 Đang phát</span>';
+          badgeHtml = '<span class="ai-queue-badge-status" style="background:rgba(99,102,241,0.25); color:#818cf8; border-color:#6366f1; font-weight:700;"><span class="ai-soundbars" style="margin-right:4px;"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>Đang phát</span>';
         } else if (i < currentAIIndex) {
           rowClass += ' played';
           badgeHtml = '<span class="ai-queue-badge-status" style="opacity:0.75;">✓ Đã phát</span>';
@@ -5176,7 +5643,7 @@
         const thumb = t.thumb || t.thumbnail || `https://i.ytimg.com/vi/${t.id || t.file_id}/hqdefault.jpg`;
         html += `
           <div class="${rowClass}" onclick="playQueueIndex(${i})" title="Bấm để phát bài này (#${i + 1})">
-            <div class="ai-queue-row-idx">${i === currentAIIndex ? '▶' : i + 1}</div>
+            <div class="ai-queue-row-idx">${i === currentAIIndex ? '<span class="ai-soundbars"><span class="bar b1"></span><span class="bar b2"></span><span class="bar b3"></span></span>' : i + 1}</div>
             <img class="ai-queue-row-thumb" src="${thumb}" alt="thumb">
             <div class="ai-queue-row-info">
               <div class="ai-queue-row-title" style="${i === currentAIIndex ? 'color:var(--primary-light); font-weight:800;' : ''}">${t.title}</div>
