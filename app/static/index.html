@@ -2081,13 +2081,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 0 16px;
+      padding: 6px 0 12px;
       perspective: 1000px;
     }
     .vinyl-wrapper {
       position: relative;
-      width: 250px;
-      height: 250px;
+      width: 220px;
+      height: 220px;
       margin: 0 auto;
       display: flex;
       align-items: center;
@@ -2133,8 +2133,8 @@
       pointer-events: none;
     }
     .vinyl-label {
-      width: 105px;
-      height: 105px;
+      width: 92px;
+      height: 92px;
       border-radius: 50%;
       overflow: hidden;
       position: relative;
@@ -2194,8 +2194,8 @@
       justify-content: center;
     }
     .nowplaying-container {
-      width: 100%;
-      max-width: 860px;
+      width: min(96vw, 1040px);
+      max-width: 1040px;
       margin: auto;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
@@ -2206,62 +2206,19 @@
       flex-direction: column;
       box-sizing: border-box;
       animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      max-height: 94dvh;
     }
     .nowplaying-topbar {
-      padding: 12px 18px;
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-subtle);
       background: rgba(14, 18, 28, 0.85);
-      gap: 10px;
+      gap: 12px;
       width: 100%;
       box-sizing: border-box;
       flex-shrink: 0;
-    }
-    .np-segmented-tabs {
-      display: inline-flex;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-full);
-      padding: 3px;
-      gap: 3px;
-    }
-    .np-seg-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 13px;
-      border-radius: var(--radius-full);
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .np-seg-btn:hover {
-      color: var(--text-main);
-    }
-    .np-seg-btn.active {
-      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-      color: #ffffff;
-      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
-    }
-    .np-tab-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 18px;
-      height: 18px;
-      padding: 0 5px;
-      border-radius: 99px;
-      font-size: 0.68rem;
-      font-weight: 800;
-      background: rgba(255, 255, 255, 0.22);
-      color: #fff;
     }
     .np-minimize-btn {
       display: inline-flex;
@@ -2270,167 +2227,128 @@
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid var(--border-subtle);
       color: var(--text-main);
-      padding: 6px 13px;
+      padding: 6px 14px;
       border-radius: 12px;
       font-size: 0.82rem;
       font-weight: 700;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
     }
     .np-minimize-btn:hover {
       background: rgba(99, 102, 241, 0.2);
       border-color: var(--primary);
       transform: translateY(-1px);
     }
+    .np-btn-gold {
+      background: rgba(234, 179, 8, 0.15) !important;
+      border-color: rgba(234, 179, 8, 0.3) !important;
+      color: #facc15 !important;
+    }
+    .np-btn-gold:hover {
+      background: rgba(234, 179, 8, 0.25) !important;
+      border-color: rgba(234, 179, 8, 0.5) !important;
+    }
     .np-badge-title {
-      font-size: 0.86rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: var(--text-secondary);
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      gap: 7px;
+      justify-content: center;
+      gap: 8px;
+      flex: 1;
+      text-align: center;
     }
     .np-main-content {
-      padding: 20px 24px 24px;
+      padding: 20px 22px 22px;
+      display: grid;
+      grid-template-columns: 1fr 1.18fr;
+      gap: 22px;
+      align-items: stretch;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .np-col-player {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      justify-content: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .np-col-queue {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
+    .np-col-queue .ai-queue-card {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      box-sizing: border-box;
+    }
+    .np-col-queue .ai-queue-items-container {
+      flex: 1;
+      max-height: 480px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
     }
 
-    /* Desktop Wide Screen (>= 901px): 2 columns side by side */
-    @media (min-width: 901px) {
+    /* Responsive Viewport for Tablets and Mobile (< 720px) */
+    @media (max-width: 719px) {
+      .nowplaying-modal {
+        padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)) !important;
+        align-items: flex-start !important;
+      }
       .nowplaying-container {
-        max-width: 980px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 96dvh !important;
+        border-radius: 18px !important;
+        margin: 0 auto !important;
       }
-      .np-main-content {
-        display: grid !important;
-        grid-template-columns: 1fr 1.08fr !important;
-        gap: 22px !important;
-        padding: 22px !important;
-        align-items: stretch !important;
-      }
-      .np-col-player {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 14px !important;
-        justify-content: center !important;
-      }
-      .np-col-queue {
-        display: flex !important;
-        flex-direction: column !important;
-        height: 100% !important;
-      }
-      .np-col-queue .ai-queue-card {
-        height: 100% !important;
-        display: flex !important;
-        flex-direction: column !important;
-      }
-      .np-col-queue .ai-queue-items-container {
-        flex: 1 !important;
-        max-height: 490px !important;
-        overflow-y: auto !important;
-      }
-      .np-queue-teaser {
-        display: none !important;
-      }
-      .np-segmented-tabs {
-        display: none !important;
-      }
-    }
-
-    /* Mobile Responsive Viewport (< 901px) */
-    @media (max-width: 900px) {
       .nowplaying-topbar {
         padding: 10px 14px !important;
       }
       .nowplaying-topbar .np-badge-title {
-        display: none !important;
+        font-size: 0.78rem !important;
       }
-      .np-segmented-tabs {
-        display: inline-flex !important;
-      }
-      .np-col-player.np-pane-hidden {
-        display: none !important;
-      }
-      .np-col-player.np-pane-active {
+      .np-main-content {
         display: flex !important;
-        flex-direction: column;
-        gap: 12px;
-        width: 100%;
+        flex-direction: column !important;
+        gap: 14px !important;
+        padding: 12px 14px 18px !important;
       }
-      .np-col-queue.np-pane-hidden {
-        display: none !important;
+      .np-col-player {
+        width: 100% !important;
+        gap: 10px !important;
       }
-      .np-col-queue.np-pane-active {
-        display: flex !important;
-        flex-direction: column;
-        width: 100%;
-        flex: 1;
-        min-height: calc(85dvh - 80px);
+      .vinyl-stage {
+        padding: 4px 0 8px !important;
       }
-      .np-col-queue.np-pane-active .ai-queue-card {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        margin: 0;
-        height: 100%;
+      .vinyl-wrapper {
+        width: 140px !important;
+        height: 140px !important;
       }
-      .np-col-queue.np-pane-active .ai-queue-items-container {
-        flex: 1 !important;
-        max-height: calc(85dvh - 160px) !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
+      .vinyl-label {
+        width: 62px !important;
+        height: 62px !important;
       }
-    }
-
-    .np-queue-teaser {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12));
-      border: 1px solid rgba(99, 102, 241, 0.25);
-      border-radius: 14px;
-      cursor: pointer;
-      margin-top: 10px;
-      transition: all 0.2s ease;
-    }
-    .np-queue-teaser:hover {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-      transform: translateY(-1px);
-    }
-    .np-qt-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      text-align: left;
-      overflow: hidden;
-    }
-    .np-qt-label {
-      font-size: 0.68rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      color: var(--primary-light);
-    }
-    .np-qt-title {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: var(--text-main);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
-    }
-    .np-qt-action {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--primary-light);
-      flex-shrink: 0;
+      .np-col-queue {
+        width: 100% !important;
+      }
+      .np-col-queue .ai-queue-items-container {
+        max-height: 320px !important;
+      }
     }
 
     /* Smart Playlist Live Recipe Banner & Applied Rules Banner */
@@ -4596,23 +4514,13 @@
           <span>Thu nhỏ</span>
         </button>
 
-        <!-- Segmented Tab Switcher for Mobile & Easy Toggling -->
-        <div class="np-segmented-tabs" id="np-segmented-tabs">
-          <button class="np-seg-btn active" id="np-seg-btn-player" onclick="setNowPlayingTab('player')">
-            <span>💿 Đang phát</span>
-          </button>
-          <button class="np-seg-btn" id="np-seg-btn-queue" onclick="setNowPlayingTab('queue')">
-            <span>🎶 Hàng đợi AI</span>
-            <span class="np-tab-badge" id="np-tab-queue-count">8</span>
-          </button>
-        </div>
-
         <div class="np-badge-title" id="np-badge-title">
-          <span>🎧 ĐANG PHÁT</span>
+          <span>💿 ĐANG PHÁT NHẠC</span>
           <span class="player-tag" id="np-format-tag" style="font-size:0.7rem; padding:2px 8px;">M4A</span>
         </div>
+
         <div style="display:flex; align-items:center; gap:8px;">
-          <button class="np-minimize-btn" onclick="saveCurrentToAIPlaylist()" title="Thêm bài này vào tab AI Playlist" style="background:rgba(234,179,8,0.15); border-color:rgba(234,179,8,0.3); color:#facc15;">
+          <button class="np-minimize-btn np-btn-gold" onclick="saveCurrentToAIPlaylist()" title="Thêm bài này vào tab AI Playlist">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
             <span>+ AI List</span>
           </button>
@@ -4622,7 +4530,7 @@
 
       <div class="np-main-content">
         <!-- Pane 1: Turntable / Video Player + Scrubber + Controls -->
-        <div class="np-col-player np-pane-active" id="np-pane-player">
+        <div class="np-col-player" id="np-pane-player">
           <!-- Stage 1: Audio Spinning Vinyl Disc (Hiển thị khi là Audio) -->
           <div id="np-audio-stage" class="vinyl-stage">
             <div class="vinyl-wrapper">
@@ -4679,38 +4587,26 @@
               </button>
             </div>
           </div>
-
-          <!-- Mobile Queue Teaser Pill (Chạm để mở full màn hình hàng đợi) -->
-          <div class="np-queue-teaser" id="np-queue-teaser" onclick="setNowPlayingTab('queue')" title="Chạm để xem toàn màn hình danh sách hàng đợi AI">
-            <div class="np-qt-info">
-              <span class="np-qt-label">BÀI TIẾP THEO</span>
-              <span class="np-qt-title" id="np-next-teaser-title">Đang chọn bài...</span>
-            </div>
-            <div class="np-qt-action">
-              <span>Xem hàng đợi AI</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </div>
-          </div>
         </div>
 
-        <!-- Pane 2: Full-viewport AI AutoPlay Queue (Tự bung 100% chiều cao trên Mobile) -->
-        <div class="np-col-queue np-pane-hidden" id="np-pane-queue">
+        <!-- Pane 2: Side-by-side AI AutoPlay Queue -->
+        <div class="np-col-queue" id="np-pane-queue">
           <div class="ai-queue-card">
             <div class="ai-queue-header">
               <div class="ai-queue-title-wrap">
                 <span class="ai-sparkle-pill">✨ AutoPlay Next AI</span>
-                <span class="ai-queue-sub" id="ai-queue-counter">Duy trì 8 bài hát (Tự tải về sẵn)</span>
+                <span class="ai-queue-sub" id="ai-queue-counter">Danh sách: 8 bài hát (Đang phát bài #1)</span>
               </div>
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="saveQueueToAIPlaylist()" title="Lưu danh sách bài này vào Tab AI Playlist">
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); display:inline-flex; align-items:center; gap:4px; font-weight:700;" onclick="saveQueueToAIPlaylist()" title="Lưu danh sách bài này vào Tab AI Playlist">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   <span>Lưu list</span>
                 </button>
-                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="downloadAllQueueTracks()" title="Tải toàn bộ các bài về server ngay">
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); display:inline-flex; align-items:center; gap:4px; font-weight:700;" onclick="downloadAllQueueTracks()" title="Tải toàn bộ các bài về server ngay">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                   <span>Tải hết</span>
                 </button>
-                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,0.06);" onclick="refreshAIQueue()" title="Làm mới hàng đợi AI">
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,0.06); font-weight:700;" onclick="refreshAIQueue()" title="Làm mới hàng đợi AI">
                   🔄 Đổi bài
                 </button>
                 <label class="ai-toggle-switch" title="Bật/Tắt tự động phát tiếp theo bằng AI">
@@ -5359,34 +5255,7 @@
     function closeVideoModal() { minimizePlayer(); }
 
     function setNowPlayingTab(tab) {
-      const pPane = document.getElementById('np-pane-player');
-      const qPane = document.getElementById('np-pane-queue');
-      const btnP = document.getElementById('np-seg-btn-player');
-      const btnQ = document.getElementById('np-seg-btn-queue');
-
-      if (tab === 'queue') {
-        if (pPane) {
-          pPane.classList.remove('np-pane-active');
-          pPane.classList.add('np-pane-hidden');
-        }
-        if (qPane) {
-          qPane.classList.remove('np-pane-hidden');
-          qPane.classList.add('np-pane-active');
-        }
-        if (btnP) btnP.classList.remove('active');
-        if (btnQ) btnQ.classList.add('active');
-      } else {
-        if (pPane) {
-          pPane.classList.remove('np-pane-hidden');
-          pPane.classList.add('np-pane-active');
-        }
-        if (qPane) {
-          qPane.classList.remove('np-pane-active');
-          qPane.classList.add('np-pane-hidden');
-        }
-        if (btnP) btnP.classList.add('active');
-        if (btnQ) btnQ.classList.remove('active');
-      }
+      // Both columns (player turntable and AI queue) are permanently visible side-by-side
     }
 
     function updateQueueTeaser() {
@@ -5532,6 +5401,7 @@
             console.warn('Autoplay audio error:', e);
             updatePlayIcons(false);
             isTransitioningTrack = false;
+            trackEndedTriggered = false;
           });
         }
         if (pThumb) pThumb.classList.add('spinning');
@@ -5582,8 +5452,19 @@
       const activeMedia = isVideo ? modalVideo : audio;
       if (!activeMedia.src) return;
       if (activeMedia.paused) {
+        // If song is at or near the end (re-playing or advancing)
         if (activeMedia.ended || (activeMedia.duration > 0 && activeMedia.currentTime >= activeMedia.duration - 0.5)) {
-          try { activeMedia.currentTime = 0; } catch (e) {}
+          if (isLooping) {
+            activeMedia.currentTime = 0;
+            activeMedia.play().then(() => updatePlayIcons(true)).catch(() => {});
+          } else if (autoPlayAI && aiTrackList.length > 0 && currentAIIndex + 1 < aiTrackList.length) {
+            playNextTrack();
+            return;
+          } else {
+            activeMedia.currentTime = 0;
+            activeMedia.play().then(() => updatePlayIcons(true)).catch(() => {});
+          }
+          return;
         }
         activeMedia.play().then(() => updatePlayIcons(true)).catch(err => {
           console.warn('Play error:', err);
@@ -6016,59 +5897,38 @@
 
       renderAIQueue();
 
-      // If already downloaded, start streaming immediately!
+      // Start streaming immediately so browser user activation is never lost and no freeze occurs
       if (track.is_downloaded) {
         startStreamingTrack(track, idx, false);
       } else {
-        // If not downloaded yet, ensure it is downloaded cleanly first
         track.downloading = true;
         renderAIQueue();
-        showToast(`⏳ Đang tải bài #${idx + 1}: "${track.title}"...`);
-        try {
-          const resp = await fetch('/api/download', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id: track.id || track.file_id,
-              title: track.title,
-              format: track.fmt || selectedFormat
-            })
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data.success) {
-              track.is_downloaded = true;
-              track.downloading = false;
-              if (data.duration) track.duration = data.duration;
-              if (data.format) track.fmt = data.format;
-              if (data.stream_url) track.stream_url = data.stream_url;
-              startStreamingTrack(track, idx, false);
-            } else {
-              throw new Error(data.detail || 'Không thể tải');
-            }
+        showToast(`⚡ Đang phát bài #${idx + 1}: "${track.title}"...`);
+        startStreamingTrack(track, idx, false);
+
+        fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: track.id || track.file_id,
+            title: track.title,
+            format: track.fmt || selectedFormat
+          })
+        }).then(r => r.json()).then(data => {
+          if (data && data.success) {
+            track.is_downloaded = true;
+            track.downloading = false;
+            if (data.duration) track.duration = data.duration;
+            if (data.format) track.fmt = data.format;
+            renderAIQueue();
           } else {
-            const errData = await resp.json().catch(() => ({}));
-            throw new Error(errData.detail || `Lỗi máy chủ ${resp.status}`);
+            track.downloading = false;
+            renderAIQueue();
           }
-        } catch (e) {
-          console.warn('Queue track download failed:', e);
-          track.downloading = false;
-          track.download_failed = true;
-          renderAIQueue();
-          showToast(`⚠️ Không thể phát "${track.title}": ${e.message}. Tự động chuyển tiếp...`);
-          if (idx + 1 < aiTrackList.length) {
-            setTimeout(() => {
-              playTrackFromQueue(idx + 1);
-            }, 1200);
-            return;
-          } else {
-            isTransitioningTrack = false;
-            trackEndedTriggered = false;
-          }
-        } finally {
+        }).catch(() => {
           track.downloading = false;
           renderAIQueue();
-        }
+        });
       }
 
       // Check remaining upcoming tracks. If less than 4 ahead, fetch more to grow list!
@@ -6232,6 +6092,12 @@
         `;
       });
       container.innerHTML = html;
+      setTimeout(() => {
+        const activeRow = container.querySelector('.ai-queue-row.active');
+        if (activeRow) {
+          activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 50);
     }
 
     function formatTime(s) {
