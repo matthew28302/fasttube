@@ -2208,15 +2208,60 @@
       animation: modalScaleUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .nowplaying-topbar {
-      padding: 14px 20px;
+      padding: 12px 18px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-subtle);
       background: rgba(14, 18, 28, 0.85);
-      gap: 12px;
+      gap: 10px;
       width: 100%;
       box-sizing: border-box;
+      flex-shrink: 0;
+    }
+    .np-segmented-tabs {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-full);
+      padding: 3px;
+      gap: 3px;
+    }
+    .np-seg-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      border-radius: var(--radius-full);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .np-seg-btn:hover {
+      color: var(--text-main);
+    }
+    .np-seg-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #ffffff;
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+    }
+    .np-tab-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 99px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
     }
     .np-minimize-btn {
       display: inline-flex;
@@ -2252,6 +2297,266 @@
       display: flex;
       flex-direction: column;
       gap: 18px;
+    }
+
+    /* Desktop Wide Screen (>= 901px): 2 columns side by side */
+    @media (min-width: 901px) {
+      .nowplaying-container {
+        max-width: 980px !important;
+      }
+      .np-main-content {
+        display: grid !important;
+        grid-template-columns: 1fr 1.08fr !important;
+        gap: 22px !important;
+        padding: 22px !important;
+        align-items: stretch !important;
+      }
+      .np-col-player {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+        justify-content: center !important;
+      }
+      .np-col-queue {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+      }
+      .np-col-queue .ai-queue-card {
+        height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      .np-col-queue .ai-queue-items-container {
+        flex: 1 !important;
+        max-height: 490px !important;
+        overflow-y: auto !important;
+      }
+      .np-queue-teaser {
+        display: none !important;
+      }
+      .np-segmented-tabs {
+        display: none !important;
+      }
+    }
+
+    /* Mobile Responsive Viewport (< 901px) */
+    @media (max-width: 900px) {
+      .nowplaying-topbar {
+        padding: 10px 14px !important;
+      }
+      .nowplaying-topbar .np-badge-title {
+        display: none !important;
+      }
+      .np-segmented-tabs {
+        display: inline-flex !important;
+      }
+      .np-col-player.np-pane-hidden {
+        display: none !important;
+      }
+      .np-col-player.np-pane-active {
+        display: flex !important;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+      }
+      .np-col-queue.np-pane-hidden {
+        display: none !important;
+      }
+      .np-col-queue.np-pane-active {
+        display: flex !important;
+        flex-direction: column;
+        width: 100%;
+        flex: 1;
+        min-height: calc(85dvh - 80px);
+      }
+      .np-col-queue.np-pane-active .ai-queue-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        height: 100%;
+      }
+      .np-col-queue.np-pane-active .ai-queue-items-container {
+        flex: 1 !important;
+        max-height: calc(85dvh - 160px) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    .np-queue-teaser {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12));
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 14px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.2s ease;
+    }
+    .np-queue-teaser:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
+      transform: translateY(-1px);
+    }
+    .np-qt-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      text-align: left;
+      overflow: hidden;
+    }
+    .np-qt-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: var(--primary-light);
+    }
+    .np-qt-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
+    .np-qt-action {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--primary-light);
+      flex-shrink: 0;
+    }
+
+    /* Smart Playlist Live Recipe Banner & Applied Rules Banner */
+    .smart-rule-banner {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.08));
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 16px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .srb-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .srb-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .srb-icon {
+      font-size: 1.1rem;
+    }
+    .srb-badge-highlight {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.76rem;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+    .srb-body {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .srb-rule-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .srb-rule-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .srb-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .srb-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+    .srb-badge-kw {
+      background: rgba(234, 179, 8, 0.15);
+      color: #facc15;
+      border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+    .srb-badge-artist {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+    .srb-badge-genre {
+      background: rgba(236, 72, 153, 0.15);
+      color: #f472b6;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+    }
+    .srb-badge-year {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .srb-badge-mood {
+      background: rgba(14, 165, 233, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(14, 165, 233, 0.3);
+    }
+    .srb-badge-random {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+    .srb-empty-hint {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+    .playlist-rule-applied-banner {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 14px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: var(--text-main);
+      font-size: 0.84rem;
+    }
+    .prab-title {
+      font-weight: 800;
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .np-info-box {
       text-align: center;
@@ -3856,11 +4161,56 @@
 
       <!-- Mode 1: Smart Filter Box (Mặc định) -->
       <div id="pl-smart-filter-box" class="smart-filter-card">
+        <!-- Live Formula & Rule Recipe Banner -->
+        <div class="smart-rule-banner" id="smart-rule-banner">
+          <div class="srb-header">
+            <div class="srb-title">
+              <span class="srb-icon">🎯</span>
+              <span>Công Thức Tạo Playlist (Chuẩn Gu Nhạc Của Bạn)</span>
+            </div>
+            <span class="srb-badge-highlight" id="srb-summary-count">8 bài</span>
+          </div>
+          <div class="srb-body">
+            <div class="srb-rule-row">
+              <span class="srb-rule-label">Công thức:</span>
+              <div class="srb-badges" id="srb-badges-container">
+                <span class="srb-empty-hint">Chưa chọn tiêu chí cụ thể. Chọn chip bên dưới để thiết lập gu nhạc chính xác.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 0. Từ Khóa / Chủ Đề / Ngữ Cảnh (Chọn hoặc gõ tự do) -->
+        <div style="margin-bottom: 20px;">
+          <div class="filter-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            <span>0. Từ Khóa / Ngữ Cảnh / Chủ Đề (Chọn hoặc gõ tự do)</span>
+            <span id="filter-keywords-count" style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;"></span>
+          </div>
+          <div class="filter-chip-group" id="filter-keywords-chips">
+            <span class="filter-chip" data-val="Cà phê sáng" onclick="toggleFilterKeyword(this, 'Cà phê sáng')">☕ Cà phê sáng</span>
+            <span class="filter-chip" data-val="Chạy deadline" onclick="toggleFilterKeyword(this, 'Chạy deadline')">💻 Chạy deadline</span>
+            <span class="filter-chip" data-val="Gym & Workout" onclick="toggleFilterKeyword(this, 'Gym & Workout')">⚡ Gym & Workout</span>
+            <span class="filter-chip" data-val="Mưa đêm chill" onclick="toggleFilterKeyword(this, 'Mưa đêm chill')">🌧️ Mưa đêm chill</span>
+            <span class="filter-chip" data-val="Lái xe đường dài" onclick="toggleFilterKeyword(this, 'Lái xe đường dài')">🚗 Lái xe đường dài</span>
+            <span class="filter-chip" data-val="Thất tình suy" onclick="toggleFilterKeyword(this, 'Thất tình suy')">🥀 Thất tình suy</span>
+            <span class="filter-chip" data-val="Tiệc tùng bay" onclick="toggleFilterKeyword(this, 'Tiệc tùng bay')">🎉 Tiệc tùng bay</span>
+            <span class="filter-chip" data-val="Acoustic mộc" onclick="toggleFilterKeyword(this, 'Acoustic mộc')">🎸 Acoustic mộc</span>
+            <span class="filter-chip" data-val="Tập trung học bài" onclick="toggleFilterKeyword(this, 'Tập trung học bài')">📚 Tập trung học bài</span>
+          </div>
+          <div class="filter-input-row" style="margin-top:8px;">
+            <input type="text" id="filter-custom-keyword" class="filter-text-input" placeholder="Nhập thêm từ khóa ngữ cảnh (ví dụ: nhạc đám cưới, nhạc chill ngắm biển...)" oninput="onKeywordInputChange(this.value)" onkeydown="if(event.key==='Enter') addCustomKeyword()">
+            <button type="button" class="btn btn-play" onclick="addCustomKeyword()" style="padding:8px 16px; font-size:0.84rem; white-space:nowrap;">
+              ➕ Thêm từ khóa
+            </button>
+          </div>
+        </div>
+
         <!-- 1. Ca sĩ / Nghệ sĩ (Mặc định lọc theo ca sĩ) -->
         <div>
           <div class="filter-section-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-            <span>1. Ca Sĩ / Nghệ Sĩ (Mặc định lọc theo ca sĩ • Chọn được nhiều)</span>
+            <span>1. Tác Giả / Ca Sĩ / Nhạc Sĩ (Chọn được nhiều ca sĩ/nhạc sĩ cùng lúc)</span>
             <span id="filter-artists-count" style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;"></span>
           </div>
           
@@ -3870,21 +4220,26 @@
             <span class="filter-chip" data-val="HIEUTHUHAI" onclick="toggleFilterArtist(this, 'HIEUTHUHAI')">🎤 HIEUTHUHAI</span>
             <span class="filter-chip" data-val="Vũ." onclick="toggleFilterArtist(this, 'Vũ.')">🎤 Vũ.</span>
             <span class="filter-chip" data-val="Đen Vâu" onclick="toggleFilterArtist(this, 'Đen Vâu')">🎤 Đen Vâu</span>
+            <span class="filter-chip" data-val="Phan Mạnh Quỳnh" onclick="toggleFilterArtist(this, 'Phan Mạnh Quỳnh')">🎼 Phan Mạnh Quỳnh</span>
+            <span class="filter-chip" data-val="Trịnh Công Sơn" onclick="toggleFilterArtist(this, 'Trịnh Công Sơn')">🎼 Trịnh Công Sơn</span>
+            <span class="filter-chip" data-val="Hứa Kim Tuyền" onclick="toggleFilterArtist(this, 'Hứa Kim Tuyền')">🎼 Hứa Kim Tuyền</span>
+            <span class="filter-chip" data-val="Mr. Siro" onclick="toggleFilterArtist(this, 'Mr. Siro')">🎼 Mr. Siro</span>
             <span class="filter-chip" data-val="Thanh Hưng" onclick="toggleFilterArtist(this, 'Thanh Hưng')">🎤 Thanh Hưng</span>
             <span class="filter-chip" data-val="Erik" onclick="toggleFilterArtist(this, 'Erik')">🎤 Erik</span>
             <span class="filter-chip" data-val="Đức Phúc" onclick="toggleFilterArtist(this, 'Đức Phúc')">🎤 Đức Phúc</span>
             <span class="filter-chip" data-val="Mono" onclick="toggleFilterArtist(this, 'Mono')">🎤 Mono</span>
             <span class="filter-chip" data-val="Trung Quân" onclick="toggleFilterArtist(this, 'Trung Quân')">🎤 Trung Quân</span>
             <span class="filter-chip" data-val="Hà Anh Tuấn" onclick="toggleFilterArtist(this, 'Hà Anh Tuấn')">🎤 Hà Anh Tuấn</span>
-            <span class="filter-chip" data-val="Charlie Puth" onclick="toggleFilterArtist(this, 'Charlie Puth')">🌟 Charlie Puth</span>
             <span class="filter-chip" data-val="Taylor Swift" onclick="toggleFilterArtist(this, 'Taylor Swift')">🌟 Taylor Swift</span>
+            <span class="filter-chip" data-val="Charlie Puth" onclick="toggleFilterArtist(this, 'Charlie Puth')">🌟 Charlie Puth</span>
             <span class="filter-chip" data-val="BTS" onclick="toggleFilterArtist(this, 'BTS')">🌟 BTS</span>
             <span class="filter-chip" data-val="BLACKPINK" onclick="toggleFilterArtist(this, 'BLACKPINK')">🌟 BLACKPINK</span>
+            <span class="filter-chip" data-val="Alan Walker" onclick="toggleFilterArtist(this, 'Alan Walker')">🌟 Alan Walker</span>
           </div>
 
           <!-- Custom Artist Input -->
           <div class="filter-input-row">
-            <input type="text" id="filter-custom-artist" class="filter-text-input" placeholder="Nhập tên ca sĩ khác rồi bấm Thêm (ví dụ: Hoàng Dũng, Min, Jack...)" onkeydown="if(event.key==='Enter') addCustomArtist()">
+            <input type="text" id="filter-custom-artist" class="filter-text-input" placeholder="Nhập tên ca sĩ hoặc nhạc sĩ khác rồi bấm Thêm (ví dụ: Hoàng Dũng, Min, Jack, Kai Đinh...)" onkeydown="if(event.key==='Enter') addCustomArtist()">
             <button type="button" class="btn btn-play" onclick="addCustomArtist()" style="padding:8px 16px; font-size:0.84rem; white-space:nowrap;">
               ➕ Thêm ca sĩ
             </button>
@@ -4079,7 +4434,10 @@
         </div>
       </div>
 
-      <div class="results-grid" id="playlist-grid"></div>
+      <!-- Applied Recipe Banner above playlist results -->
+      <div class="playlist-rule-applied-banner" id="playlist-rule-applied-banner" style="display:none;"></div>
+
+      <div class="tracklist-container" id="playlist-grid"></div>
     </section>
 
     <!-- Saved Playlists Drawer -->
@@ -4187,6 +4545,18 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
           <span>Thu nhỏ</span>
         </button>
+
+        <!-- Segmented Tab Switcher for Mobile & Easy Toggling -->
+        <div class="np-segmented-tabs" id="np-segmented-tabs">
+          <button class="np-seg-btn active" id="np-seg-btn-player" onclick="setNowPlayingTab('player')">
+            <span>💿 Đang phát</span>
+          </button>
+          <button class="np-seg-btn" id="np-seg-btn-queue" onclick="setNowPlayingTab('queue')">
+            <span>🎶 Hàng đợi AI</span>
+            <span class="np-tab-badge" id="np-tab-queue-count">8</span>
+          </button>
+        </div>
+
         <div class="np-badge-title" id="np-badge-title">
           <span>🎧 ĐANG PHÁT</span>
           <span class="player-tag" id="np-format-tag" style="font-size:0.7rem; padding:2px 8px;">M4A</span>
@@ -4201,92 +4571,109 @@
       </div>
 
       <div class="np-main-content">
-        <!-- Stage 1: Audio Spinning Vinyl Disc (Hiển thị khi là Audio) -->
-        <div id="np-audio-stage" class="vinyl-stage">
-          <div class="vinyl-wrapper">
-            <div class="vinyl-disc" id="np-vinyl-disc">
-              <div class="vinyl-label">
-                <img id="np-vinyl-thumb" src="" alt="Album Artwork">
+        <!-- Pane 1: Turntable / Video Player + Scrubber + Controls -->
+        <div class="np-col-player np-pane-active" id="np-pane-player">
+          <!-- Stage 1: Audio Spinning Vinyl Disc (Hiển thị khi là Audio) -->
+          <div id="np-audio-stage" class="vinyl-stage">
+            <div class="vinyl-wrapper">
+              <div class="vinyl-disc" id="np-vinyl-disc">
+                <div class="vinyl-label">
+                  <img id="np-vinyl-thumb" src="" alt="Album Artwork">
+                </div>
+                <div class="vinyl-hole"></div>
               </div>
-              <div class="vinyl-hole"></div>
             </div>
           </div>
-        </div>
 
-        <!-- Stage 2: Video Player Frame (Hiển thị khi là Video) -->
-        <div id="np-video-stage" style="display:none; width:100%; border-radius:16px; overflow:hidden; background:#000;">
-          <video id="modal-video-element" class="video-player-frame" controls playsinline preload="auto" style="width:100%; max-height:55dvh; display:block;"></video>
-        </div>
-
-        <!-- Song info -->
-        <div class="np-info-box">
-          <div class="np-song-title" id="np-song-title">Chưa chọn bài hát</div>
-          <div class="np-song-meta">
-            <span id="np-song-channel">YouTube</span>
-            <span>•</span>
-            <span id="np-song-duration">0:00</span>
+          <!-- Stage 2: Video Player Frame (Hiển thị khi là Video) -->
+          <div id="np-video-stage" style="display:none; width:100%; border-radius:16px; overflow:hidden; background:#000;">
+            <video id="modal-video-element" class="video-player-frame" controls playsinline preload="auto" style="width:100%; max-height:55dvh; display:block;"></video>
           </div>
-        </div>
 
-        <!-- Main Scrubber & Controls -->
-        <div class="np-controls-box">
-          <div class="np-scrub-row">
-            <span id="np-cur-time" style="font-size:0.8rem; font-weight:700; color:var(--text-dim); min-width:36px;">0:00</span>
-            <div class="np-scrub-bar" onclick="seekAbsolute(event)">
-              <div class="np-scrub-fill" id="np-scrub-fill"></div>
+          <!-- Song info -->
+          <div class="np-info-box">
+            <div class="np-song-title" id="np-song-title">Chưa chọn bài hát</div>
+            <div class="np-song-meta">
+              <span id="np-song-channel">YouTube</span>
+              <span>•</span>
+              <span id="np-song-duration">0:00</span>
             </div>
-            <span id="np-dur-time" style="font-size:0.8rem; font-weight:700; color:var(--text-dim); min-width:36px; text-align:right;">0:00</span>
           </div>
 
-          <div class="np-buttons-row">
-            <button class="np-btn-action" title="Lặp lại" id="np-loop-btn" onclick="toggleLoop()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-            </button>
-            <button class="np-btn-action" title="Bài trước đó (Previous)" onclick="playPrevTrack()">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
-            </button>
-            <button class="np-btn-play" id="np-play-btn" onclick="togglePlay()" title="Phát / Tạm dừng">
-              <svg id="np-icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <svg id="np-icon-pause" style="display:none;" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-            </button>
-            <button class="np-btn-action" title="Bài tiếp theo (Next - AI)" onclick="playNextTrack()">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-            </button>
-            <button class="np-btn-action" title="Tải bài này về máy" onclick="downloadCurrent()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- AI AutoPlay Next (8 bài hát tiếp theo) -->
-        <div class="ai-queue-card">
-          <div class="ai-queue-header">
-            <div class="ai-queue-title-wrap">
-              <span class="ai-sparkle-pill">✨ AutoPlay Next AI</span>
-              <span class="ai-queue-sub" id="ai-queue-counter">Duy trì 8 bài hát (Tự tải về sẵn)</span>
+          <!-- Main Scrubber & Controls -->
+          <div class="np-controls-box">
+            <div class="np-scrub-row">
+              <span id="np-cur-time" style="font-size:0.8rem; font-weight:700; color:var(--text-dim); min-width:36px;">0:00</span>
+              <div class="np-scrub-bar" onclick="seekAbsolute(event)">
+                <div class="np-scrub-fill" id="np-scrub-fill"></div>
+              </div>
+              <span id="np-dur-time" style="font-size:0.8rem; font-weight:700; color:var(--text-dim); min-width:36px; text-align:right;">0:00</span>
             </div>
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="saveQueueToAIPlaylist()" title="Lưu danh sách 8 bài này vào Tab AI Playlist">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                <span>Lưu list</span>
+
+            <div class="np-buttons-row">
+              <button class="np-btn-action" title="Lặp lại" id="np-loop-btn" onclick="toggleLoop()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
               </button>
-              <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="downloadAllQueueTracks()" title="Tải toàn bộ 8 bài về server ngay">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span>Tải hết</span>
+              <button class="np-btn-action" title="Bài trước đó (Previous)" onclick="playPrevTrack()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
               </button>
-              <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,0.06);" onclick="refreshAIQueue()" title="Làm mới hàng đợi AI">
-                🔄 Đổi bài
+              <button class="np-btn-play" id="np-play-btn" onclick="togglePlay()" title="Phát / Tạm dừng">
+                <svg id="np-icon-play" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <svg id="np-icon-pause" style="display:none;" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
               </button>
-              <label class="ai-toggle-switch" title="Bật/Tắt tự động phát tiếp theo bằng AI">
-                <input type="checkbox" id="ai-autoplay-toggle" checked onchange="toggleAIAutoPlay(this.checked)">
-                <span class="ai-toggle-slider"></span>
-              </label>
+              <button class="np-btn-action" title="Bài tiếp theo (Next - AI)" onclick="playNextTrack()">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
+              </button>
+              <button class="np-btn-action" title="Tải bài này về máy" onclick="downloadCurrent()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              </button>
             </div>
           </div>
 
-          <div class="ai-queue-items-container" id="ai-queue-list">
-            <div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">
-              ⏳ Bật AutoPlay để AI tự động chọn 8 bài hát tiếp theo...
+          <!-- Mobile Queue Teaser Pill (Chạm để mở full màn hình hàng đợi) -->
+          <div class="np-queue-teaser" id="np-queue-teaser" onclick="setNowPlayingTab('queue')" title="Chạm để xem toàn màn hình danh sách hàng đợi AI">
+            <div class="np-qt-info">
+              <span class="np-qt-label">BÀI TIẾP THEO</span>
+              <span class="np-qt-title" id="np-next-teaser-title">Đang chọn bài...</span>
+            </div>
+            <div class="np-qt-action">
+              <span>Xem hàng đợi AI</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 2: Full-viewport AI AutoPlay Queue (Tự bung 100% chiều cao trên Mobile) -->
+        <div class="np-col-queue np-pane-hidden" id="np-pane-queue">
+          <div class="ai-queue-card">
+            <div class="ai-queue-header">
+              <div class="ai-queue-title-wrap">
+                <span class="ai-sparkle-pill">✨ AutoPlay Next AI</span>
+                <span class="ai-queue-sub" id="ai-queue-counter">Duy trì 8 bài hát (Tự tải về sẵn)</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="saveQueueToAIPlaylist()" title="Lưu danh sách bài này vào Tab AI Playlist">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  <span>Lưu list</span>
+                </button>
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3); display:inline-flex; align-items:center; gap:4px;" onclick="downloadAllQueueTracks()" title="Tải toàn bộ các bài về server ngay">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Tải hết</span>
+                </button>
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(255,255,255,0.06);" onclick="refreshAIQueue()" title="Làm mới hàng đợi AI">
+                  🔄 Đổi bài
+                </button>
+                <label class="ai-toggle-switch" title="Bật/Tắt tự động phát tiếp theo bằng AI">
+                  <input type="checkbox" id="ai-autoplay-toggle" checked onchange="toggleAIAutoPlay(this.checked)">
+                  <span class="ai-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="ai-queue-items-container" id="ai-queue-list">
+              <div style="text-align:center; padding:18px; color:var(--text-dim); font-size:0.82rem;">
+                ⏳ Bật AutoPlay để AI tự động chọn các bài hát tiếp theo...
+              </div>
             </div>
           </div>
         </div>
@@ -4908,8 +5295,56 @@
     function openVideoModal() { openNowPlayingModal(); }
     function closeVideoModal() { minimizePlayer(); }
 
+    function setNowPlayingTab(tab) {
+      const pPane = document.getElementById('np-pane-player');
+      const qPane = document.getElementById('np-pane-queue');
+      const btnP = document.getElementById('np-seg-btn-player');
+      const btnQ = document.getElementById('np-seg-btn-queue');
+
+      if (tab === 'queue') {
+        if (pPane) {
+          pPane.classList.remove('np-pane-active');
+          pPane.classList.add('np-pane-hidden');
+        }
+        if (qPane) {
+          qPane.classList.remove('np-pane-hidden');
+          qPane.classList.add('np-pane-active');
+        }
+        if (btnP) btnP.classList.remove('active');
+        if (btnQ) btnQ.classList.add('active');
+      } else {
+        if (pPane) {
+          pPane.classList.remove('np-pane-hidden');
+          pPane.classList.add('np-pane-active');
+        }
+        if (qPane) {
+          qPane.classList.remove('np-pane-active');
+          qPane.classList.add('np-pane-hidden');
+        }
+        if (btnP) btnP.classList.add('active');
+        if (btnQ) btnQ.classList.remove('active');
+      }
+    }
+
+    function updateQueueTeaser() {
+      const teaserTitle = document.getElementById('np-next-teaser-title');
+      const tabCount = document.getElementById('np-tab-queue-count');
+      if (tabCount) tabCount.textContent = aiTrackList.length || 0;
+
+      if (!teaserTitle) return;
+      if (currentAIIndex + 1 < aiTrackList.length) {
+        const nextT = aiTrackList[currentAIIndex + 1];
+        teaserTitle.textContent = `${nextT.title || 'Bài tiếp theo'} (#${currentAIIndex + 2})`;
+      } else if (aiTrackList.length > 0) {
+        teaserTitle.textContent = 'Đã đến cuối danh sách (AI đang tìm thêm...)';
+      } else {
+        teaserTitle.textContent = 'Chưa có hàng đợi AI';
+      }
+    }
+
     function startStreamingTrack(track, queueIndex = -1, isNewSelection = false) {
       if (!track) return;
+      trackEndedTriggered = false;
       currentTrack = track;
       const cleanExt = track.fmt ? (track.fmt.startsWith('mp4') ? 'mp4' : (track.fmt.startsWith('mp3') ? 'mp3' : track.fmt)) : ((track.fmt || '').includes('video') ? 'mp4' : 'm4a');
       const isVideo = cleanExt.startsWith('mp4') || (track.fmt || '').includes('video');
@@ -5136,6 +5571,8 @@
       activeMedia.currentTime = pos * activeMedia.duration;
     }
 
+    let trackEndedTriggered = false;
+
     function updateProgress() {
       const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
       const activeMedia = isVideo ? modalVideo : audio;
@@ -5162,14 +5599,22 @@
       if (npCur) npCur.textContent = formatTime(cur);
       if (npDur) npDur.textContent = formatTime(dur);
       if (npDurSong && dur > 0) npDurSong.textContent = formatTime(dur);
+
+      // Robust EOF / Track Ended Watchdog: Trigger onTrackEnded if within 0.35s of end or activeMedia.ended
+      if (!trackEndedTriggered && dur > 1 && (cur >= dur - 0.35 || activeMedia.ended)) {
+        trackEndedTriggered = true;
+        onTrackEnded();
+      }
     }
 
     function onTrackEnded() {
+      trackEndedTriggered = false;
       const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
       const activeMedia = isVideo ? modalVideo : audio;
 
       // 1. Repeat / Loop Track (Ưu tiên lặp lại bài hát đang phát)
       if (isLooping) {
+        trackEndedTriggered = false;
         activeMedia.currentTime = 0;
         activeMedia.play().catch(e => console.log('Loop play error:', e));
         return;
@@ -5177,6 +5622,7 @@
 
       // 2. Playlist Queue Playback (Nếu đang phát playlist thì tự nhảy sang bài kế tiếp)
       if (isPlayingPlaylist && playlistQueue && playlistQueue.length > 0) {
+        trackEndedTriggered = false;
         playlistIndex++;
         if (playlistIndex < playlistQueue.length) {
           showToast(`⏭️ Đang phát bài tiếp theo trong Playlist (${playlistIndex + 1}/${playlistQueue.length})...`);
@@ -5193,6 +5639,7 @@
 
       // 3. AI AutoPlay Mode (Tự động phát bài tiếp theo trong danh sách lớn dần)
       if (autoPlayAI) {
+        trackEndedTriggered = false;
         playNextTrack();
         return;
       }
@@ -5201,6 +5648,7 @@
       if (lastSearchResults && lastSearchResults.length > 0 && currentTrack) {
         const curIdx = lastSearchResults.findIndex(it => it.id === currentTrack.id);
         if (curIdx !== -1 && curIdx + 1 < lastSearchResults.length) {
+          trackEndedTriggered = false;
           const nextItem = lastSearchResults[curIdx + 1];
           showToast(`⏭️ Tự động chuyển bài tiếp theo: "${nextItem.title}"`);
           actionPlay(nextItem.id, nextItem.title, nextItem.channel, nextItem.thumbnail, nextItem.is_downloaded);
@@ -5527,10 +5975,19 @@
     }
 
     function playNextTrack() {
+      trackEndedTriggered = false;
+      // 0. Playlist Tab mode
+      if (isPlayingPlaylist && playlistQueue && playlistQueue.length > 0) {
+        nextPlaylist();
+        return;
+      }
+
       // 1. Advance to next track in growing aiTrackList
       if (currentAIIndex + 1 < aiTrackList.length) {
-        playTrackFromQueue(currentAIIndex + 1);
-        showToast(`⏭️ Đang phát bài #${currentAIIndex + 1}: "${aiTrackList[currentAIIndex].title}"`);
+        const nextIdx = currentAIIndex + 1;
+        const nextT = aiTrackList[nextIdx];
+        showToast(`⏭️ Đang phát bài #${nextIdx + 1}: "${nextT.title}"`);
+        playTrackFromQueue(nextIdx);
         
         // Fetch 1 more track from AI to grow list further!
         fetchOneMoreAIRec();
@@ -5559,10 +6016,19 @@
     }
 
     function playPrevTrack() {
+      trackEndedTriggered = false;
+      // 0. Playlist Tab mode
+      if (isPlayingPlaylist && playlistQueue && playlistQueue.length > 0) {
+        prevPlaylist();
+        return;
+      }
+
       // 1. Return to previous track in growing aiTrackList
       if (currentAIIndex > 0) {
-        playTrackFromQueue(currentAIIndex - 1);
-        showToast(`⏮️ Quay lại bài #${currentAIIndex + 1}: "${aiTrackList[currentAIIndex].title}"`);
+        const prevIdx = currentAIIndex - 1;
+        const prevT = aiTrackList[prevIdx];
+        showToast(`⏮️ Quay lại bài #${prevIdx + 1}: "${prevT.title}"`);
+        playTrackFromQueue(prevIdx);
         return;
       }
 
@@ -5593,6 +6059,7 @@
     }
 
     function renderAIQueue() {
+      updateQueueTeaser();
       const container = document.getElementById('ai-queue-list');
       const counterEl = document.getElementById('ai-queue-counter');
       const miniPill = document.getElementById('mini-ai-pill');
@@ -5681,9 +6148,11 @@
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Smart Multi-Criteria Playlist Filter State & Logic
+    // Smart Multi-Criteria Playlist Filter State & Logic (Bộ Lọc Gu Nhạc AI)
     // ──────────────────────────────────────────────────────────────────────────
     const smartFilter = {
+      keywords: '',
+      keywordList: [],
       artists: [],
       genres: [],
       year: '2026',
@@ -5706,6 +6175,100 @@
       if (customBox) customBox.style.display = isFilter ? 'none' : 'block';
     }
 
+    function toggleFilterKeyword(el, kw) {
+      const idx = smartFilter.keywordList.indexOf(kw);
+      if (idx > -1) {
+        smartFilter.keywordList.splice(idx, 1);
+        if (el) el.classList.remove('active');
+      } else {
+        smartFilter.keywordList.push(kw);
+        if (el) el.classList.add('active');
+      }
+      syncKeywordsString();
+      updateSmartRuleBanner();
+    }
+
+    function addCustomKeyword() {
+      const input = document.getElementById('filter-custom-keyword');
+      if (!input) return;
+      const val = input.value.trim();
+      if (!val) return;
+      if (!smartFilter.keywordList.includes(val)) {
+        smartFilter.keywordList.push(val);
+        syncKeywordsString();
+        updateSmartRuleBanner();
+      }
+      input.value = '';
+    }
+
+    function onKeywordInputChange(val) {
+      syncKeywordsString();
+      updateSmartRuleBanner();
+    }
+
+    function syncKeywordsString() {
+      const customInp = document.getElementById('filter-custom-keyword');
+      const customVal = customInp ? customInp.value.trim() : '';
+      const all = [...smartFilter.keywordList];
+      if (customVal && !all.includes(customVal)) all.push(customVal);
+      smartFilter.keywords = all.join(', ');
+      const countEl = document.getElementById('filter-keywords-count');
+      if (countEl) countEl.textContent = smartFilter.keywordList.length > 0 ? `(Đã chọn ${smartFilter.keywordList.length} từ khóa)` : '';
+    }
+
+    function updateSmartRuleBanner() {
+      const container = document.getElementById('srb-badges-container');
+      const countBadge = document.getElementById('srb-summary-count');
+      const limitSelect = document.getElementById('filter-limit');
+      const limitVal = limitSelect ? limitSelect.value : (smartFilter.limit || 8);
+      const isRandom = document.getElementById('filter-random-checkbox') ? document.getElementById('filter-random-checkbox').checked : smartFilter.is_random;
+
+      if (countBadge) countBadge.textContent = `${limitVal} bài`;
+      if (!container) return;
+
+      const badges = [];
+
+      // 0. Keywords
+      const allKw = [...smartFilter.keywordList];
+      const customInp = document.getElementById('filter-custom-keyword');
+      const customVal = customInp ? customInp.value.trim() : '';
+      if (customVal && !allKw.includes(customVal)) allKw.push(customVal);
+      if (allKw.length > 0) {
+        badges.push(`<span class="srb-badge srb-badge-kw" title="Từ khóa ngữ cảnh">🏷️ ${allKw.join(', ')}</span>`);
+      }
+
+      // 1. Artists / Composers
+      if (smartFilter.artists.length > 0) {
+        badges.push(`<span class="srb-badge srb-badge-artist" title="Tác giả / Ca sĩ">🎤 ${smartFilter.artists.join(', ')}</span>`);
+      }
+
+      // 2. Genres
+      if (smartFilter.genres.length > 0) {
+        badges.push(`<span class="srb-badge srb-badge-genre" title="Thể loại âm nhạc">🎵 ${smartFilter.genres.join(', ')}</span>`);
+      }
+
+      // 3. Year
+      if (smartFilter.year) {
+        badges.push(`<span class="srb-badge srb-badge-year" title="Năm phát hành">📅 ${smartFilter.year}</span>`);
+      } else {
+        badges.push(`<span class="srb-badge srb-badge-year" title="Thời gian">📅 Tất cả thời gian</span>`);
+      }
+
+      // 4. Mood
+      if (smartFilter.mood) {
+        badges.push(`<span class="srb-badge srb-badge-mood" title="Tâm trạng / Vibe">✨ ${smartFilter.mood}</span>`);
+      }
+
+      // 5. Mode
+      badges.push(`<span class="srb-badge srb-badge-random" title="Chế độ chọn">${isRandom ? '🎲 Random ngẫu nhiên' : '🔥 Thứ tự phổ biến'}</span>`);
+
+      if (badges.length === 0) {
+        container.innerHTML = '<span class="srb-empty-hint">Chưa chọn tiêu chí cụ thể. Hãy chọn các chip bên dưới để lập gu nhạc chuẩn xác.</span>';
+      } else {
+        container.innerHTML = badges.join('');
+      }
+    }
+
     function toggleFilterArtist(el, artist) {
       const idx = smartFilter.artists.indexOf(artist);
       if (idx > -1) {
@@ -5716,6 +6279,7 @@
         if (el) el.classList.add('active');
       }
       updateFilterArtistsUI();
+      updateSmartRuleBanner();
     }
 
     function addCustomArtist() {
@@ -5726,6 +6290,7 @@
       if (!smartFilter.artists.includes(val)) {
         smartFilter.artists.push(val);
         updateFilterArtistsUI();
+        updateSmartRuleBanner();
       }
       input.value = '';
     }
@@ -5738,6 +6303,7 @@
           if (c.dataset.val === artist) c.classList.remove('active');
         });
         updateFilterArtistsUI();
+        updateSmartRuleBanner();
       }
     }
 
@@ -5769,6 +6335,7 @@
       if (countEl) {
         countEl.textContent = smartFilter.genres.length > 0 ? `(Đã chọn ${smartFilter.genres.length} thể loại)` : '';
       }
+      updateSmartRuleBanner();
     }
 
     function setFilterYear(el, year) {
@@ -5776,6 +6343,7 @@
       document.querySelectorAll('#filter-year-chips .filter-chip').forEach(c => {
         c.classList.toggle('active', c.dataset.val === year);
       });
+      updateSmartRuleBanner();
     }
 
     function setFilterMood(el, mood) {
@@ -5783,34 +6351,54 @@
       document.querySelectorAll('#filter-mood-chips .filter-chip').forEach(c => {
         c.classList.toggle('active', c.dataset.val === mood);
       });
+      updateSmartRuleBanner();
     }
 
     function resetSmartFilter() {
+      smartFilter.keywords = '';
+      smartFilter.keywordList = [];
       smartFilter.artists = [];
       smartFilter.genres = [];
       smartFilter.year = '2026';
       smartFilter.mood = '';
       smartFilter.is_random = true;
+      document.querySelectorAll('#filter-keywords-chips .filter-chip').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('#filter-artists-chips .filter-chip').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('#filter-genres-chips .filter-chip').forEach(c => c.classList.remove('active'));
       setFilterYear(null, '2026');
       setFilterMood(null, '');
       const chk = document.getElementById('filter-random-checkbox');
       if (chk) chk.checked = true;
+      const inpKw = document.getElementById('filter-custom-keyword');
+      if (inpKw) inpKw.value = '';
       const inp = document.getElementById('filter-custom-artist');
       if (inp) inp.value = '';
       updateFilterArtistsUI();
+      const countKw = document.getElementById('filter-keywords-count');
+      if (countKw) countKw.textContent = '';
       const countGenres = document.getElementById('filter-genres-count');
       if (countGenres) countGenres.textContent = '';
+      updateSmartRuleBanner();
       showToast('🔄 Đã đặt lại bộ lọc');
     }
+
+    // Attach listeners on filter limit and random checkbox to update live banner
+    document.addEventListener('DOMContentLoaded', () => {
+      const fl = document.getElementById('filter-limit');
+      if (fl) fl.addEventListener('change', updateSmartRuleBanner);
+      const fr = document.getElementById('filter-random-checkbox');
+      if (fr) fr.addEventListener('change', updateSmartRuleBanner);
+      updateSmartRuleBanner();
+    });
 
     async function generateSmartPlaylist() {
       const btn = document.getElementById('btn-smart-gen-playlist');
       const status = document.getElementById('playlist-status');
       const grid = document.getElementById('playlist-grid');
       const saveBtn = document.getElementById('btn-save-gen-playlist');
+      const appliedBanner = document.getElementById('playlist-rule-applied-banner');
 
+      syncKeywordsString();
       smartFilter.is_random = document.getElementById('filter-random-checkbox') ? document.getElementById('filter-random-checkbox').checked : true;
       smartFilter.limit = parseInt(document.getElementById('filter-limit')?.value || 8);
       smartFilter.format = document.getElementById('filter-format')?.value || 'm4a';
@@ -5819,9 +6407,10 @@
         btn.disabled = true;
         btn.innerHTML = `<div class="spinner" style="width:15px;height:15px;border-width:2px;margin-right:6px;"></div><span>Đang tuyển chọn nhạc...</span>`;
       }
-      status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> AI đang áp dụng bộ lọc (Ca sĩ: ${smartFilter.artists.length ? smartFilter.artists.join(', ') : 'Mặc định'}, Thể loại: ${smartFilter.genres.length ? smartFilter.genres.join(', ') : 'Đa dạng'}, Năm: ${smartFilter.year || 'Tất cả'})...`;
+      status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> AI đang áp dụng công thức (Từ khóa: ${smartFilter.keywords || 'Mở rộng'}, Ca sĩ: ${smartFilter.artists.length ? smartFilter.artists.join(', ') : 'Mặc định'}, Thể loại: ${smartFilter.genres.length ? smartFilter.genres.join(', ') : 'Đa dạng'}, Năm: ${smartFilter.year || 'Tất cả'})...`;
       grid.innerHTML = '';
       document.getElementById('playlist-controls').style.display = 'none';
+      if (appliedBanner) appliedBanner.style.display = 'none';
       if (saveBtn) saveBtn.style.display = 'none';
 
       try {
@@ -5832,6 +6421,7 @@
             'x-access-password': getStoredPassword()
           },
           body: JSON.stringify({
+            keywords: smartFilter.keywords,
             genres: smartFilter.genres,
             artists: smartFilter.artists,
             year: smartFilter.year,
@@ -5860,10 +6450,11 @@
           title: t.title,
           channel: t.channel || 'YouTube',
           thumbnail: t.thumb || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`,
-          source_query: smartFilter.artists.join(', ') || smartFilter.genres.join(', ') || 'Bộ lọc AI'
+          source_query: smartFilter.artists.join(', ') || smartFilter.keywords || smartFilter.genres.join(', ') || 'Bộ lọc AI'
         }));
 
         let headingText = 'Playlist: ';
+        if (smartFilter.keywords) headingText += `[${smartFilter.keywords}] `;
         if (smartFilter.genres.length) headingText += smartFilter.genres.join(', ') + ' ';
         if (smartFilter.artists.length) headingText += '• ' + smartFilter.artists.join(', ') + ' ';
         if (smartFilter.year) headingText += `(${smartFilter.year})`;
@@ -5873,6 +6464,23 @@
         const b = document.getElementById('playlist-badge');
         b.style.display = 'inline-block';
         b.textContent = `${playlistItems.length} bài`;
+
+        // Render Applied Rules Banner
+        if (appliedBanner) {
+          appliedBanner.style.display = 'flex';
+          const ruleParts = [];
+          if (smartFilter.keywords) ruleParts.push(`<b>Ngữ cảnh:</b> ${smartFilter.keywords}`);
+          if (smartFilter.artists.length) ruleParts.push(`<b>Ca sĩ/Tác giả:</b> ${smartFilter.artists.join(', ')}`);
+          if (smartFilter.genres.length) ruleParts.push(`<b>Thể loại:</b> ${smartFilter.genres.join(', ')}`);
+          if (smartFilter.year) ruleParts.push(`<b>Năm:</b> ${smartFilter.year}`);
+          if (smartFilter.mood) ruleParts.push(`<b>Vibe:</b> ${smartFilter.mood}`);
+          ruleParts.push(smartFilter.is_random ? '<b>Random ngẫu nhiên</b>' : '<b>Top Hit</b>');
+
+          appliedBanner.innerHTML = `
+            <div class="prab-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>Quy Tắc Đã Áp Dụng:</span></div>
+            <div>${ruleParts.join(' • ')}</div>
+          `;
+        }
 
         document.getElementById('playlist-controls').style.display = 'flex';
         document.getElementById('btn-dl-all-playlist').style.display = 'none';
@@ -6268,38 +6876,44 @@
         grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Không có bài nào được tải.</div>`;
         return;
       }
-      grid.innerHTML = items.map((it, idx) => `
-        <div class="card" id="pl-card-${it.file_id}">
-          <div class="card-thumb-wrap" onclick="playPlaylistIndex(${idx})">
-            <img class="card-thumb" src="https://i.ytimg.com/vi/${it.file_id}/hqdefault.jpg" alt="${it.title}">
-            <div class="thumb-play-overlay">
-              <div class="thumb-play-circle">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+      grid.innerHTML = items.map((it, idx) => {
+        const fileId = it.file_id || it.id;
+        const thumb = it.thumbnail || (fileId ? `https://i.ytimg.com/vi/${fileId}/hqdefault.jpg` : '');
+        const title = it.title || it.query || 'Bài hát';
+        const channel = it.channel || it.source_query || 'Playlist AI';
+        return `
+          <div class="track-row" id="pl-card-${fileId || idx}" onclick="playPlaylistIndex(${idx})">
+            <div class="tr-index">
+              <span class="tr-num">${idx + 1}</span>
+              <span class="tr-play-icon">▶</span>
+            </div>
+            <div class="tr-thumb-wrap">
+              <img class="tr-thumb" src="${thumb}" alt="${escapeQuotes(title)}" loading="lazy" onerror="this.src='/static/placeholder.png'">
+              <div class="tr-thumb-overlay">▶</div>
+            </div>
+            <div class="tr-info">
+              <div class="tr-title" title="${escapeQuotes(title)}">${title}</div>
+              <div class="tr-sub">
+                <span class="tr-channel">${channel}</span>
+                <span class="tr-sep">•</span>
+                <span class="tr-badge-downloaded">✓ Tuyển chọn AI</span>
               </div>
             </div>
-            <span class="card-duration">#${idx + 1}</span>
-          </div>
-          <div class="card-body">
-            <h3 class="card-title" title="${it.title}">${it.title}</h3>
-            <div class="card-channel" style="color:var(--text-muted); font-size:0.78rem; display:flex; align-items:center; gap:5px;" title="Từ khóa AI gợi ý ban đầu">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-              <span>${it.source_query ? 'Gợi ý AI: ' + it.source_query : 'YouTube Music'}</span>
-            </div>
-            <div class="card-actions" style="grid-template-columns: 1fr 40px 40px;">
-              <button class="btn btn-play" onclick="playPlaylistIndex(${idx})">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <div class="tr-actions" onclick="event.stopPropagation();">
+              <button class="tr-btn tr-btn-play" onclick="playPlaylistIndex(${idx})" title="Phát bài này">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 <span>Phát</span>
               </button>
-              <button class="btn" onclick="saveTrackToAIPlaylist({ id: '${it.file_id}', title: '${escapeQuotes(it.title)}' })" title="Lưu vào AI Playlist" style="background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); border-radius:10px; padding:0; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+              <button class="btn" onclick="saveTrackToAIPlaylist({ id: '${fileId}', title: '${escapeQuotes(title)}', channel: '${escapeQuotes(channel)}', thumb: '${thumb}' })" title="Lưu vào AI Playlist" style="background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); border-radius:8px; padding:6px 10px; cursor:pointer;">
                 ⭐
               </button>
-              <a class="btn btn-download" style="text-decoration:none;" href="/stream/${it.file_id}?download=1" download title="Lưu về máy">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <a class="tr-btn tr-btn-dl" href="/stream/${fileId}?download=1" download title="Lưu về máy" style="text-decoration:none;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               </a>
             </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function playPlaylistIndex(idx) {

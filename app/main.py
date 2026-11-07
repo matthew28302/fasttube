@@ -1132,6 +1132,7 @@ async def api_autoplay_recommendations(payload: AutoplayRecommendationPayload, r
 
 class SmartPlaylistPayload(BaseModel):
     prompt: str = ""
+    keywords: str = ""
     genres: list[str] = []
     artists: list[str] = []
     year: str = ""
@@ -1149,16 +1150,18 @@ async def api_ai_smart_playlist(payload: SmartPlaylistPayload, request: Request)
     limit = max(1, min(int(payload.limit or 8), 25))
     
     filter_criteria = []
+    if payload.keywords:
+        filter_criteria.append(f"Keywords / Theme / Context: {payload.keywords}")
     if payload.genres:
-        filter_criteria.append(f"Genres/Styles: {', '.join(payload.genres)}")
+        filter_criteria.append(f"Genres / Music Styles: {', '.join(payload.genres)}")
     if payload.artists:
-        filter_criteria.append(f"Artists/Performers: {', '.join(payload.artists)}")
+        filter_criteria.append(f"Artists / Composers / Authors: {', '.join(payload.artists)}")
     if payload.year:
-        filter_criteria.append(f"Release Year/Era: {payload.year}")
+        filter_criteria.append(f"Release Year / Era: {payload.year}")
     if payload.mood:
-        filter_criteria.append(f"Mood/Theme: {payload.mood}")
+        filter_criteria.append(f"Mood / Vibe: {payload.mood}")
     if payload.is_random:
-        filter_criteria.append("Selection Mode: Randomly sample diverse and hit songs across the chosen criteria")
+        filter_criteria.append("Selection Mode: Randomly sample diverse, high-energy, genuine hit songs across the specified criteria")
     if payload.prompt:
         filter_criteria.append(f"Additional Request: {payload.prompt}")
         
