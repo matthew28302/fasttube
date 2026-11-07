@@ -313,10 +313,10 @@ def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
     if cookies_dir.exists():
         p1 = cookies_dir / "www.youtube.com_cookies.txt"
         p2 = cookies_dir / "cookies.txt"
-        if p1.is_file():
-            candidate_files.append(p1)
-        if p2.is_file() and p2 not in candidate_files:
-            candidate_files.append(p2)
+        p3 = cookies_dir / "user_youtube_cookies_backup.txt"
+        for cp in [p1, p2, p3]:
+            if cp.is_file() and cp not in candidate_files:
+                candidate_files.append(cp)
         try:
             for p in sorted(cookies_dir.iterdir()):
                 if p.is_file() and p.suffix.lower() == ".txt" and p not in candidate_files:
@@ -324,9 +324,9 @@ def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
         except Exception:
             pass
 
-    # 2. Look in project root directory
+    # 2. Look in project root directory & cache directory
     root_dir = cookies_dir.resolve().parent
-    for r_name in ["cookies.txt", "www.youtube.com_cookies.txt"]:
+    for r_name in ["cookies.txt", "www.youtube.com_cookies.txt", "cache/saved_cookies.txt"]:
         r_p = root_dir / r_name
         if r_p.is_file() and r_p not in candidate_files:
             candidate_files.append(r_p)
@@ -334,10 +334,27 @@ def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
     # 3. Look in parent cookies directory if exists
     p_cookies = root_dir / "cookies"
     if p_cookies.exists() and p_cookies != cookies_dir:
-        for c_name in ["www.youtube.com_cookies.txt", "cookies.txt"]:
+        for c_name in ["www.youtube.com_cookies.txt", "cookies.txt", "user_youtube_cookies_backup.txt"]:
             cp = p_cookies / c_name
             if cp.is_file() and cp not in candidate_files:
                 candidate_files.append(cp)
+
+    # 4. Auto-discover from user's Downloads or Home folder if needed
+    try:
+        downloads_dir = Path.home() / "Downloads"
+        if downloads_dir.exists():
+            download_candidates: list[Path] = []
+            for pat in ["*youtube*cookie*.txt", "cookie*.txt", "*cookie*youtube*.txt"]:
+                for dp in downloads_dir.glob(pat):
+                    if dp.is_file() and dp.stat().st_size > 100:
+                        download_candidates.append(dp)
+            # Sort newest first by modification time
+            download_candidates.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+            for dp in download_candidates:
+                if dp not in candidate_files:
+                    candidate_files.append(dp)
+    except Exception:
+        pass
 
     # Validate candidates: must contain actual Netscape cookie lines (tabs with domain / name)
     for p in candidate_files:
@@ -351,6 +368,16 @@ def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
                 if "\t" in l or "youtube" in l.lower() or "google" in l.lower()
             ]
             if len(valid_entries) >= 1 or len(data_lines) >= 1:
+                # If discovered outside cookies_dir, auto-persist to cookies_dir so it stays permanently!
+                try:
+                    target = cookies_dir / "www.youtube.com_cookies.txt"
+                    if p != target and not (target.exists() and target.stat().st_size > 500):
+                        cookies_dir.mkdir(parents=True, exist_ok=True)
+                        target.write_text(text, encoding="utf-8")
+                        logger.info("Auto-persisted discovered YouTube cookie from %s to %s", p, target)
+                        return target
+                except Exception:
+                    pass
                 return p
         except Exception:
             pass

@@ -827,12 +827,17 @@ def _save_cookie_content(text: str) -> dict:
     settings.cookies_dir.mkdir(parents=True, exist_ok=True)
     target1 = settings.cookies_dir / "www.youtube.com_cookies.txt"
     target2 = settings.project_root / "cookies.txt"
+    target3 = settings.cookies_dir / "user_youtube_cookies_backup.txt"
+    target4 = settings.project_root / "cache/saved_cookies.txt"
 
-    target1.write_text(text + "\n", encoding="utf-8")
-    try:
-        target2.write_text(text + "\n", encoding="utf-8")
-    except Exception:
-        pass
+    content_with_nl = text + "\n"
+    target1.write_text(content_with_nl, encoding="utf-8")
+    for t in [target2, target3, target4]:
+        try:
+            t.parent.mkdir(parents=True, exist_ok=True)
+            t.write_text(content_with_nl, encoding="utf-8")
+        except Exception:
+            pass
 
     logger.info("New YouTube cookies saved: %d valid lines written to %s", valid_count, target1)
     return {
