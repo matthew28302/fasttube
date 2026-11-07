@@ -12,10 +12,11 @@ from pathlib import Path
 import re
 import threading
 from typing import Optional
+import subprocess
 import uuid
 
 import psutil
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
@@ -751,6 +752,182 @@ def api_set_settings(payload: SettingsPayload):
         _write_env_key("GROQ_API_KEY", payload.groq_api_key.strip())
         os.environ["GROQ_API_KEY"] = payload.groq_api_key.strip()
     return {"ok": True}
+
+
+# ---------------------------------------------------------------------------
+# YouTube Cookies Management (Bypass Bot Challenge on Datacenter VPS)
+# ---------------------------------------------------------------------------
+
+def _get_cookie_status() -> dict:
+    from app.downloader import _pick_cookie_file
+    c_path = _pick_cookie_file(settings.cookies_dir)
+    if not c_path or not c_path.is_file():
+        return {
+            "has_cookies": False,
+            "filename": None,
+            "path": None,
+            "valid_entries": 0,
+            "last_modified": None,
+            "file_size_kb": 0.0,
+        }
+    try:
+        content = c_path.read_text(encoding="utf-8", errors="ignore")
+        lines = [l.strip() for l in content.splitlines()]
+        data_lines = [l for l in lines if l and not l.startswith("#")]
+        httponly_lines = [l for l in lines if l and l.startswith("#HttpOnly_")]
+        valid_entries = len(data_lines) + len(httponly_lines)
+        st = c_path.stat()
+        from datetime import datetime
+        mtime = datetime.fromtimestamp(st.st_mtime).strftime("%d/%m/%Y %H:%M:%S")
+        size_kb = round(st.st_size / 1024, 1)
+        return {
+            "has_cookies": valid_entries > 0,
+            "filename": c_path.name,
+            "path": str(c_path),
+            "valid_entries": valid_entries,
+            "last_modified": mtime,
+            "file_size_kb": size_kb,
+        }
+    except Exception as e:
+        return {
+            "has_cookies": False,
+            "filename": c_path.name,
+            "path": str(c_path),
+            "valid_entries": 0,
+            "last_modified": None,
+            "file_size_kb": 0.0,
+            "error": str(e),
+        }
+
+
+@app.get("/api/cookies/status")
+def api_cookies_status():
+    return _get_cookie_status()
+
+
+class CookiePastePayload(BaseModel):
+    content: str
+
+
+def _save_cookie_content(text: str) -> dict:
+    text = (text or "").strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Nội dung cookie trống")
+    lines = [l.strip() for l in text.splitlines()]
+    data_lines = [l for l in lines if l and not l.startswith("#")]
+    httponly_lines = [l for l in lines if l and l.startswith("#HttpOnly_")]
+    valid_count = len(data_lines) + len(httponly_lines)
+    if valid_count == 0 and len(lines) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Không tìm thấy dòng cookie hợp lệ theo chuẩn Netscape (phải có các trường phân cách bằng tab)",
+        )
+
+    # Ensure cookies_dir exists
+    settings.cookies_dir.mkdir(parents=True, exist_ok=True)
+    target1 = settings.cookies_dir / "www.youtube.com_cookies.txt"
+    target2 = settings.project_root / "cookies.txt"
+
+    target1.write_text(text + "\n", encoding="utf-8")
+    try:
+        target2.write_text(text + "\n", encoding="utf-8")
+    except Exception:
+        pass
+
+    logger.info("New YouTube cookies saved: %d valid lines written to %s", valid_count, target1)
+    return {
+        "success": True,
+        "valid_entries": valid_count,
+        "message": f"Đã lưu thành công {valid_count} dòng cookie YouTube vào hệ thống!",
+        "status": _get_cookie_status(),
+    }
+
+
+@app.post("/api/cookies/upload")
+async def api_cookies_upload(request: Request):
+    content_type = request.headers.get("content-type", "")
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        file = form.get("file")
+        if file and hasattr(file, "read"):
+            raw = await file.read()
+            try:
+                text = raw.decode("utf-8")
+            except UnicodeDecodeError:
+                text = raw.decode("latin-1", errors="ignore")
+            return _save_cookie_content(text)
+    raw = await request.body()
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        text = raw.decode("latin-1", errors="ignore")
+    return _save_cookie_content(text)
+
+
+@app.post("/api/cookies/paste")
+def api_cookies_paste(payload: CookiePastePayload):
+    return _save_cookie_content(payload.content)
+
+
+@app.post("/api/cookies/test")
+async def api_cookies_test():
+    from app.downloader import _get_ytdlp_bin, _pick_cookie_file
+    c_path = _pick_cookie_file(settings.cookies_dir)
+    test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    cmd = [
+        _get_ytdlp_bin(),
+        "-4",
+        "--no-warnings",
+        "--socket-timeout",
+        "10",
+        "--dump-single-json",
+        "--flat-playlist",
+    ]
+    if c_path and c_path.is_file():
+        cmd.extend(["--cookies", str(c_path)])
+
+    cmd.append(test_url)
+    t0 = time.perf_counter()
+    try:
+        proc = await asyncio.to_thread(
+            subprocess.run,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=18,
+        )
+        elapsed = round(time.perf_counter() - t0, 2)
+        if proc.returncode == 0:
+            import json as _j
+            title = ""
+            try:
+                d = _j.loads(proc.stdout)
+                title = d.get("title", "")
+            except Exception:
+                pass
+            return {
+                "success": True,
+                "elapsed_s": elapsed,
+                "has_cookies": bool(c_path),
+                "message": f"✅ Kiểm tra YouTube thành công ({elapsed}s)! Hệ thống đã xác thực và sẵn sàng tải nhạc/video.",
+                "video_title": title,
+            }
+        err_msg = (proc.stderr or proc.stdout or "").strip()
+        is_bot = "bot" in err_msg.lower() or "sign in" in err_msg.lower()
+        return {
+            "success": False,
+            "elapsed_s": elapsed,
+            "has_cookies": bool(c_path),
+            "is_bot_blocked": is_bot,
+            "message": f"❌ Lỗi xác thực YouTube: {err_msg[:400]}",
+        }
+    except Exception as e:
+        elapsed = round(time.perf_counter() - t0, 2)
+        return {
+            "success": False,
+            "elapsed_s": elapsed,
+            "message": f"❌ Lỗi kiểm tra: {str(e)}",
+        }
 
 
 def _parse_songs_json(text: str) -> list[str]:

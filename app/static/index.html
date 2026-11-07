@@ -4514,22 +4514,72 @@
     </div>
   </div>
 
-  <!-- Settings Modal -->
+  <!-- Settings Modal with Cookies & System Config -->
   <div class="video-modal" id="settings-modal" onclick="if(event.target===this) closeSettings()">
-    <div class="video-modal-content" style="max-width:520px;">
+    <div class="video-modal-content" style="max-width:560px; max-height:88vh; overflow-y:auto;">
       <div class="video-modal-header">
-        <div class="video-modal-title">Cài đặt hệ thống</div>
+        <div class="video-modal-title" style="display:flex; align-items:center; gap:8px;">
+          <span>⚙️ Cài đặt hệ thống</span>
+        </div>
         <button class="close-btn" onclick="closeSettings()">&times;</button>
       </div>
-      <div style="padding:24px; display:flex; flex-direction:column; gap:16px;">
-        <div>
-          <label style="font-weight:700; font-size:0.9rem; margin-bottom:8px; display:block;">Groq API Key (Dùng cho AI Playlist)</label>
-          <input id="settings-groq-key" type="password" class="search-input" style="width:100%; border:1px solid var(--border-subtle); border-radius:12px; padding:12px; background:var(--bg-surface);" placeholder="gsk_...">
+      <div style="padding:20px; display:flex; flex-direction:column; gap:16px;">
+        
+        <!-- Section 1: YouTube Cookies Manager (VPS Bot Bypass) -->
+        <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div style="font-weight:800; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+              <span>🍪 YouTube Cookies</span>
+              <span id="cookie-status-badge" style="font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:20px; background:rgba(244,63,94,0.15); color:var(--accent-rose);">Chưa kiểm tra</span>
+            </div>
+            <button class="btn" onclick="testYouTubeCookies()" id="btn-test-cookie" style="padding:5px 12px; font-size:0.78rem; border-radius:8px; background:rgba(99,102,241,0.15); color:var(--primary-light); border:1px solid rgba(99,102,241,0.3); cursor:pointer;">
+              🔍 Kiểm tra kết nối
+            </button>
+          </div>
+
+          <div id="cookie-details" style="font-size:0.8rem; color:var(--text-dim); line-height:1.5;">
+            Đang tải thông tin cookies...
+          </div>
+
+          <!-- File upload button & Paste box -->
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <label class="btn" style="flex:1; min-width:140px; padding:9px 14px; text-align:center; font-size:0.82rem; font-weight:600; border-radius:10px; background:var(--primary); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <span>📁 Tải lên file cookies.txt</span>
+                <input type="file" id="cookie-file-input" accept=".txt" onchange="uploadCookieFile(this)" style="display:none;">
+              </label>
+              <button class="btn" onclick="toggleCookiePasteBox()" style="flex:1; min-width:140px; padding:9px 14px; font-size:0.82rem; font-weight:600; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); color:var(--text-main); cursor:pointer;">
+                📋 Dán nội dung text
+              </button>
+            </div>
+
+            <!-- Paste Box (collapsible) -->
+            <div id="cookie-paste-container" style="display:none; flex-direction:column; gap:8px; margin-top:4px;">
+              <textarea id="cookie-paste-area" rows="4" style="width:100%; border:1px solid var(--border-subtle); border-radius:10px; padding:10px; background:var(--bg-surface); color:var(--text-main); font-family:monospace; font-size:0.75rem; resize:vertical;" placeholder="# Netscape HTTP Cookie File&#10;.youtube.com&#9;TRUE&#9;/&#9;TRUE&#9;..."></textarea>
+              <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn" onclick="toggleCookiePasteBox()" style="padding:6px 12px; font-size:0.8rem; border-radius:8px; background:transparent; border:1px solid var(--border-subtle); color:var(--text-dim); cursor:pointer;">Hủy</button>
+                <button class="btn btn-download" onclick="savePastedCookies()" style="padding:6px 14px; font-size:0.8rem; border-radius:8px; cursor:pointer;">💾 Lưu nội dung Cookies</button>
+              </div>
+            </div>
+
+            <div id="cookie-op-result" style="font-size:0.8rem; min-height:16px;"></div>
+
+            <div style="font-size:0.75rem; color:var(--text-dim); background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 10px; line-height:1.4;">
+              💡 <b>Cách lấy cookie:</b> Cài tiện ích <i>"Get cookies.txt LOCALLY"</i> trên Chrome/Edge/Firefox, đăng nhập YouTube, bấm <i>Export</i> rồi tải file lên đây để VPS không bao giờ bị chặn Bot.
+            </div>
+          </div>
         </div>
-        <button class="btn btn-download" onclick="saveSettings()" style="padding:12px;">Lưu cấu hình</button>
-        <div id="settings-status" style="color:var(--text-muted); font-size:0.86rem; text-align:center;"></div>
-        <hr style="border:none; border-top:1px solid var(--border-subtle); margin:4px 0;">
-        <button class="btn" onclick="lockApp()" style="padding:12px; background:rgba(244,63,94,0.15); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.3); border-radius:12px; font-weight:600; cursor:pointer; width:100%;">
+
+        <!-- Section 2: Groq API Key -->
+        <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+          <label style="font-weight:700; font-size:0.9rem; display:block;">Groq API Key (Dùng cho AI Playlist & Gợi ý bài hát)</label>
+          <input id="settings-groq-key" type="password" class="search-input" style="width:100%; border:1px solid var(--border-subtle); border-radius:12px; padding:10px 12px; background:var(--bg-surface); font-size:0.85rem;" placeholder="gsk_...">
+          <button class="btn btn-download" onclick="saveSettings()" style="padding:10px; border-radius:10px; font-size:0.85rem;">Lưu Groq API Key</button>
+          <div id="settings-status" style="color:var(--text-muted); font-size:0.82rem; text-align:center;"></div>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border-subtle); margin:0;">
+        <button class="btn" onclick="lockApp()" style="padding:12px; background:rgba(244,63,94,0.12); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.25); border-radius:12px; font-weight:600; cursor:pointer; width:100%;">
           🔒 Đăng xuất / Khóa màn hình
         </button>
       </div>
@@ -4764,6 +4814,12 @@
     audio.addEventListener('error', (e) => {
       console.warn('Audio playback error:', e);
       updatePlayIcons(false);
+      if (autoPlayAI && aiTrackList.length > 0 && currentAIIndex + 1 < aiTrackList.length) {
+        showToast('⚠️ Lỗi kết nối âm thanh bài này. Đang tự chuyển sang bài tiếp theo...');
+        setTimeout(() => {
+          playNextTrack();
+        }, 1200);
+      }
     });
 
     modalVideo.addEventListener('timeupdate', updateProgress);
@@ -4774,6 +4830,12 @@
     modalVideo.addEventListener('error', (e) => {
       console.warn('Video playback error:', e);
       updatePlayIcons(false);
+      if (autoPlayAI && aiTrackList.length > 0 && currentAIIndex + 1 < aiTrackList.length) {
+        showToast('⚠️ Lỗi phát video. Đang tự chuyển sang bài tiếp theo...');
+        setTimeout(() => {
+          playNextTrack();
+        }, 1200);
+      }
     });
 
     function setFormat(fmt) {
@@ -5253,6 +5315,7 @@
     let currentAIIndex = -1;    // Pointer to currently playing song in aiTrackList
     let isFetchingAI = false;
     let isDownloadingQueue = false;
+    let isTransitioningTrack = false;
 
     // Synchronize initial toggle switch
     setTimeout(() => {
@@ -5428,15 +5491,22 @@
         modalVideo.load();
         const p = modalVideo.play();
         if (p !== undefined) {
-          p.then(() => updatePlayIcons(true)).catch(e => {
+          p.then(() => {
+            updatePlayIcons(true);
+            isTransitioningTrack = false;
+            trackEndedTriggered = false;
+          }).catch(e => {
             console.warn('Autoplay video error, trying muted fallback:', e);
             modalVideo.muted = true;
             modalVideo.play().then(() => {
               updatePlayIcons(true);
+              isTransitioningTrack = false;
+              trackEndedTriggered = false;
               setTimeout(() => { modalVideo.muted = false; }, 400);
             }).catch(err => {
               console.warn('Muted autoplay video also rejected:', err);
               updatePlayIcons(false);
+              isTransitioningTrack = false;
             });
           });
         }
@@ -5454,9 +5524,14 @@
         audio.load();
         const p = audio.play();
         if (p !== undefined) {
-          p.then(() => updatePlayIcons(true)).catch(e => {
+          p.then(() => {
+            updatePlayIcons(true);
+            isTransitioningTrack = false;
+            trackEndedTriggered = false;
+          }).catch(e => {
             console.warn('Autoplay audio error:', e);
             updatePlayIcons(false);
+            isTransitioningTrack = false;
           });
         }
         if (pThumb) pThumb.classList.add('spinning');
@@ -5601,20 +5676,20 @@
       if (npDurSong && dur > 0) npDurSong.textContent = formatTime(dur);
 
       // Robust EOF / Track Ended Watchdog: Trigger onTrackEnded if within 0.35s of end or activeMedia.ended
-      if (!trackEndedTriggered && dur > 1 && (cur >= dur - 0.35 || activeMedia.ended)) {
+      if (!trackEndedTriggered && !isTransitioningTrack && dur > 1 && (cur >= dur - 0.35 || activeMedia.ended)) {
         trackEndedTriggered = true;
         onTrackEnded();
       }
     }
 
     function onTrackEnded() {
-      trackEndedTriggered = false;
       const isVideo = currentTrack && (currentTrack.fmt || '').startsWith('mp4');
       const activeMedia = isVideo ? modalVideo : audio;
 
       // 1. Repeat / Loop Track (Ưu tiên lặp lại bài hát đang phát)
       if (isLooping) {
         trackEndedTriggered = false;
+        isTransitioningTrack = false;
         activeMedia.currentTime = 0;
         activeMedia.play().catch(e => console.log('Loop play error:', e));
         return;
@@ -5622,7 +5697,6 @@
 
       // 2. Playlist Queue Playback (Nếu đang phát playlist thì tự nhảy sang bài kế tiếp)
       if (isPlayingPlaylist && playlistQueue && playlistQueue.length > 0) {
-        trackEndedTriggered = false;
         playlistIndex++;
         if (playlistIndex < playlistQueue.length) {
           showToast(`⏭️ Đang phát bài tiếp theo trong Playlist (${playlistIndex + 1}/${playlistQueue.length})...`);
@@ -5633,13 +5707,14 @@
           playlistQueue = [];
           isPlayingPlaylist = false;
           updatePlayIcons(false);
+          trackEndedTriggered = false;
+          isTransitioningTrack = false;
           return;
         }
       }
 
       // 3. AI AutoPlay Mode (Tự động phát bài tiếp theo trong danh sách lớn dần)
       if (autoPlayAI) {
-        trackEndedTriggered = false;
         playNextTrack();
         return;
       }
@@ -5648,7 +5723,6 @@
       if (lastSearchResults && lastSearchResults.length > 0 && currentTrack) {
         const curIdx = lastSearchResults.findIndex(it => it.id === currentTrack.id);
         if (curIdx !== -1 && curIdx + 1 < lastSearchResults.length) {
-          trackEndedTriggered = false;
           const nextItem = lastSearchResults[curIdx + 1];
           showToast(`⏭️ Tự động chuyển bài tiếp theo: "${nextItem.title}"`);
           actionPlay(nextItem.id, nextItem.title, nextItem.channel, nextItem.thumbnail, nextItem.is_downloaded);
@@ -5657,6 +5731,8 @@
       }
 
       updatePlayIcons(false);
+      trackEndedTriggered = false;
+      isTransitioningTrack = false;
     }
 
     function toggleLoop() {
@@ -5922,18 +5998,32 @@
     }
 
     async function playTrackFromQueue(idx) {
-      if (idx < 0 || idx >= aiTrackList.length) return;
+      if (idx < 0 || idx >= aiTrackList.length) {
+        isTransitioningTrack = false;
+        trackEndedTriggered = false;
+        return;
+      }
+      isTransitioningTrack = true;
+      trackEndedTriggered = true; // Lock watchdog until track starts
+
       currentAIIndex = idx;
       const track = aiTrackList[idx];
-      if (!track) return;
+      if (!track) {
+        isTransitioningTrack = false;
+        trackEndedTriggered = false;
+        return;
+      }
 
       renderAIQueue();
 
-      // If not downloaded yet, ensure it is downloaded cleanly first
-      if (!track.is_downloaded) {
+      // If already downloaded, start streaming immediately!
+      if (track.is_downloaded) {
+        startStreamingTrack(track, idx, false);
+      } else {
+        // If not downloaded yet, ensure it is downloaded cleanly first
         track.downloading = true;
         renderAIQueue();
-        showToast(`⏳ Đang chuẩn bị bài #${idx + 1}: "${track.title}"...`);
+        showToast(`⏳ Đang tải bài #${idx + 1}: "${track.title}"...`);
         try {
           const resp = await fetch('/api/download', {
             method: 'POST',
@@ -5952,17 +6042,34 @@
               if (data.duration) track.duration = data.duration;
               if (data.format) track.fmt = data.format;
               if (data.stream_url) track.stream_url = data.stream_url;
+              startStreamingTrack(track, idx, false);
+            } else {
+              throw new Error(data.detail || 'Không thể tải');
             }
+          } else {
+            const errData = await resp.json().catch(() => ({}));
+            throw new Error(errData.detail || `Lỗi máy chủ ${resp.status}`);
           }
         } catch (e) {
           console.warn('Queue track download failed:', e);
+          track.downloading = false;
+          track.download_failed = true;
+          renderAIQueue();
+          showToast(`⚠️ Không thể phát "${track.title}": ${e.message}. Tự động chuyển tiếp...`);
+          if (idx + 1 < aiTrackList.length) {
+            setTimeout(() => {
+              playTrackFromQueue(idx + 1);
+            }, 1200);
+            return;
+          } else {
+            isTransitioningTrack = false;
+            trackEndedTriggered = false;
+          }
         } finally {
           track.downloading = false;
           renderAIQueue();
         }
       }
-
-      startStreamingTrack(track, idx, false);
 
       // Check remaining upcoming tracks. If less than 4 ahead, fetch more to grow list!
       const remainingAhead = aiTrackList.length - 1 - currentAIIndex;
@@ -5975,7 +6082,6 @@
     }
 
     function playNextTrack() {
-      trackEndedTriggered = false;
       // 0. Playlist Tab mode
       if (isPlayingPlaylist && playlistQueue && playlistQueue.length > 0) {
         nextPlaylist();
@@ -6012,6 +6118,8 @@
         }
       }
 
+      trackEndedTriggered = false;
+      isTransitioningTrack = false;
       showToast('ℹ️ Đã đến bài cuối cùng trong danh sách');
     }
 
@@ -6515,6 +6623,7 @@
 
     async function openSettings() {
       document.getElementById('settings-modal').classList.add('active');
+      loadCookieStatus();
       try {
         const res = await fetch('/api/settings');
         const data = await res.json();
@@ -6532,6 +6641,134 @@
         setTimeout(closeSettings, 1000);
       } catch (e) {
         document.getElementById('settings-status').textContent = '❌ Lỗi khi lưu cấu hình';
+      }
+    }
+
+    async function loadCookieStatus() {
+      const badge = document.getElementById('cookie-status-badge');
+      const details = document.getElementById('cookie-details');
+      if (!badge || !details) return;
+
+      try {
+        const res = await fetch('/api/cookies/status');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (data.has_cookies && data.valid_entries > 0) {
+          badge.style.background = 'rgba(16,185,129,0.15)';
+          badge.style.color = 'var(--accent-green)';
+          badge.textContent = `✓ Đã sẵn sàng (${data.valid_entries} cookie)`;
+          details.innerHTML = `File: <b style="color:var(--text-main);">${data.filename}</b> • Cập nhật: <b>${data.last_modified || 'Gần đây'}</b> (${data.file_size_kb} KB)`;
+        } else {
+          badge.style.background = 'rgba(244,63,94,0.15)';
+          badge.style.color = 'var(--accent-rose)';
+          badge.textContent = 'Chưa có cookie (Dễ bị chặn bot VPS)';
+          details.innerHTML = '⚠️ Chưa phát hiện file cookies hợp lệ. Tải lên file <code>cookies.txt</code> để tải nhạc mượt mà trên VPS.';
+        }
+      } catch (err) {
+        badge.textContent = 'Lỗi kiểm tra';
+        details.textContent = `Không thể kiểm tra cookies: ${err.message}`;
+      }
+    }
+
+    function toggleCookiePasteBox() {
+      const c = document.getElementById('cookie-paste-container');
+      if (!c) return;
+      c.style.display = (c.style.display === 'none' || !c.style.display) ? 'flex' : 'none';
+      if (c.style.display === 'flex') {
+        const area = document.getElementById('cookie-paste-area');
+        if (area) area.focus();
+      }
+    }
+
+    async function uploadCookieFile(input) {
+      if (!input || !input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const resEl = document.getElementById('cookie-op-result');
+      if (resEl) resEl.innerHTML = '<span style="color:var(--primary-light);">⏳ Đang tải lên và phân tích cookies...</span>';
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const resp = await fetch('/api/cookies/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-green);">✅ ${data.message}</span>`;
+          showToast(`🍪 ${data.message}`);
+          loadCookieStatus();
+        } else {
+          throw new Error(data.detail || 'Lỗi tải lên cookie');
+        }
+      } catch (e) {
+        if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">❌ ${e.message}</span>`;
+        showToast(`❌ ${e.message}`);
+      } finally {
+        input.value = '';
+      }
+    }
+
+    async function savePastedCookies() {
+      const area = document.getElementById('cookie-paste-area');
+      const resEl = document.getElementById('cookie-op-result');
+      const text = area ? area.value.trim() : '';
+      if (!text) {
+        showToast('⚠️ Vui lòng dán nội dung cookie vào khung trước');
+        return;
+      }
+      if (resEl) resEl.innerHTML = '<span style="color:var(--primary-light);">⏳ Đang lưu cookies...</span>';
+
+      try {
+        const resp = await fetch('/api/cookies/paste', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: text })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.success) {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-green);">✅ ${data.message}</span>`;
+          showToast(`🍪 ${data.message}`);
+          area.value = '';
+          toggleCookiePasteBox();
+          loadCookieStatus();
+        } else {
+          throw new Error(data.detail || 'Lỗi lưu cookie');
+        }
+      } catch (e) {
+        if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">❌ ${e.message}</span>`;
+        showToast(`❌ ${e.message}`);
+      }
+    }
+
+    async function testYouTubeCookies() {
+      const btn = document.getElementById('btn-test-cookie');
+      const resEl = document.getElementById('cookie-op-result');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang thử...';
+      }
+      if (resEl) resEl.innerHTML = '<span style="color:var(--primary-light);">⏳ Đang kết nối YouTube xác thực bot test...</span>';
+
+      try {
+        const resp = await fetch('/api/cookies/test', { method: 'POST' });
+        const data = await resp.json();
+        if (data.success) {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-green);">${data.message}</span>`;
+          showToast(`✅ YouTube xác thực thành công! (${data.elapsed_s}s)`);
+        } else {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">${data.message}</span>`;
+          showToast(`⚠️ YouTube cảnh báo: ${data.is_bot_blocked ? 'Bị chặn bot! Vui lòng tải cookie mới.' : data.message}`);
+        }
+      } catch (e) {
+        if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">❌ Lỗi: ${e.message}</span>`;
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔍 Kiểm tra kết nối';
+        }
       }
     }
 

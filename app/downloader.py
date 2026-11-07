@@ -215,8 +215,8 @@ def _fast_inprocess_download(
     merge_output_format: Optional[str] = None,
 ) -> Optional[DownloadResult]:
     client = (player_client or "visionos").strip()
-    # visionos/ios/android bypass YouTube's datacenter bot block without cookies
-    use_cookie = cookie_file if (cookie_file and client in ("tv_samsung", "web", "tv")) else None
+    # Provide cookies whenever available to authenticate requests
+    use_cookie = cookie_file if cookie_file else None
 
     if not merge_output_format and "/18" not in format_spec and "/best" not in format_spec:
         format_spec = f"{format_spec}/18/best"
@@ -225,6 +225,7 @@ def _fast_inprocess_download(
     opts = {
         "noplaylist": True,
         "format": format_spec,
+        "source_address": "0.0.0.0",  # Force IPv4 to prevent datacenter IPv6 BotGuard bans
         "concurrent_fragment_downloads": max(16, concurrent_fragments),
         "http_chunk_size": 10485760,  # 10MB chunking bypasses YouTube playback-speed throttling
         "buffersize": 4194304,        # 4MB buffer for high-throughput disk I/O
@@ -303,20 +304,57 @@ class DownloadResult:
 
 
 def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
-    if not cookies_dir.exists():
-        return None
     if os.getenv("FASTTUBE_IGNORE_COOKIES", "").strip() in ("1", "true", "yes"):
         return None
-    # Prefer *.txt cookie export (Netscape format) from browser.
-    for p in sorted(cookies_dir.iterdir()):
-        if p.is_file() and p.suffix.lower() == ".txt":
-            try:
-                lines = [l.strip() for l in p.read_text(encoding="utf-8", errors="ignore").splitlines()]
-                data_lines = [l for l in lines if l and not l.startswith("#")]
-                if len(data_lines) >= 3:
-                    return p
-            except Exception:
-                pass
+
+    candidate_files: list[Path] = []
+
+    # 1. Look inside configured cookies_dir
+    if cookies_dir.exists():
+        p1 = cookies_dir / "www.youtube.com_cookies.txt"
+        p2 = cookies_dir / "cookies.txt"
+        if p1.is_file():
+            candidate_files.append(p1)
+        if p2.is_file() and p2 not in candidate_files:
+            candidate_files.append(p2)
+        try:
+            for p in sorted(cookies_dir.iterdir()):
+                if p.is_file() and p.suffix.lower() == ".txt" and p not in candidate_files:
+                    candidate_files.append(p)
+        except Exception:
+            pass
+
+    # 2. Look in project root directory
+    root_dir = cookies_dir.resolve().parent
+    for r_name in ["cookies.txt", "www.youtube.com_cookies.txt"]:
+        r_p = root_dir / r_name
+        if r_p.is_file() and r_p not in candidate_files:
+            candidate_files.append(r_p)
+
+    # 3. Look in parent cookies directory if exists
+    p_cookies = root_dir / "cookies"
+    if p_cookies.exists() and p_cookies != cookies_dir:
+        for c_name in ["www.youtube.com_cookies.txt", "cookies.txt"]:
+            cp = p_cookies / c_name
+            if cp.is_file() and cp not in candidate_files:
+                candidate_files.append(cp)
+
+    # Validate candidates: must contain actual Netscape cookie lines (tabs with domain / name)
+    for p in candidate_files:
+        try:
+            text = p.read_text(encoding="utf-8", errors="ignore")
+            lines = [l.strip() for l in text.splitlines()]
+            data_lines = [l for l in lines if l and not l.startswith("#")]
+            httponly_lines = [l for l in lines if l and l.startswith("#HttpOnly_")]
+            valid_entries = [
+                l for l in (data_lines + httponly_lines)
+                if "\t" in l or "youtube" in l.lower() or "google" in l.lower()
+            ]
+            if len(valid_entries) >= 1 or len(data_lines) >= 1:
+                return p
+        except Exception:
+            pass
+
     return None
 
 
@@ -609,6 +647,7 @@ def download_from_youtube(
     ) -> list[str]:
         cmd = [
             _get_ytdlp_bin(),
+            "-4",  # Force IPv4 to prevent datacenter IPv6 bot detection
         ]
         if _FFMPEG_PATH:
             cmd += ["--ffmpeg-location", _FFMPEG_PATH]
@@ -739,16 +778,28 @@ def download_from_youtube(
         last_cmd: list[str] | None = None
         last_rc: int | None = None
 
-        # Ordered by YouTube bot-challenge bypass ability:
-        # visionos, ios, android bypass datacenter bot barriers without cookies
-        player_clients: list[tuple[str | None, bool]] = [
-            ("visionos", False),
-            ("ios", False),
-            ("android", False),
-            ("tv_samsung", bool(cookie_file)),
-            ("web", bool(cookie_file)),
-            (None, False),
-        ]
+        # When cookies exist, prioritize authenticated Smart TV & Web clients.
+        # When cookies are absent, rely on visionos / ios / android client engines.
+        if cookie_file:
+            player_clients: list[tuple[str | None, bool]] = [
+                ("tv_samsung", True),
+                ("web", True),
+                ("mweb", True),
+                ("tv_embedded", True),
+                ("ios", True),
+                ("android", True),
+                ("visionos", False),
+                (None, True),
+            ]
+        else:
+            player_clients: list[tuple[str | None, bool]] = [
+                ("visionos", False),
+                ("ios", False),
+                ("android", False),
+                ("tv_samsung", False),
+                ("web", False),
+                (None, False),
+            ]
         attempt = 0
         for fmt_try in fmt_list:
             for client, use_cookies in player_clients:
@@ -854,13 +905,16 @@ def download_from_youtube(
             # 2. ios: Uses native iOS YouTube app endpoints
             # 3. android: Android app endpoints
             # 4. tv_samsung: Smart TV endpoints (optionally with cookies)
-            client_candidates = ["visionos", "ios", "android", "tv_samsung"]
+            if cookie_file:
+                client_candidates = ["tv_samsung", "web", "mweb", "tv_embedded", "ios", "android", "visionos"]
+            else:
+                client_candidates = ["visionos", "ios", "android", "tv_samsung"]
             if ytdlp_player_client and ytdlp_player_client not in client_candidates:
                 client_candidates.insert(0, ytdlp_player_client)
 
             for cand_client in client_candidates:
                 try:
-                    c_file = cookie_file if cand_client in ("tv_samsung", "web", "tv") else None
+                    c_file = cookie_file if cand_client in ("tv_samsung", "web", "mweb", "tv_embedded", "ios", "android", "tv") else None
                     fast_res = _fast_inprocess_download(
                         source_url=source,
                         music_dir=music_dir,
@@ -958,8 +1012,11 @@ def download_from_youtube(
                 logger.error("yt-dlp --list-formats (tail) for %s:\n%s", source, lf)
         # More descriptive error message
         error_msg = f"yt-dlp failed: {last_stderr[:1200]}" if last_stderr else "yt-dlp failed: no output"
+        st_chk = (last_stderr or "").lower()
         if "timeout" in error_msg.lower():
             error_msg = "Download timeout - server or network too slow"
+        elif "sign in to confirm" in st_chk or "not a bot" in st_chk or "bot" in st_chk:
+            error_msg = "YouTube chặn bot trên IP máy chủ VPS. Vui lòng mở Cài đặt (⚙️) trên giao diện web để tải lên hoặc dán file cookies.txt mới nhất."
         raise RuntimeError(error_msg)
 
     # yt-dlp --print-json prints one JSON line per downloaded entry.
