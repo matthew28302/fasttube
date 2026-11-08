@@ -4488,6 +4488,39 @@
           </div>
         </div>
 
+        <!-- Section 1.5: Proxy Manager (Bypass VPS Datacenter IP Ban) -->
+        <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+            <div style="font-weight:800; font-size:0.95rem; display:flex; align-items:center; gap:6px;">
+              <span>🌐 Proxy mạng (Vượt chặn IP VPS)</span>
+              <span id="proxy-status-badge" style="font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:20px; background:rgba(255,255,255,0.08); color:var(--text-dim);">Chưa cài</span>
+            </div>
+            <button class="btn" onclick="testProxyConnection()" id="btn-test-proxy" style="padding:5px 12px; font-size:0.78rem; border-radius:8px; background:rgba(99,102,241,0.15); color:var(--primary-light); border:1px solid rgba(99,102,241,0.3); cursor:pointer;">
+              🔍 Kiểm tra Proxy
+            </button>
+          </div>
+
+          <div id="proxy-details" style="font-size:0.8rem; color:var(--text-dim); line-height:1.5;">
+            Đang tải cấu hình proxy...
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <input id="settings-proxy-input" type="text" class="search-input" style="width:100%; border:1px solid var(--border-subtle); border-radius:10px; padding:9px 12px; background:var(--bg-surface); font-family:monospace; font-size:0.8rem;" placeholder="http://user:pass@host:port hoặc socks5://...">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-download" onclick="saveProxyConfig()" style="flex:1; min-width:120px; padding:8px 14px; font-size:0.82rem; font-weight:600; border-radius:10px; cursor:pointer;">
+                💾 Lưu Proxy
+              </button>
+              <button class="btn" onclick="clearProxyConfig()" style="padding:8px 14px; font-size:0.82rem; font-weight:600; border-radius:10px; background:rgba(244,63,94,0.12); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.25); cursor:pointer;">
+                🗑️ Xóa
+              </button>
+            </div>
+            <div id="proxy-op-result" style="font-size:0.8rem; min-height:16px;"></div>
+            <div style="font-size:0.75rem; color:var(--text-dim); background:rgba(255,255,255,0.03); border-radius:8px; padding:8px 10px; line-height:1.4;">
+              💡 <b>Khi nào cần dùng Proxy?</b> Nếu máy chủ VPS bị YouTube chặn IP (báo lỗi <i>"Sign in to confirm you're not a bot"</i> liên tục), chỉ cần nhập bất kỳ Proxy HTTP/SOCKS5 nào vào đây, hệ thống sẽ tự động chuyển hướng tải qua Proxy an toàn 100%.
+            </div>
+          </div>
+        </div>
+
         <!-- Section 2: Groq API Key -->
         <div style="background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:10px;">
           <label style="font-weight:700; font-size:0.9rem; display:block;">Groq API Key (Dùng cho AI Playlist & Gợi ý bài hát)</label>
@@ -6523,6 +6556,7 @@
     async function openSettings() {
       document.getElementById('settings-modal').classList.add('active');
       loadCookieStatus();
+      loadProxyStatus();
       try {
         const res = await fetch('/api/settings');
         const data = await res.json();
@@ -6667,6 +6701,104 @@
         if (btn) {
           btn.disabled = false;
           btn.textContent = '🔍 Kiểm tra kết nối';
+        }
+      }
+    }
+
+    async function loadProxyStatus() {
+      const badge = document.getElementById('proxy-status-badge');
+      const details = document.getElementById('proxy-details');
+      const input = document.getElementById('settings-proxy-input');
+      if (!badge || !details) return;
+
+      try {
+        const res = await fetch('/api/proxy/status');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        if (data.configured && data.proxy) {
+          badge.style.background = 'rgba(16,185,129,0.15)';
+          badge.style.color = 'var(--accent-green)';
+          badge.textContent = '✓ Đang hoạt động';
+          details.innerHTML = `Đang định tuyến qua: <b style="color:var(--text-main); font-family:monospace;">${data.proxy}</b>`;
+          if (input && !input.value) input.value = data.full_proxy || data.proxy;
+        } else {
+          badge.style.background = 'rgba(255,255,255,0.08)';
+          badge.style.color = 'var(--text-dim)';
+          badge.textContent = 'Chưa cài đặt';
+          details.innerHTML = 'Hệ thống đang kết nối trực tiếp không qua proxy.';
+          if (input) input.value = '';
+        }
+      } catch (err) {
+        badge.textContent = 'Lỗi';
+        details.textContent = `Không thể kiểm tra proxy: ${err.message}`;
+      }
+    }
+
+    async function saveProxyConfig() {
+      const input = document.getElementById('settings-proxy-input');
+      const resEl = document.getElementById('proxy-op-result');
+      const val = input ? input.value.trim() : '';
+      if (resEl) resEl.innerHTML = '<span style="color:var(--primary-light);">⏳ Đang lưu cấu hình proxy...</span>';
+
+      try {
+        const res = await fetch('/api/proxy/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ proxy: val }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-green);">${data.message}</span>`;
+          showToast(`✅ ${data.message}`);
+          loadProxyStatus();
+        } else {
+          throw new Error(data.detail || data.message || 'Lỗi lưu proxy');
+        }
+      } catch (e) {
+        if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">❌ ${e.message}</span>`;
+        showToast(`❌ ${e.message}`);
+      }
+    }
+
+    async function clearProxyConfig() {
+      const input = document.getElementById('settings-proxy-input');
+      if (input) input.value = '';
+      saveProxyConfig();
+    }
+
+    async function testProxyConnection() {
+      const btn = document.getElementById('btn-test-proxy');
+      const resEl = document.getElementById('proxy-op-result');
+      const input = document.getElementById('settings-proxy-input');
+      const currentVal = input ? input.value.trim() : '';
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang thử...';
+      }
+      if (resEl) resEl.innerHTML = '<span style="color:var(--primary-light);">⏳ Đang kiểm tra kết nối YouTube qua Proxy...</span>';
+
+      try {
+        const resp = await fetch('/api/proxy/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ proxy: currentVal }),
+        });
+        const data = await resp.json();
+        if (data.success) {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-green);">${data.message}</span>`;
+          showToast(`✅ Proxy hoạt động rất tốt! (${data.elapsed_s}s)`);
+        } else {
+          if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">${data.message}</span>`;
+          showToast(`⚠️ Kiểm tra thất bại: ${data.message}`);
+        }
+      } catch (e) {
+        if (resEl) resEl.innerHTML = `<span style="color:var(--accent-rose);">❌ Lỗi: ${e.message}</span>`;
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '🔍 Kiểm tra Proxy';
         }
       }
     }

@@ -60,6 +60,7 @@ class Settings:
     max_storage_mb: int
     max_file_age_hours: int
     access_password: str
+    ytdlp_proxy: str | None
 
 
 def load_settings() -> Settings:
@@ -121,6 +122,15 @@ def load_settings() -> Settings:
 
     access_password = (os.getenv("ACCESS_PASSWORD", "duahau") or "duahau").strip()
 
+    proxy_file = (project_root() / "cache" / "proxy.txt")
+    cached_proxy = None
+    if proxy_file.exists():
+        try:
+            cached_proxy = proxy_file.read_text(encoding="utf-8").strip() or None
+        except Exception:
+            pass
+    ytdlp_proxy = (os.getenv("YTDLP_PROXY") or cached_proxy or "").strip() or None
+
     return Settings(
         project_root=project_root(),
         music_dir=music_dir,
@@ -149,6 +159,7 @@ def load_settings() -> Settings:
         max_storage_mb=max_storage_mb,
         max_file_age_hours=max_file_age_hours,
         access_password=access_password,
+        ytdlp_proxy=ytdlp_proxy,
     )
 
 

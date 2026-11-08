@@ -925,18 +925,34 @@ def api_cookies_paste(payload: CookiePastePayload):
 
 @app.post("/api/cookies/test")
 async def api_cookies_test():
-    from app.downloader import _get_ytdlp_bin, _pick_cookie_file
+    from app.downloader import _get_ytdlp_bin, _pick_cookie_file, _get_active_js_runtime
     c_path = _pick_cookie_file(settings.cookies_dir)
     test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     cmd = [
         _get_ytdlp_bin(),
-        "-4",
         "--no-warnings",
         "--socket-timeout",
-        "10",
+        "12",
         "--dump-single-json",
         "--flat-playlist",
+        "--extractor-args",
+        "youtube:player_client=android",
     ]
+    proxy_to_use = os.getenv("YTDLP_PROXY")
+    if not proxy_to_use:
+        try:
+            pf = settings.project_root / "cache" / "proxy.txt"
+            if pf.is_file():
+                proxy_to_use = pf.read_text(encoding="utf-8").strip() or None
+        except Exception:
+            pass
+    if proxy_to_use:
+        cmd.extend(["--proxy", proxy_to_use])
+
+    js_eng = _get_active_js_runtime(settings.ytdlp_js_runtimes)
+    if js_eng:
+        cmd.extend(["--js-runtimes", js_eng])
+
     if c_path and c_path.is_file():
         cmd.extend(["--cookies", str(c_path)])
 
@@ -981,6 +997,136 @@ async def api_cookies_test():
             "success": False,
             "elapsed_s": elapsed,
             "message": f"❌ Lỗi kiểm tra: {str(e)}",
+        }
+
+
+class ProxySavePayload(BaseModel):
+    proxy: str = ""
+
+
+def _mask_proxy(url: str) -> str:
+    if not url:
+        return ""
+    if "@" in url:
+        prefix, host_port = url.split("@", 1)
+        if ":" in prefix:
+            proto_user, _ = prefix.rsplit(":", 1)
+            return f"{proto_user}:***@{host_port}"
+    return url
+
+
+@app.get("/api/proxy/status")
+def api_proxy_status():
+    p = os.getenv("YTDLP_PROXY")
+    if not p:
+        try:
+            pf = settings.project_root / "cache" / "proxy.txt"
+            if pf.is_file():
+                p = pf.read_text(encoding="utf-8").strip() or None
+        except Exception:
+            pass
+    return {
+        "configured": bool(p),
+        "proxy": _mask_proxy(p or ""),
+        "full_proxy": p or "",
+    }
+
+
+@app.post("/api/proxy/save")
+def api_proxy_save(payload: ProxySavePayload):
+    raw = (payload.proxy or "").strip()
+    cache_dir = settings.project_root / "cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    p_file = cache_dir / "proxy.txt"
+    if not raw:
+        if p_file.exists():
+            try:
+                p_file.unlink()
+            except Exception:
+                pass
+        os.environ.pop("YTDLP_PROXY", None)
+        logger.info("Proxy cleared from system")
+        return {"success": True, "configured": False, "message": "Đã xóa proxy. Hệ thống dùng kết nối trực tiếp."}
+
+    valid_schemes = ("http://", "https://", "socks5://", "socks5h://", "socks4://")
+    if not any(raw.lower().startswith(s) for s in valid_schemes):
+        raise HTTPException(
+            status_code=400,
+            detail="Proxy không hợp lệ. Phải bắt đầu bằng http://, https://, socks5:// hoặc socks5h://",
+        )
+
+    p_file.write_text(raw, encoding="utf-8")
+    os.environ["YTDLP_PROXY"] = raw
+    logger.info("Proxy updated to: %s", _mask_proxy(raw))
+    return {
+        "success": True,
+        "configured": True,
+        "proxy": _mask_proxy(raw),
+        "message": f"Đã lưu proxy thành công: {_mask_proxy(raw)}",
+    }
+
+
+@app.post("/api/proxy/test")
+async def api_proxy_test(payload: Optional[ProxySavePayload] = None):
+    from app.downloader import _get_ytdlp_bin
+    proxy_val = payload.proxy.strip() if payload and payload.proxy else None
+    if not proxy_val:
+        proxy_val = os.getenv("YTDLP_PROXY")
+        if not proxy_val:
+            try:
+                pf = settings.project_root / "cache" / "proxy.txt"
+                if pf.is_file():
+                    proxy_val = pf.read_text(encoding="utf-8").strip() or None
+            except Exception:
+                pass
+
+    if not proxy_val:
+        return {"success": False, "message": "Chưa có proxy để kiểm tra."}
+
+    test_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    cmd = [
+        _get_ytdlp_bin(),
+        "--no-warnings",
+        "--socket-timeout",
+        "15",
+        "--proxy",
+        proxy_val,
+        "--extractor-args",
+        "youtube:player_client=android",
+        "--print",
+        "%(title)s",
+        test_url,
+    ]
+    t0 = time.perf_counter()
+    try:
+        proc = await asyncio.to_thread(
+            subprocess.run,
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+        elapsed = round(time.perf_counter() - t0, 2)
+        if proc.returncode == 0:
+            title = (proc.stdout or "").strip()
+            return {
+                "success": True,
+                "elapsed_s": elapsed,
+                "message": f"✅ Proxy hoạt động tốt ({elapsed}s)! Đã kết nối thành công đến YouTube.",
+                "video_title": title,
+            }
+        err = (proc.stderr or proc.stdout or "").strip()
+        return {
+            "success": False,
+            "elapsed_s": elapsed,
+            "message": f"❌ Lỗi kết nối qua Proxy: {err[:300]}",
+        }
+    except Exception as e:
+        elapsed = round(time.perf_counter() - t0, 2)
+        return {
+            "success": False,
+            "elapsed_s": elapsed,
+            "message": f"❌ Lỗi kiểm tra proxy: {str(e)}",
         }
 
 

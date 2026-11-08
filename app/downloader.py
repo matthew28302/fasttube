@@ -225,10 +225,10 @@ def _fast_inprocess_download(
     audio_bitrate: str = "128k",
     target_codec: Optional[str] = None,
     merge_output_format: Optional[str] = None,
+    proxy: Optional[str] = None,
 ) -> Optional[DownloadResult]:
     client = (player_client or "android").strip()
-    # visionos/android_vr/android/ios do not support web cookies; passing cookies causes yt-dlp to skip or fail them
-    use_cookie = cookie_file if (cookie_file and client not in ("visionos", "android_vr", "android", "ios")) else None
+    use_cookie = cookie_file if cookie_file else None
 
     if not merge_output_format:
         format_parts = [p.strip() for p in format_spec.split("/")]
@@ -256,6 +256,8 @@ def _fast_inprocess_download(
             }
         },
     }
+    if proxy:
+        opts["proxy"] = proxy
     if js_eng:
         opts["js_runtimes"] = {js_eng: {}}
     if merge_output_format:
@@ -471,6 +473,7 @@ def download_from_youtube(
     max_abr_kbps: int = 96,
     exclude_ids: set[str] | list[str] | None = None,
     cancel_event: Optional[threading.Event] = None,
+    proxy: Optional[str] = None,
 ) -> DownloadResult:
     music_dir.mkdir(parents=True, exist_ok=True)
     target_id = _extract_id_from_url_or_id(query_or_url)
@@ -533,12 +536,27 @@ def download_from_youtube(
             source = fallback_urls[0]
 
     cookie_file = _pick_cookie_file(cookies_dir)
+    # Resolve proxy (from argument, env var, or cache file)
+    proxy_to_use = proxy or os.getenv("YTDLP_PROXY")
+    if not proxy_to_use:
+        try:
+            pf = music_dir.parent / "cache" / "proxy.txt"
+            if pf.is_file():
+                proxy_to_use = pf.read_text(encoding="utf-8").strip() or None
+        except Exception:
+            pass
+    if proxy_to_use:
+        logger.info("Using proxy for download: %s", proxy_to_use.split("@")[-1] if "@" in proxy_to_use else proxy_to_use)
+
     # Use a local yt-dlp cache to reduce repeated extractor/player work across requests.
     ytdlp_cache_dir = (music_dir.parent / "cache" / "ytdlp").resolve()
 
     def _list_formats_for(url: str) -> str:
         # Best-effort debug helper. Logs can be long; we keep tail.
         cmd = [_get_ytdlp_bin(), "--list-formats", url]
+        if proxy_to_use:
+            cmd.insert(1, "--proxy")
+            cmd.insert(2, proxy_to_use)
         if cookie_file:
             cmd.insert(1, "--cookies")
             cmd.insert(2, str(cookie_file))
@@ -551,23 +569,22 @@ def download_from_youtube(
     def _format_candidates() -> list[str]:
         """
         Return a list of format selectors to try, in order.
-        We always keep audio-only (never `best`, which may include video).
+        We always keep audio-only first, with 18/best fallback for android client.
         """
         abr = max(32, min(int(max_abr_kbps), 160))
-        base_small = f"bestaudio[abr<={abr}]/bestaudio" if prefer_abr_128 else "bestaudio"
-        base_any = "bestaudio"
+        base_small = f"bestaudio[abr<={abr}]/bestaudio/18/best" if prefer_abr_128 else "bestaudio/18/best"
+        base_any = "bestaudio/18/best"
 
         m = (audio_mode or "mp3").strip().lower()
         # Speed/stability: try m4a (itag 140 commonly) first when available since it often works even when bestaudio fails
-        # Prefer smallest m4a first (itag 139 ~48kbps, then 140 ~128kbps) for fastest download
-        m4a_first = "139/140/bestaudio[ext=m4a]/bestaudio"
+        # Fallback to itag 18 / best if pure audio streams are blocked or restricted under android client
+        m4a_first = "139/140/bestaudio[ext=m4a]/bestaudio/18/best"
         if prefer_abr_128:
-            # Prioritize smallest audio: try m4a <=abr first (itag 139), fallback to any m4a
-            m4a_first = f"bestaudio[ext=m4a][abr<={abr}]/139/140/bestaudio[ext=m4a]/bestaudio"
+            m4a_first = f"bestaudio[ext=m4a][abr<={abr}]/139/140/bestaudio[ext=m4a]/bestaudio/18/best"
         if not prefer_itag_140:
-            m4a_first = "bestaudio[ext=m4a]/bestaudio"
+            m4a_first = "bestaudio[ext=m4a]/bestaudio/18/best"
             if prefer_abr_128:
-                m4a_first = f"bestaudio[ext=m4a][abr<={abr}]/bestaudio[ext=m4a]/bestaudio"
+                m4a_first = f"bestaudio[ext=m4a][abr<={abr}]/bestaudio[ext=m4a]/bestaudio/18/best"
         if m in ("mp4_1080", "1080p"):
             return [
                 "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=1080]+bestaudio[ext=m4a]/bestvideo[height<=1080]+140/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
@@ -602,14 +619,14 @@ def download_from_youtube(
         if m == "opus":
             if prefer_abr_128:
                 return [
-                    "249/250/bestaudio[acodec=opus][abr<=64]/bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio",
+                    "249/250/bestaudio[acodec=opus][abr<=64]/bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio/18/best",
                     m4a_first,
                     base_small,
                     base_any,
                 ]
             else:
                 return [
-                    "251/bestaudio[acodec=opus]/250/249/bestaudio[ext=m4a]/bestaudio",
+                    "251/bestaudio[acodec=opus]/250/249/bestaudio[ext=m4a]/bestaudio/18/best",
                     base_any,
                     m4a_first,
                 ]
@@ -639,6 +656,9 @@ def download_from_youtube(
         ]
         if _FFMPEG_PATH:
             cmd += ["--ffmpeg-location", _FFMPEG_PATH]
+        if proxy_to_use:
+            cmd.insert(1, "--proxy")
+            cmd.insert(2, proxy_to_use)
         mode_str = (audio_mode or "").strip().lower()
         is_video_mode = mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p")
         if max_duration_s and max_duration_s > 0 and not is_video_mode and not _extract_id_from_url_or_id(source):
@@ -744,7 +764,7 @@ def download_from_youtube(
             cmd.insert(3, "m4a")
         if ytdlp_verbose:
             cmd.insert(1, "--verbose")
-        if use_cookies and cookie_file and (player_client not in ("visionos", "android_vr", "android", "ios")):
+        if use_cookies and cookie_file:
             cmd.insert(1, "--cookies")
             cmd.insert(2, str(cookie_file))
         return cmd
@@ -757,27 +777,33 @@ def download_from_youtube(
 
         if cookie_file:
             player_clients: list[tuple[str | None, bool]] = [
-                ("tv_samsung", True),
-                (None, True),
-                ("web", True),
+                ("android", False),    # 1. Android without cookies (cleanest bypass of bot detection on VPS)
+                ("android", True),     # 2. Android with cookies (for age-gated/member content)
+                ("tv_samsung", True),  # 3. Samsung TV client
+                (None, True),          # 4. Default client
+                ("web", True),         # 5. Web client
             ]
         elif fast_mode:
             player_clients = [
                 ("android", False),
                 ("visionos", False),
-                ("tv_samsung", True),
-                (None, True),
+                ("tv_samsung", False),
+                (None, False),
             ]
         else:
             player_clients = [
                 ("android", False),
                 ("visionos", False),
-                ("tv_samsung", True),
-                ("web", True),
-                ("tv", True),
+                ("tv_samsung", False),
+                ("web", False),
+                ("tv", False),
             ]
         attempt = 0
+        all_bot_blocked = False
         for fmt_try in fmt_list:
+            if all_bot_blocked:
+                break
+            bot_block_count = 0
             for client, use_cookies in player_clients:
                 attempt += 1
                 cmd = _build_cmd_with_client(fmt_try, client, use_cookies, force_mp3=force_mp3, relax_retries=relax_retries, skip_hls=skip_hls)
@@ -852,6 +878,16 @@ def download_from_youtube(
 
                 if proc.returncode == 0:
                     return last_stdout, last_stderr, last_cmd, last_rc
+
+                st_lower = (last_stderr or "").lower()
+                if "sign in to confirm" in st_lower or "not a bot" in st_lower:
+                    bot_block_count += 1
+                    logger.warning("yt-dlp bot detection on client=%s (cookies=%s)", client, use_cookies)
+
+            if bot_block_count >= len(player_clients):
+                logger.error("All player clients encountered YouTube bot block / IP ban on this server. Stopping retries.")
+                all_bot_blocked = True
+                break
         return last_stdout, last_stderr, last_cmd, last_rc
 
     def _has_json_output(stdout: str) -> bool:
@@ -875,16 +911,8 @@ def download_from_youtube(
     if fast_mode and "://" in source:
         try:
             fmt_candidates = _format_candidates()
-            best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio"
-            # When cookies are present, client MUST support cookies (tv_samsung or web).
-            # visionos/android/android_vr explicitly ignore cookies and trigger bot blocks on datacenters.
-            if cookie_file:
-                if not ytdlp_player_client or ytdlp_player_client in ("visionos", "android_vr", "android", "ios"):
-                    primary_client = "tv_samsung"
-                else:
-                    primary_client = ytdlp_player_client
-            else:
-                primary_client = ytdlp_player_client or "android"
+            best_fmt = fmt_candidates[0] if fmt_candidates else "bestaudio/18/best"
+            primary_client = ytdlp_player_client or "android"
 
             fast_res = _fast_inprocess_download(
                 source_url=source,
@@ -899,14 +927,15 @@ def download_from_youtube(
                 audio_bitrate=audio_bitrate,
                 target_codec=t_codec,
                 merge_output_format=merge_fmt,
+                proxy=proxy_to_use,
             )
             # Fallback to the other client if the first fails
             if not fast_res:
-                alt_client = "android" if primary_client == "tv_samsung" else "tv_samsung"
+                alt_client = "tv_samsung" if primary_client == "android" else "android"
                 fast_res = _fast_inprocess_download(
                     source_url=source,
                     music_dir=music_dir,
-                    cookie_file=cookie_file if alt_client != "android" else None,
+                    cookie_file=cookie_file,
                     format_spec=best_fmt,
                     player_client=alt_client,
                     concurrent_fragments=concurrent_fragments,
@@ -916,6 +945,7 @@ def download_from_youtube(
                     audio_bitrate=audio_bitrate,
                     target_codec=t_codec,
                     merge_output_format=merge_fmt,
+                    proxy=proxy_to_use,
                 )
             if fast_res:
                 logger.info("fast in-process download succeeded | id=%s title=%r path=%s", fast_res.file_id, fast_res.title, fast_res.path)
@@ -955,7 +985,7 @@ def download_from_youtube(
                 relax_retries=True,
                 skip_hls=False,
             )
-    if (last_rc != 0 or not _has_json_output(last_stdout)) and fallback_urls:
+    if (last_rc != 0 or not _has_json_output(last_stdout)) and fallback_urls and not all_bot_blocked:
         for alt in fallback_urls[1:]:
             logger.warning("yt-dlp failed for first result; trying next search result: %s", alt)
             source = alt
@@ -1001,7 +1031,7 @@ def download_from_youtube(
         if "timeout" in error_msg.lower():
             error_msg = "Download timeout - server or network too slow"
         elif "sign in to confirm" in st_chk or "not a bot" in st_chk or "bot" in st_chk:
-            error_msg = "YouTube chặn bot trên IP máy chủ VPS. Vui lòng mở Cài đặt (⚙️) trên giao diện web để tải lên hoặc dán file cookies.txt mới nhất."
+            error_msg = "YouTube chặn bot trên IP máy chủ VPS. Vui lòng mở Cài đặt (⚙️) trên giao diện web để nhập Proxy hoặc cập nhật cookies.txt mới nhất."
         raise RuntimeError(error_msg)
 
     # yt-dlp --print-json prints one JSON line per downloaded entry.
