@@ -120,7 +120,24 @@ echo "==> Installing Python packages"
 pip install -r requirements.txt
 
 echo "==> Ensuring runtime folders"
-mkdir -p music cache cookies logs
+mkdir -p music cache cookies logs .local/bin
+
+if ! command -v node >/dev/null 2>&1 && ! command -v deno >/dev/null 2>&1 && ! [[ -x "${ROOT_DIR}/.local/bin/deno" ]]; then
+  echo "==> Provisioning Deno standalone JS engine for YouTube deciphering..."
+  DENO_ARCH="x86_64"
+  if [[ "$(uname -m)" == *"aarch64"* ]] || [[ "$(uname -m)" == *"arm64"* ]]; then
+    DENO_ARCH="aarch64"
+  fi
+  DENO_ZIP="${ROOT_DIR}/cache/deno.zip"
+  curl -fsSL "https://dl.deno.land/release/v2.1.9/deno-${DENO_ARCH}-unknown-linux-gnu.zip" -o "$DENO_ZIP" || \
+  curl -fsSL "https://github.com/denoland/deno/releases/download/v2.1.9/deno-${DENO_ARCH}-unknown-linux-gnu.zip" -o "$DENO_ZIP" || true
+  if [[ -f "$DENO_ZIP" ]]; then
+    python -m zipfile -e "$DENO_ZIP" "${ROOT_DIR}/.local/bin" || true
+    chmod +x "${ROOT_DIR}/.local/bin/deno" 2>/dev/null || true
+    rm -f "$DENO_ZIP"
+    echo "==> Deno installed into .local/bin/deno successfully!"
+  fi
+fi
 
 if [[ ! -f .env ]]; then
   if [[ -f .env.example ]]; then

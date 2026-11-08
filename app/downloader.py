@@ -194,10 +194,22 @@ except Exception as e:
 
 
 def _detect_js_engine() -> Optional[str]:
-    for cand in ["node", "deno", "bun", "quickjs"]:
+    for cand in ["node", "deno", "bun", "qjs", "quickjs"]:
         if shutil.which(cand):
             return cand
+    for root_dir in [Path.cwd(), Path(__file__).resolve().parent.parent]:
+        for cand in ["deno", "deno.exe", "node", "node.exe"]:
+            p = root_dir / ".local" / "bin" / cand
+            if p.is_file():
+                return cand.split(".")[0]
     return None
+
+
+def _get_active_js_runtime(configured_runtime: str | None = None) -> Optional[str]:
+    cand = (configured_runtime or "").strip()
+    if cand and shutil.which(cand):
+        return cand
+    return _detect_js_engine()
 
 
 def _fast_inprocess_download(
@@ -223,7 +235,7 @@ def _fast_inprocess_download(
         if "18" not in format_parts and "best" not in format_parts:
             format_spec = f"{format_spec}/18/best"
 
-    js_eng = _detect_js_engine()
+    js_eng = _get_active_js_runtime()
     opts = {
         "noplaylist": True,
         "format": format_spec,
@@ -234,6 +246,7 @@ def _fast_inprocess_download(
         "outtmpl": str(music_dir / "%(title).200B [%(id)s].%(ext)s"),
         "cookiefile": str(use_cookie) if use_cookie else None,
         "nocheckcertificate": True,
+        "remote_components": ["ejs:github"],
         "quiet": not ytdlp_verbose,
         "no_warnings": not ytdlp_verbose,
         "extractor_args": {
@@ -763,10 +776,8 @@ def download_from_youtube(
             cmd.insert(12, "30")
             cmd.insert(13, "--no-check-certificates")
         # Force JS runtime to help with EJS/n challenges (e.g. deno).
-        runtime = ytdlp_js_runtimes
-        if not runtime:
-            runtime = _detect_js_engine()
-        elif ytdlp_js_runtimes_path:
+        runtime = _get_active_js_runtime(ytdlp_js_runtimes)
+        if ytdlp_js_runtimes_path and runtime:
             runtime = f"{runtime}:{ytdlp_js_runtimes_path}"
         if runtime:
             cmd.insert(1, "--js-runtimes")
