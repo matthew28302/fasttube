@@ -11,74 +11,77 @@
   <style>
     :root {
       color-scheme: dark;
-      --bg-base: #07090e;
-      --bg-surface: #0e121c;
-      --bg-card: #141926;
-      --bg-card-hover: #1a2133;
-      --bg-glass: rgba(14, 18, 28, 0.78);
-      --bg-glass-heavy: rgba(10, 13, 22, 0.92);
+      --bg-base: #0f0f0f;
+      --bg-surface: #0f0f0f;
+      --bg-sidebar: #0f0f0f;
+      --bg-card: #181818;
+      --bg-card-hover: #222222;
+      --bg-glass: rgba(15, 15, 15, 0.96);
+      --bg-glass-heavy: rgba(15, 15, 15, 0.98);
       
-      --border-subtle: rgba(255, 255, 255, 0.07);
-      --border-card: rgba(255, 255, 255, 0.1);
-      --border-hover: rgba(99, 102, 241, 0.45);
-      --border-focus: #6366f1;
+      --border-subtle: rgba(255, 255, 255, 0.1);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 0, 0, 0.5);
+      --border-focus: #ff0000;
       
-      --primary: #6366f1;
-      --primary-hover: #4f46e5;
-      --primary-light: #818cf8;
-      --primary-glow: rgba(99, 102, 241, 0.3);
-      --accent-cyan: #06b6d4;
-      --accent-emerald: #10b981;
-      --accent-rose: #f43f5e;
+      --primary: #ff0000;
+      --primary-hover: #cc0000;
+      --primary-light: #ff4e45;
+      --primary-glow: rgba(255, 0, 0, 0.35);
+      --accent-cyan: #3ea6ff;
+      --accent-emerald: #2ba640;
+      --accent-rose: #ff0000;
       --accent-amber: #f59e0b;
       
-      --text-main: #f8fafc;
-      --text-secondary: #cbd5e1;
-      --text-muted: #64748b;
-      --text-dim: #475569;
+      --text-main: #f1f1f1;
+      --text-secondary: #aaaaaa;
+      --text-muted: #717171;
+      --text-dim: #555555;
       
-      --player-height: 90px;
-      --header-height: 72px;
+      --player-height: 84px;
+      --header-height: 56px;
+      --sidebar-width: 240px;
       --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
       --radius-full: 9999px;
       
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.45);
-      --shadow-glow: 0 0 35px rgba(99, 102, 241, 0.22);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.6);
+      --shadow-glow: 0 0 35px rgba(255, 0, 0, 0.25);
     }
 
     /* -------------------------------------------------------------
-       THEME: LIGHT MODE (High Contrast, Razor Sharp Text & Borders)
+       THEME: LIGHT MODE (YouTube Light Clean)
        ------------------------------------------------------------- */
     [data-theme="light"] {
       color-scheme: light !important;
-      --bg-base: #f1f5f9;         /* Slate 100 */
+      --bg-base: #f9f9f9;
       --bg-surface: #ffffff;
+      --bg-sidebar: #ffffff;
       --bg-card: #ffffff;
-      --bg-card-hover: #f8fafc;
-      --bg-glass: rgba(255, 255, 255, 0.96);
-      --bg-glass-heavy: rgba(241, 245, 249, 0.98);
+      --bg-card-hover: #f2f2f2;
+      --bg-glass: rgba(255, 255, 255, 0.98);
+      --bg-glass-heavy: rgba(249, 249, 249, 0.98);
       
-      --border-subtle: #cbd5e1;   /* Slate 300 - clear visible borders */
-      --border-card: #cbd5e1;
-      --border-hover: #4f46e5;
-      --border-focus: #4338ca;
+      --border-subtle: #e5e5e5;
+      --border-card: #e5e5e5;
+      --border-hover: #ff0000;
+      --border-focus: #ff0000;
       
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --primary-light: #6366f1;
-      --primary-glow: rgba(79, 70, 229, 0.25);
+      --primary: #ff0000;
+      --primary-hover: #cc0000;
+      --primary-light: #ff4e45;
+      --primary-glow: rgba(255, 0, 0, 0.2);
       
-      --text-main: #090d16;       /* Deep solid black-slate */
-      --text-secondary: #1e293b;  /* Slate 800 - dark, readable */
-      --text-muted: #475569;      /* Slate 600 */
-      --text-dim: #64748b;
+      --text-main: #0f0f0f;
+      --text-secondary: #606060;
+      --text-muted: #909090;
+      --text-dim: #aaaaaa;
       
       --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.08);
       --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.08);
-      --shadow-glow: 0 0 25px rgba(79, 70, 229, 0.16);
+      --shadow-glow: 0 0 25px rgba(255, 0, 0, 0.16);
     }
 
     [data-theme="light"] body {
@@ -357,12 +360,12 @@
       font-weight: 600;
     }
     [data-theme="light"] .control-btn-main {
-      background: #090d16;
+      background: #ff0000;
       color: #ffffff;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 4px 14px rgba(255, 0, 0, 0.3);
     }
     [data-theme="light"] .control-btn-main:hover {
-      background: #1e293b;
+      background: #cc0000;
       color: #ffffff;
     }
     [data-theme="light"] .control-btn {
@@ -870,21 +873,19 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding-bottom: calc(var(--player-height) + 36px);
+      padding-bottom: calc(var(--player-height) + 12px);
       overflow-x: hidden;
       max-width: 100vw;
       width: 100%;
-      background-image: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent 70%),
-        radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.06), transparent 40%),
-        radial-gradient(circle at 90% 40%, rgba(139, 92, 246, 0.06), transparent 40%);
-      background-attachment: fixed;
     }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 7px; height: 7px; }
-    ::-webkit-scrollbar-track { background: var(--bg-base); }
-    ::-webkit-scrollbar-thumb { background: #262f45; border-radius: 4px; }
+    /* Scrollbar (YouTube Slim Style) */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #3f3f3f; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #717171; }
+    [data-theme="light"] ::-webkit-scrollbar-thumb { background: #cccccc; }
+    [data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: #909090; }
     ::-webkit-scrollbar-thumb:hover { background: #3b4665; }
 
     /* Header */
@@ -1856,26 +1857,26 @@
     .skeleton-card {
       background: var(--bg-card);
       border: 1px solid var(--border-card);
-      border-radius: 18px;
+      border-radius: 12px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
     .skeleton-thumb {
       aspect-ratio: 16 / 9;
-      background: linear-gradient(90deg, #131826 25%, #1e263d 50%, #131826 75%);
+      background: linear-gradient(90deg, #212121 25%, #2a2a2a 50%, #212121 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
     .skeleton-body {
-      padding: 16px 18px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
     .skeleton-line {
       height: 14px;
-      background: #192033;
+      background: #272727;
       border-radius: 6px;
       animation: shimmer 1.5s infinite;
     }
@@ -1990,16 +1991,16 @@
     .control-btn-main {
       width: 44px;
       height: 44px;
-      background: #ffffff;
-      color: #090c14;
+      background: #ff0000;
+      color: #ffffff;
       border-radius: 50%;
-      box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 16px rgba(255, 0, 0, 0.4);
     }
     .control-btn-main:hover {
       transform: scale(1.08);
-      background: #f1f5f9;
-      color: #000;
-      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.35);
+      background: #cc0000;
+      color: #ffffff;
+      box-shadow: 0 6px 20px rgba(255, 0, 0, 0.55);
     }
 
     .progress-wrap {
@@ -2026,7 +2027,7 @@
     }
     .progress-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #6366f1, #38bdf8);
+      background: #ff0000;
       border-radius: var(--radius-full);
       width: 0%;
       position: relative;
@@ -2040,8 +2041,8 @@
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: #fff;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+      background: #ff0000;
+      box-shadow: 0 0 8px rgba(255, 0, 0, 0.7);
       opacity: 0;
       transition: opacity 0.15s;
     }
@@ -2526,7 +2527,7 @@
     }
     .np-scrub-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--primary), var(--accent-cyan));
+      background: #ff0000;
       width: 0%;
       border-radius: 99px;
       transition: width 0.1s linear;
@@ -2541,14 +2542,14 @@
       width: 54px;
       height: 54px;
       border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), #4338ca);
+      background: #ff0000;
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
       border: none;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+      box-shadow: 0 6px 20px rgba(255, 0, 0, 0.45);
       transition: transform 0.18s, box-shadow 0.18s;
     }
     .np-btn-play:hover {
@@ -3906,156 +3907,792 @@
     @media (max-width: 400px) {
       .lock-card { padding: 32px 20px; }
     }
+
+    /* -------------------------------------------------------------
+       YOUTUBE OFFICIAL DESIGN SYSTEM (FASTTUBE YOUTUBE EDITION)
+       ------------------------------------------------------------- */
+    .yt-header {
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      gap: 16px;
+    }
+    .yt-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .yt-icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .yt-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    [data-theme="light"] .yt-icon-btn:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+    .yt-brand {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      color: var(--text-main);
+      user-select: none;
+    }
+    .yt-brand-text {
+      font-size: 1.28rem;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      display: flex;
+      align-items: center;
+      color: var(--text-main);
+    }
+    .yt-country-badge {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-left: 3px;
+      vertical-align: super;
+    }
+    .yt-header-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex: 1;
+      max-width: 680px;
+    }
+    .yt-search-form {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 40px;
+      background: #121212;
+      border: 1px solid #303030;
+      border-radius: 40px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    [data-theme="light"] .yt-search-form {
+      background: #ffffff;
+      border-color: #cccccc;
+    }
+    .yt-search-form:focus-within {
+      border-color: #1c62b9;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .yt-search-input-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding: 0 16px;
+      position: relative;
+    }
+    .yt-search-input {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 0.96rem;
+      font-weight: 500;
+    }
+    .yt-search-input::placeholder {
+      color: var(--text-muted);
+    }
+    .yt-search-clear-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px 8px;
+    }
+    .yt-search-btn {
+      width: 64px;
+      height: 100%;
+      background: #222222;
+      border: none;
+      border-left: 1px solid #303030;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    [data-theme="light"] .yt-search-btn {
+      background: #f8f8f8;
+      border-left-color: #d3d3d3;
+    }
+    .yt-search-btn:hover {
+      background: #272727;
+    }
+    .yt-voice-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #181818;
+      border: 1px solid #303030;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    [data-theme="light"] .yt-voice-btn {
+      background: #f2f2f2;
+      border-color: #e5e5e5;
+    }
+    .yt-voice-btn:hover {
+      background: #272727;
+    }
+    .yt-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .yt-user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.72rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* YouTube App Layout: Sidebar + Main Content */
+    .yt-app-layout {
+      display: flex;
+      min-height: calc(100vh - var(--header-height));
+      width: 100%;
+      position: relative;
+    }
+    .yt-sidebar {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-subtle);
+      padding: 12px 10px;
+      overflow-y: auto;
+      height: calc(100vh - var(--header-height));
+      position: sticky;
+      top: var(--header-height);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: width 0.22s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 50;
+    }
+    .yt-sidebar.collapsed {
+      width: 72px;
+      padding: 12px 4px;
+    }
+    .yt-sidebar.collapsed .yt-sidebar-label {
+      display: none;
+    }
+    .yt-sidebar.collapsed .yt-sidebar-heading,
+    .yt-sidebar.collapsed .yt-sidebar-divider,
+    .yt-sidebar.collapsed .yt-sub-channel-item {
+      display: none;
+    }
+    .yt-sidebar.collapsed .yt-sidebar-item {
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px 4px;
+      font-size: 0.68rem;
+      text-align: center;
+      justify-content: center;
+    }
+    .yt-sidebar.collapsed .yt-sidebar-item svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .yt-sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .yt-sidebar-divider {
+      height: 1px;
+      background: var(--border-subtle);
+      margin: 8px 6px;
+    }
+    .yt-sidebar-heading {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      padding: 6px 14px 4px;
+    }
+    .yt-sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      transition: background 0.18s;
+    }
+    .yt-sidebar-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    [data-theme="light"] .yt-sidebar-item:hover {
+      background: #f2f2f2;
+    }
+    .yt-sidebar-item.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ff0000;
+      font-weight: 700;
+    }
+    [data-theme="light"] .yt-sidebar-item.active {
+      background: #f2f2f2;
+      color: #ff0000;
+    }
+    .yt-sidebar-item.active svg {
+      color: #ff0000;
+      stroke: #ff0000;
+    }
+
+    .yt-sub-channel-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.18s;
+      color: var(--text-main);
+      font-size: 0.86rem;
+      font-weight: 500;
+    }
+    .yt-sub-channel-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    [data-theme="light"] .yt-sub-channel-item:hover {
+      background: #f2f2f2;
+    }
+    .yt-sub-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.68rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .yt-sub-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main Content Wrapper */
+    .yt-main-wrapper {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 24px;
+    }
+
+    /* YouTube Topic Filter Chips Bar */
+    .yt-chips-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--bg-surface);
+      position: sticky;
+      top: var(--header-height);
+      z-index: 30;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .yt-chips-bar::-webkit-scrollbar {
+      display: none;
+    }
+    .yt-chip {
+      padding: 7px 14px;
+      border-radius: 8px;
+      background: #272727;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .yt-chip {
+      background: #f2f2f2;
+      border-color: #e5e5e5;
+      color: #0f0f0f;
+    }
+    .yt-chip:hover {
+      background: #3f3f3f;
+    }
+    [data-theme="light"] .yt-chip:hover {
+      background: #e5e5e5;
+    }
+    .yt-chip.active {
+      background: #ffffff;
+      color: #0f0f0f;
+      border-color: #ffffff;
+    }
+    [data-theme="light"] .yt-chip.active {
+      background: #0f0f0f;
+      color: #ffffff;
+      border-color: #0f0f0f;
+    }
+
+    /* YouTube Main Content Feed */
+    .yt-main-content {
+      padding: 20px;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* YouTube Video Card */
+    .yt-video-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      cursor: pointer;
+      position: relative;
+      border-radius: 12px;
+      padding: 8px;
+      transition: background 0.2s;
+    }
+    .yt-video-card:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    [data-theme="light"] .yt-video-card:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+    .yt-thumb-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #181818;
+    }
+    .yt-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+    .yt-video-card:hover .yt-thumb-img {
+      transform: scale(1.04);
+    }
+    .yt-duration-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.82);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .yt-card-details {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .yt-channel-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #272727;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .yt-video-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .yt-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.35;
+      color: var(--text-main);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .yt-channel-row {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .yt-verified-badge {
+      display: inline-flex;
+      color: #aaaaaa;
+    }
+    .yt-meta-row {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .yt-card-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+    .yt-action-pill-btn {
+      padding: 6px 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.18s;
+    }
+    .yt-action-pill-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+    .yt-action-pill-btn.primary {
+      background: #ff0000;
+      color: #fff;
+      border-color: #ff0000;
+    }
+    .yt-action-pill-btn.primary:hover {
+      background: #cc0000;
+    }
+    .yt-action-pill-btn.radio {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    .yt-action-pill-btn.radio:hover {
+      background: rgba(245, 158, 11, 0.25);
+    }
+
+    /* YouTube Subscribe Button */
+    .yt-sub-btn {
+      background: #ffffff;
+      color: #0f0f0f;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 18px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    [data-theme="light"] .yt-sub-btn {
+      background: #0f0f0f;
+      color: #ffffff;
+    }
+    .yt-sub-btn.subscribed {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-main);
+    }
+    [data-theme="light"] .yt-sub-btn.subscribed {
+      background: #f2f2f2;
+      color: #0f0f0f;
+    }
+
+    /* Mobile Responsive Sidebar */
+    @media (max-width: 900px) {
+      .yt-sidebar {
+        position: fixed;
+        left: 0;
+        top: var(--header-height);
+        bottom: 0;
+        transform: translateX(-100%);
+        z-index: 1000;
+        background: var(--bg-surface);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      }
+      .yt-sidebar.mobile-open {
+        transform: translateX(0);
+      }
+      .yt-sidebar-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
+        display: none;
+      }
+      .yt-sidebar-backdrop.active {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top App Navigation -->
-  <header>
-    <div class="header-container">
-      <a href="/" class="brand" title="FastTube Studio">
-        <div class="brand-icon-wrap">
-          <div class="brand-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 18V5l12-2v13"></path>
-              <circle cx="6" cy="18" r="3"></circle>
-              <circle cx="18" cy="16" r="3"></circle>
-            </svg>
-          </div>
+  <!-- YouTube Top Navigation Header -->
+  <header class="yt-header">
+    <div class="yt-header-left">
+      <button class="yt-icon-btn" id="btn-toggle-sidebar" onclick="toggleSidebar()" title="Mở / Thu gọn menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <a href="/" class="yt-brand" title="FastTube - YouTube Studio">
+        <div class="yt-logo-icon">
+          <svg width="28" height="20" viewBox="0 0 28 20" fill="none"><rect width="28" height="20" rx="5" fill="#ff0000"/><polygon points="11 6 18 10 11 14" fill="#ffffff"/></svg>
         </div>
-        <div>
-          <div class="brand-title">FastTube</div>
-        </div>
+        <span class="yt-brand-text">Fast<span style="color:#ff0000;">Tube</span></span>
+        <span class="yt-country-badge">VN</span>
       </a>
+    </div>
 
-      <!-- Real-Time Visitor Stats Badge (In the middle of Navbar) -->
+    <!-- YouTube Center Unified Search -->
+    <div class="yt-header-center">
+      <div class="yt-search-form">
+        <div class="yt-search-input-box">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="yt-search-input" 
+            placeholder="Tìm kiếm bài hát, nghệ sĩ hoặc dán link YouTube..." 
+            autocomplete="off"
+            oninput="handleSearchInput(event)"
+            onkeydown="if(event.key==='Enter') doSearch()"
+          >
+          <button class="yt-search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="Xóa nội dung" style="display:none;">
+            ✕
+          </button>
+        </div>
+        <button class="yt-search-btn" id="search-btn" onclick="doSearch()" title="Tìm kiếm">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+      </div>
+      <button class="yt-voice-btn" onclick="navTo('radio')" title="Trạm phát YouTube Radio Mix">
+        <span style="font-size:1.05rem;">📻</span>
+      </button>
+    </div>
+
+    <!-- YouTube Header Right -->
+    <div class="yt-header-right">
       <div class="nav-stats-badge" id="nav-stats" title="Lượng truy cập thời gian thực">
         <span class="pulse-dot"></span>
         <span class="nav-stats-num" id="nav-online-count">1</span> <span class="nav-stats-label">online</span>
-        <span class="nav-stats-sep">•</span>
-        <span class="nav-stats-num" id="nav-views-count">1</span> <span class="nav-stats-label">lượt xem</span>
       </div>
 
-      <div class="nav-container">
-        <nav class="nav-segmented">
-          <button class="nav-btn active" id="tab-search" onclick="switchTab('search')">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <span>Tìm kiếm & Tải</span>
-          </button>
-          <button class="nav-btn" id="tab-playlist" onclick="switchTab('playlist')">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
-            <span>AI Playlist</span>
-          </button>
-        </nav>
+      <div class="theme-segmented" title="Chọn giao diện">
+        <button class="theme-seg-btn active" id="theme-btn-dark" onclick="setTheme('dark', true)">🌙</button>
+        <button class="theme-seg-btn" id="theme-btn-light" onclick="setTheme('light', true)">☀️</button>
+      </div>
 
-        <!-- 3-Theme Segmented Switcher (Tối / Sáng / Xám) -->
-        <div class="theme-segmented" title="Chọn giao diện: Tối, Sáng hoặc Xám">
-          <button class="theme-seg-btn active" id="theme-btn-dark" onclick="setTheme('dark', true)">🌙<span class="theme-label"> Tối</span></button>
-          <button class="theme-seg-btn" id="theme-btn-light" onclick="setTheme('light', true)">☀️<span class="theme-label"> Sáng</span></button>
-          <button class="theme-seg-btn" id="theme-btn-gray" onclick="setTheme('gray', true)">🌫️<span class="theme-label"> Xám</span></button>
-        </div>
+      <button class="yt-icon-btn" id="btn-settings" onclick="openSettings()" title="Cài đặt hệ thống">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
 
-        <button class="btn-icon-setting" id="btn-settings" onclick="openSettings()" title="Cài đặt hệ thống">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </button>
+      <div class="yt-user-avatar" title="FastTube Premium VIP">
+        <span>VIP</span>
       </div>
     </div>
   </header>
 
-  <!-- Main View Area -->
-  <main>
-    <!-- SEARCH TAB -->
-    <section id="view-search">
-      <div class="hero">
-        <h1 class="hero-clean-title">Tìm kiếm & Tải nhạc</h1>
+  <!-- Backdrop for Mobile Sidebar -->
+  <div class="yt-sidebar-backdrop" id="yt-sidebar-backdrop" onclick="closeMobileSidebar()"></div>
 
-        <!-- Search Input Bar -->
-        <div class="search-wrapper">
-          <div class="search-box">
-            <svg class="search-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input 
-              type="text" 
-              id="search-input" 
-              class="search-input" 
-              placeholder="Dán link YouTube (https://...) hoặc nhập tên bài hát, video..."
-              autocomplete="off"
-              oninput="handleSearchInput(event)"
-              onkeydown="if(event.key==='Enter') doSearch()"
-            >
-            <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="Xóa nội dung">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <button class="search-btn" id="search-btn" onclick="doSearch()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <span>Tìm kiếm</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Format Selector Panel -->
-        <div class="format-selector-panel">
-          <div class="format-group-chips">
-            <button class="format-pill active" data-fmt="m4a" onclick="setFormat('m4a')">
-              <span>🎧 M4A</span>
-              <span class="pill-tag">128k</span>
-            </button>
-            <button class="format-pill" data-fmt="mp3_320" onclick="setFormat('mp3_320')">
-              <span>🎵 MP3</span>
-              <span class="pill-tag">320k</span>
-            </button>
-            <button class="format-pill" data-fmt="flac" onclick="setFormat('flac')">
-              <span>🎼 FLAC</span>
-              <span class="pill-tag">Lossless</span>
-            </button>
-            <button class="format-pill" data-fmt="mp4_1080" onclick="setFormat('mp4_1080')">
-              <span>🎬 MP4</span>
-              <span class="pill-tag">1080p FHD</span>
-            </button>
-            <button class="format-pill" data-fmt="mp4_720" onclick="setFormat('mp4_720')">
-              <span>🎬 MP4</span>
-              <span class="pill-tag">720p HD</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Trending Suggestions -->
-        <div class="quick-chips-wrap">
-          <span class="quick-label">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>
-            Gợi ý:
-          </span>
-          <span class="chip" onclick="quickSearch('Em của ngày hôm qua')">Em của ngày hôm qua</span>
-          <span class="chip" onclick="quickSearch('Nơi này có anh')">Nơi này có anh</span>
-          <span class="chip" onclick="quickSearch('Waiting for you mono')">Waiting for you</span>
-          <span class="chip" onclick="quickSearch('Cắt đôi nỗi sầu')">Cắt đôi nỗi sầu</span>
-          <span class="chip" onclick="quickSearch('See tình')">See tình</span>
-          <span class="chip" onclick="quickSearch('Shape of you')">Shape of you</span>
-          <span class="chip" onclick="quickSearch('Lofi chill tiktok')">Lofi chill tiktok</span>
-        </div>
+  <!-- YouTube App Layout (Sidebar + Main Wrapper) -->
+  <div class="yt-app-layout">
+    <!-- YouTube Left Sidebar Drawer -->
+    <aside class="yt-sidebar" id="yt-sidebar">
+      <div class="yt-sidebar-section">
+        <button class="yt-sidebar-item active" id="side-nav-home" onclick="navTo('home')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          <span class="yt-sidebar-label">Trang chủ</span>
+        </button>
+        <button class="yt-sidebar-item" id="side-nav-trending" onclick="navTo('trending')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+          <span class="yt-sidebar-label">Thịnh hành</span>
+        </button>
+        <button class="yt-sidebar-item" id="side-nav-radio" onclick="navTo('radio')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"></circle><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
+          <span class="yt-sidebar-label">YouTube Radio</span>
+        </button>
+        <button class="yt-sidebar-item" id="side-nav-playlist" onclick="navTo('playlist')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+          <span class="yt-sidebar-label">AI Playlist</span>
+        </button>
       </div>
 
-      <!-- Search Results Area -->
-      <div id="results-area" style="display: none;">
-        <div class="section-header">
-          <div class="section-title">
-            <span>Kết quả tìm kiếm</span>
-            <span class="section-badge" id="results-count">0 bài hát</span>
-          </div>
-          <!-- View Mode Switcher (Danh sách vs Lưới thẻ) -->
-          <div class="view-mode-toggle" title="Chọn chế độ hiển thị kết quả">
-            <button class="view-mode-btn active" id="btn-view-list" onclick="setViewMode('list')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-              <span>Danh sách</span>
-            </button>
-            <button class="view-mode-btn" id="btn-view-grid" onclick="setViewMode('grid')">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              <span>Lưới thẻ</span>
-            </button>
-          </div>
-        </div>
-        <div class="tracklist-container" id="results-grid"></div>
+      <div class="yt-sidebar-divider"></div>
+
+      <div class="yt-sidebar-section">
+        <div class="yt-sidebar-heading">Bạn & Thư viện</div>
+        <button class="yt-sidebar-item" id="side-nav-saved" onclick="toggleSavedDrawer()">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          <span class="yt-sidebar-label">Danh sách đã lưu</span>
+        </button>
+        <button class="yt-sidebar-item" id="side-nav-downloads" onclick="navTo('downloads')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span class="yt-sidebar-label">Đã tải về máy</span>
+        </button>
+        <button class="yt-sidebar-item" id="side-nav-history" onclick="navTo('history')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span class="yt-sidebar-label">Lịch sử nghe</span>
+        </button>
       </div>
-    </section>
+
+      <div class="yt-sidebar-divider"></div>
+
+      <div class="yt-sidebar-section">
+        <div class="yt-sidebar-heading">Kênh Đề Xuất</div>
+        <div class="yt-sub-channel-item" onclick="quickSearch('Sơn Tùng M-TP')">
+          <span class="yt-sub-avatar">ST</span>
+          <span class="yt-sub-name">Sơn Tùng M-TP</span>
+        </div>
+        <div class="yt-sub-channel-item" onclick="quickSearch('Vũ.')">
+          <span class="yt-sub-avatar" style="background:#0284c7;">V</span>
+          <span class="yt-sub-name">Vũ. Official</span>
+        </div>
+        <div class="yt-sub-channel-item" onclick="quickSearch('Đen Vâu')">
+          <span class="yt-sub-avatar" style="background:#16a34a;">Đ</span>
+          <span class="yt-sub-name">Đen Vâu</span>
+        </div>
+        <div class="yt-sub-channel-item" onclick="quickSearch('HIEUTHUHAI')">
+          <span class="yt-sub-avatar" style="background:#ea580c;">H</span>
+          <span class="yt-sub-name">HIEUTHUHAI</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="yt-main-wrapper">
+      <!-- YouTube Topic Filter Chips Bar -->
+      <div class="yt-chips-bar" id="yt-chips-bar">
+        <button class="yt-chip active" onclick="filterByTopic(this, 'all')">Tất cả</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Nhạc Trẻ Hay Nhất Hiện Nay')">Âm nhạc</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'V-Pop Hot Hits')">V-Pop</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Sơn Tùng M-TP')">Sơn Tùng M-TP</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Vũ.')">Vũ.</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Đen Vâu')">Đen Vâu</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'HIEUTHUHAI')">HIEUTHUHAI</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Lofi Chill Buồn')">Lofi Chill</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Vinahouse Remix 2026')">Remix</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Rap Việt Mới Nhất')">Rap Việt</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Top US-UK Hits')">US-UK</button>
+        <button class="yt-chip" onclick="filterByTopic(this, 'Acoustic Mộc Chill')">Acoustic</button>
+      </div>
+
+      <!-- Main View Area -->
+      <main class="yt-main-content">
+        <!-- SEARCH / HOME TAB -->
+        <section id="view-search">
+          <div class="format-selector-panel" style="margin-bottom: 16px;">
+            <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>⚡ Định dạng tải mặc định:</span>
+            </div>
+            <div class="format-group-chips">
+              <button class="format-pill active" data-fmt="m4a" onclick="setFormat('m4a')">
+                <span>🎧 M4A</span>
+                <span class="pill-tag">128k (2s)</span>
+              </button>
+              <button class="format-pill" data-fmt="mp3_320" onclick="setFormat('mp3_320')">
+                <span>🎵 MP3</span>
+                <span class="pill-tag">320k</span>
+              </button>
+              <button class="format-pill" data-fmt="flac" onclick="setFormat('flac')">
+                <span>🎼 FLAC</span>
+                <span class="pill-tag">Lossless</span>
+              </button>
+              <button class="format-pill" data-fmt="mp4_1080" onclick="setFormat('mp4_1080')">
+                <span>🎬 MP4</span>
+                <span class="pill-tag">1080p FHD</span>
+              </button>
+              <button class="format-pill" data-fmt="mp4_720" onclick="setFormat('mp4_720')">
+                <span>🎬 MP4</span>
+                <span class="pill-tag">720p HD</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Search Results Area -->
+          <div id="results-area">
+            <div class="section-header">
+              <div class="section-title">
+                <span id="results-heading-text">Khám phá video âm nhạc</span>
+                <span class="section-badge" id="results-count">0 bài hát</span>
+              </div>
+              <div class="view-mode-toggle" title="Chọn chế độ hiển thị kết quả">
+                <button class="view-mode-btn" id="btn-view-list" onclick="setViewMode('list')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                  <span>Danh sách</span>
+                </button>
+                <button class="view-mode-btn active" id="btn-view-grid" onclick="setViewMode('grid')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                  <span>Lưới thẻ</span>
+                </button>
+              </div>
+            </div>
+            <div class="results-grid" id="results-grid"></div>
+          </div>
+        </section>
 
     <!-- PLAYLIST TAB -->
     <section id="view-playlist" style="display: none;">
@@ -4448,6 +5085,8 @@
       <div id="saved-drawer-detail" style="border-top:1px solid var(--border-subtle); padding:14px; display:none; max-height:50vh; overflow:auto;"></div>
     </div>
   </main>
+    </div> <!-- .yt-main-wrapper -->
+  </div> <!-- .yt-app-layout -->
 
   <!-- Sticky Bottom Media Player (Mini Player) -->
   <div class="player-bar" id="player-bar">
@@ -4658,13 +5297,41 @@
             <video id="modal-video-element" class="video-player-frame" controls playsinline preload="auto" style="width:100%; max-height:55dvh; display:block;"></video>
           </div>
 
-          <!-- Song info -->
-          <div class="np-info-box">
-            <div class="np-song-title" id="np-song-title">Chưa chọn bài hát</div>
-            <div class="np-song-meta">
-              <span id="np-song-channel">YouTube</span>
-              <span>•</span>
-              <span id="np-song-duration">0:00</span>
+          <!-- YouTube Watch Page Info & Channel Bar -->
+          <div class="np-info-box" style="margin-top: 14px;">
+            <div class="np-song-title" id="np-song-title" style="font-size: 1.22rem; font-weight: 800; line-height: 1.35; margin-bottom: 8px;">Chưa chọn bài hát</div>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle);">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="yt-channel-avatar" id="np-channel-avatar" style="width:40px; height:40px; font-size:0.95rem;">YT</div>
+                <div>
+                  <div style="font-weight:700; font-size:0.95rem; display:flex; align-items:center; gap:4px;">
+                    <span id="np-song-channel">YouTube</span>
+                    <svg class="yt-verified-badge" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7l-4.5-4.5 1.4-1.4 3.1 3.1 7.4-7.4 1.4 1.4-8.8 8.8z"/></svg>
+                  </div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);" id="np-song-duration">0:00</div>
+                </div>
+                <button class="yt-sub-btn" id="np-subscribe-btn" onclick="toggleSubscribe(this)">Đăng ký</button>
+              </div>
+
+              <!-- YouTube Action Pills Row -->
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button class="yt-action-pill-btn" onclick="showToast('👍 Cảm ơn bạn đã thích bài hát!')" title="Thích video này">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                  <span>15K</span>
+                </button>
+                <button class="yt-action-pill-btn radio" onclick="triggerCurrentTrackRadio()" title="Khởi tạo YouTube Radio Mix 25 bài">
+                  <span>📻 YouTube Mix</span>
+                </button>
+                <button class="yt-action-pill-btn" onclick="downloadCurrent()" title="Tải về máy">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span>Tải về</span>
+                </button>
+                <button class="yt-action-pill-btn" onclick="copyStreamUrl()" title="Chia sẻ liên kết bài hát">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                  <span>Chia sẻ</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -4857,11 +5524,136 @@
 
     function switchTab(tab) {
       document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('view-search').style.display = tab === 'search' ? 'block' : 'none';
+      const vs = document.getElementById('view-search');
       const vp = document.getElementById('view-playlist');
+      if (vs) vs.style.display = tab === 'search' ? 'block' : 'none';
       if (vp) vp.style.display = tab === 'playlist' ? 'block' : 'none';
       if (tab === 'playlist') loadSavedPlaylists();
-      document.getElementById(`tab-${tab}`).classList.add('active');
+      const tabBtn = document.getElementById(`tab-${tab}`);
+      if (tabBtn) tabBtn.classList.add('active');
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('yt-sidebar');
+      const backdrop = document.getElementById('yt-sidebar-backdrop');
+      if (!sb) return;
+      if (window.innerWidth <= 900) {
+        sb.classList.toggle('mobile-open');
+        if (backdrop) backdrop.classList.toggle('active', sb.classList.contains('mobile-open'));
+      } else {
+        sb.classList.toggle('collapsed');
+      }
+    }
+
+    function closeMobileSidebar() {
+      const sb = document.getElementById('yt-sidebar');
+      const backdrop = document.getElementById('yt-sidebar-backdrop');
+      if (sb) sb.classList.remove('mobile-open');
+      if (backdrop) backdrop.classList.remove('active');
+    }
+
+    function navTo(page) {
+      document.querySelectorAll('.yt-sidebar-item').forEach(el => el.classList.remove('active'));
+      const activeBtn = document.getElementById(`side-nav-${page}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      closeMobileSidebar();
+
+      if (page === 'home') {
+        switchTab('search');
+        const heading = document.getElementById('results-heading-text');
+        if (heading) heading.textContent = 'Khám phá video âm nhạc';
+        if (!lastSearchResults || lastSearchResults.length === 0) {
+          quickSearch('Nhạc Trẻ Hay Nhất Hiện Nay');
+        }
+      } else if (page === 'trending') {
+        switchTab('search');
+        const heading = document.getElementById('results-heading-text');
+        if (heading) heading.textContent = '🔥 Video Thịnh Hành Việt Nam';
+        document.querySelectorAll('.yt-chip').forEach(c => c.classList.remove('active'));
+        quickSearch('Top Thịnh Hành Việt Nam 2026');
+      } else if (page === 'radio') {
+        switchTab('playlist');
+        switchPlaylistMode('radio');
+      } else if (page === 'playlist') {
+        switchTab('playlist');
+        switchPlaylistMode('filter');
+      } else if (page === 'saved') {
+        toggleSavedDrawer();
+      } else if (page === 'downloads') {
+        switchTab('search');
+        showDownloadedOnly();
+      } else if (page === 'history') {
+        switchTab('search');
+        showListeningHistory();
+      }
+    }
+
+    function filterByTopic(el, topic) {
+      document.querySelectorAll('.yt-chip').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+      navTo('home');
+      const heading = document.getElementById('results-heading-text');
+      if (topic === 'all') {
+        if (heading) heading.textContent = 'Khám phá video âm nhạc';
+        quickSearch('Nhạc Việt Mới Nhất 2026');
+      } else {
+        if (heading) heading.textContent = `Chủ đề: ${topic}`;
+        quickSearch(topic);
+      }
+    }
+
+    function quickRadioRandom() {
+      const popularSeeds = ['Sơn Tùng M-TP', 'Vũ.', 'Đen Vâu', 'HIEUTHUHAI', 'Soobin', 'Lofi Chill Việt Nam', 'Top Hits US-UK'];
+      const chosen = popularSeeds[Math.floor(Math.random() * popularSeeds.length)];
+      navTo('radio');
+      quickRadioMix(chosen);
+    }
+
+    function toggleSubscribe(btn) {
+      if (!btn) return;
+      const isSub = btn.classList.contains('subscribed');
+      if (isSub) {
+        btn.classList.remove('subscribed');
+        btn.textContent = 'Đăng ký';
+        showToast('🔔 Đã hủy đăng ký kênh');
+      } else {
+        btn.classList.add('subscribed');
+        btn.innerHTML = '🔔 Đã đăng ký';
+        showToast('🎉 Đã đăng ký kênh YouTube này!');
+      }
+    }
+
+    function showDownloadedOnly() {
+      const heading = document.getElementById('results-heading-text');
+      if (heading) heading.textContent = '💾 Danh sách các bài đã tải về máy';
+      if (!lastSearchResults || lastSearchResults.length === 0) {
+        quickSearch('Sơn Tùng M-TP');
+      } else {
+        const dls = lastSearchResults.filter(it => it.is_downloaded);
+        if (dls.length > 0) {
+          renderResults(dls);
+          showToast(`💾 Đang hiển thị ${dls.length} bài hát đã có sẵn trong máy`);
+        } else {
+          showToast('ℹ️ Chưa có bài nào được tải trong kết quả hiện tại.');
+        }
+      }
+    }
+
+    function showListeningHistory() {
+      const heading = document.getElementById('results-heading-text');
+      if (heading) heading.textContent = '🕒 Lịch sử nghe gần đây';
+      try {
+        const hist = JSON.parse(localStorage.getItem('fasttube_history') || '[]');
+        if (hist.length > 0) {
+          renderResults(hist);
+          showToast(`🕒 Đang hiển thị ${hist.length} bài hát trong lịch sử nghe`);
+        } else {
+          showToast('ℹ️ Lịch sử nghe còn trống. Hãy phát một bài hát!');
+        }
+      } catch (e) {
+        showToast('ℹ️ Chưa có lịch sử nghe.');
+      }
     }
 
     function handleSearchInput(e) {
@@ -4886,9 +5678,11 @@
     }
 
     function quickSearch(q) {
+      switchTab('search');
       const input = document.getElementById('search-input');
-      input.value = q;
-      document.getElementById('search-clear-btn').style.display = 'flex';
+      if (input) input.value = q;
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.style.display = 'flex';
       doSearch();
     }
 
@@ -5053,10 +5847,11 @@
           const fmtsLabel = (it.downloaded_formats && it.downloaded_formats.length > 0)
             ? it.downloaded_formats.join(', ')
             : 'Đã có';
+          const chInitials = (it.channel || 'YT').trim().split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'YT';
           return `
-          <div class="card" id="card-${it.id}">
-            <div class="card-thumb-wrap" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
-              <img class="card-thumb" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
+          <div class="yt-video-card" id="card-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
+            <div class="yt-thumb-container">
+              <img class="yt-thumb-img" src="${it.thumbnail}" alt="${it.title}" loading="lazy">
               ${it.is_downloaded ? `
                 <div class="card-badge-local" title="Đã có sẵn file: ${fmtsLabel}">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -5064,51 +5859,45 @@
                 </div>
               ` : ''}
               <div class="thumb-play-overlay">
-                <div class="thumb-play-circle">
+                <div class="thumb-play-circle" style="background:#ff0000;">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 </div>
               </div>
-              <span class="card-duration">${it.duration || 'Video'}</span>
+              <span class="yt-duration-badge">${it.duration || 'Video'}</span>
             </div>
-            <div class="card-body">
-              <h3 class="card-title" title="${it.title}">${it.title}</h3>
-              <div class="card-channel">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
-                <span>${it.channel || 'YouTube'}</span>
+            
+            <div class="yt-card-details">
+              <div class="yt-channel-avatar" title="${it.channel || 'YouTube'}">${chInitials}</div>
+              <div class="yt-video-info">
+                <h3 class="yt-card-title" title="${it.title}">${it.title}</h3>
+                <div class="yt-channel-row">
+                  <span>${it.channel || 'YouTube'}</span>
+                  <svg class="yt-verified-badge" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-1.9 14.7l-4.5-4.5 1.4-1.4 3.1 3.1 7.4-7.4 1.4 1.4-8.8 8.8z"/></svg>
+                </div>
+                <div class="yt-meta-row">
+                  <span>${it.duration ? it.duration + ' • ' : ''}YouTube Music</span>
+                  ${it.is_downloaded ? `<span style="color:#10b981; font-weight:700;">• Sẵn sàng</span>` : ''}
+                </div>
+                
+                <div class="yt-card-actions-bar" onclick="event.stopPropagation();">
+                  <button class="yt-action-pill-btn primary" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')" title="Phát ngay">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Phát</span>
+                  </button>
+                  <button class="yt-action-pill-btn radio" onclick="actionPlayRadio('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', '${it.duration || ''}')" title="Phát YouTube Radio Mix dựa trên bài này">
+                    <span>📻 Radio</span>
+                  </button>
+                  <button class="yt-action-pill-btn" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')" title="Tải về máy (${selectedFormat})">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    <span>Tải</span>
+                  </button>
+                </div>
               </div>
-              
-              <select class="card-format-select" id="fmt-${it.id}">
-                <optgroup label="🎧 Âm thanh (Audio)">
-                  <option value="m4a" ${selectedFormat==='m4a'?'selected':''}>⚡ M4A 128k (Tải nhanh 2s)</option>
-                  <option value="mp3_320" ${selectedFormat==='mp3_320'?'selected':''}>🎵 MP3 320kbps (Chất lượng cao)</option>
-                  <option value="mp3_128" ${selectedFormat==='mp3_128'?'selected':''}>🎵 MP3 128kbps (Tiết kiệm)</option>
-                  <option value="flac" ${selectedFormat==='flac'?'selected':''}>🎼 FLAC Lossless</option>
-                  <option value="wav" ${selectedFormat==='wav'?'selected':''}>🎼 WAV Uncompressed</option>
-                  <option value="opus" ${selectedFormat==='opus'?'selected':''}>⚡ Opus (160k - WebM)</option>
-                </optgroup>
-                <optgroup label="🎬 Video (MP4 chuẩn)">
-                  <option value="mp4_1080" ${selectedFormat==='mp4_1080'?'selected':''}>🎬 MP4 1080p Full HD</option>
-                  <option value="mp4_720" ${selectedFormat==='mp4_720'?'selected':''}>🎬 MP4 720p HD</option>
-                  <option value="mp4_480" ${selectedFormat==='mp4_480'?'selected':''}>🎬 MP4 480p SD</option>
-                  <option value="mp4_360" ${selectedFormat==='mp4_360'?'selected':''}>🎬 MP4 360p Low</option>
-                </optgroup>
-              </select>
-
-              <div class="card-actions" style="margin-bottom:6px;">
-                <button class="btn btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                  <span>Xem / Nghe</span>
-                </button>
-                <button class="btn btn-download" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                  <span>Tải về</span>
-                </button>
-              </div>
-              <button class="btn" style="width:100%; background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:7px 10px; font-size:0.82rem; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; border-radius:10px; cursor:pointer;" onclick="actionPlayRadio('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', '${it.duration || ''}')" title="Khởi tạo YouTube Radio Mix 25 bài chuẩn gu bài này">
-                <span>📻 YouTube Radio Mix</span>
-              </button>
             </div>
           </div>
+          `;
+        }).join('');
+      }
         `;
         }).join('');
       }
@@ -5465,6 +6254,28 @@
       if (npCurTime) npCurTime.textContent = '0:00';
       if (npDurTime) npDurTime.textContent = track.duration || '--:--';
       if (npDurSong && track.duration) npDurSong.textContent = track.duration;
+
+      // Update YouTube Channel Avatar & Record History
+      const npAvatar = document.getElementById('np-channel-avatar');
+      if (npAvatar) {
+        const chInit = (track.channel || 'YT').trim().split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'YT';
+        npAvatar.textContent = chInit;
+      }
+
+      try {
+        let hist = JSON.parse(localStorage.getItem('fasttube_history') || '[]');
+        hist = hist.filter(h => (h.id || h.file_id) !== (track.id || track.file_id));
+        hist.unshift({
+          id: track.id || track.file_id,
+          title: track.title,
+          channel: track.channel || 'YouTube',
+          thumbnail: thumbUrl,
+          duration: track.duration || '',
+          is_downloaded: track.is_downloaded || false
+        });
+        if (hist.length > 50) hist = hist.slice(0, 50);
+        localStorage.setItem('fasttube_history', JSON.stringify(hist));
+      } catch (e) {}
 
       if (isVideo) {
         audio.pause();
@@ -6673,6 +7484,14 @@
       const fr = document.getElementById('filter-random-checkbox');
       if (fr) fr.addEventListener('change', updateSmartRuleBanner);
       updateSmartRuleBanner();
+
+      // Auto-load trending music on startup like YouTube homepage!
+      setTimeout(() => {
+        const searchInput = document.getElementById('search-input');
+        if (searchInput && !searchInput.value) {
+          quickSearch('Nhạc Trẻ Hay Nhất Hiện Nay');
+        }
+      }, 400);
     });
 
     async function generateSmartPlaylist() {
