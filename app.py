@@ -129,10 +129,11 @@ def main():
 
     workers = 1
 
+    import yt_dlp
     print("==================================================================")
     print(" [FastTube Studio] Server Starting...")
     print(f" - Host & Port : http://{host}:{port}")
-    print(f" - Python      : {sys.version.split()[0]}")
+    print(f" - Python      : {sys.version.split()[0]} | yt-dlp: {getattr(yt_dlp, 'version', None) and yt_dlp.version.__version__}")
     print(f" - Event Loop  : {_loop} | HTTP Parser: {_http}")
     print("==================================================================")
 
