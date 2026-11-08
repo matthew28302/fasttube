@@ -53,6 +53,8 @@ import requests as _requests
 logger = logging.getLogger("music_api")
 
 _FILE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{6,32}$")
+_IN_FLIGHT_DOWNLOADS: dict[str, asyncio.Event] = {}
+_IN_FLIGHT_LOCK = asyncio.Lock()
 
 
 def _is_allowed_youtube_url(url: str) -> bool:
@@ -395,6 +397,39 @@ async def api_download(payload: DownloadPayload, request: Request):
                 "path": str(existing.path),
             }
 
+    lock_key = target_id or target
+    async with _IN_FLIGHT_LOCK:
+        if lock_key in _IN_FLIGHT_DOWNLOADS:
+            wait_ev = _IN_FLIGHT_DOWNLOADS[lock_key]
+            is_primary = False
+        else:
+            wait_ev = asyncio.Event()
+            _IN_FLIGHT_DOWNLOADS[lock_key] = wait_ev
+            is_primary = True
+
+    if not is_primary:
+        # Wait for the concurrent download for the same track to finish
+        await wait_ev.wait()
+        if target_id:
+            existing = find_by_file_id(target_folder, target_id, ext=target_ext) or find_by_file_id(settings.music_dir, target_id, ext=target_ext)
+            if existing and existing.path.exists():
+                size_b = existing.path.stat().st_size
+                actual_ext = existing.path.suffix.lstrip(".")
+                return {
+                    "success": True,
+                    "cached": True,
+                    "file_id": target_id,
+                    "title": existing.title,
+                    "format": actual_ext,
+                    "subfolder": subfolder,
+                    "size_mb": round(size_b / 1024 / 1024, 2),
+                    "duration_s": None,
+                    "elapsed_s": round(time.perf_counter() - t0, 2),
+                    "stream_url": f"{base}/stream/{target_id}?ext={actual_ext}",
+                    "download_url": f"{base}/stream/{target_id}?download=1&ext={actual_ext}",
+                    "path": str(existing.path),
+                }
+
     try:
         async with download_semaphore:
             res = await asyncio.to_thread(
@@ -421,6 +456,11 @@ async def api_download(payload: DownloadPayload, request: Request):
     except Exception as e:
         logger.error("Download failed for %s: %s", target, e)
         raise HTTPException(status_code=500, detail=str(e)[:500])
+    finally:
+        if is_primary:
+            async with _IN_FLIGHT_LOCK:
+                _IN_FLIGHT_DOWNLOADS.pop(lock_key, None)
+            wait_ev.set()
 
     enforce_library_limit(settings.music_dir, max_age_hours=settings.max_file_age_hours, exclude_id=res.file_id)
     base = _base_url(request)
@@ -656,6 +696,15 @@ def stream(file_id: str, download: bool = False, ext: Optional[str] = None) -> F
     if not hit or not hit.path.exists():
         # Fast fallback: check if ANY audio/video format for this file_id already exists on disk
         hit = find_by_file_id(settings.music_dir, file_id, ext=None)
+
+    if not hit or not hit.path.exists():
+        # Check if an active download for this file_id is already in-flight
+        if file_id in _IN_FLIGHT_DOWNLOADS:
+            for _ in range(50):
+                time.sleep(0.3)
+                hit = find_by_file_id(settings.music_dir, file_id, ext=ext) or find_by_file_id(settings.music_dir, file_id, ext=None)
+                if hit and hit.path.exists():
+                    break
 
     if not hit or not hit.path.exists():
         # Auto on-demand download so missing/purged files or direct links never return a broken JSON download

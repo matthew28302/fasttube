@@ -5845,8 +5845,6 @@
             }
 
             renderAIQueue();
-            // Automatically download in background
-            downloadAllQueueTracks();
 
             if (autoPlayIfArrived && newTracks.length > 0 && currentAIIndex + 1 < aiTrackList.length) {
               playTrackFromQueue(currentAIIndex + 1);
@@ -5874,8 +5872,43 @@
       await fetchAIRecommendations(currentTrack, 1);
     }
 
-    function preloadNextTrack() {
-      downloadAllQueueTracks();
+    async function preloadNextTrack() {
+      // Only preload the single next upcoming track in queue to avoid YouTube rate limits
+      if (!aiTrackList || aiTrackList.length === 0) return;
+      const nextIdx = currentAIIndex + 1;
+      if (nextIdx >= aiTrackList.length) return;
+      const nextTrack = aiTrackList[nextIdx];
+      if (!nextTrack || nextTrack.is_downloaded || nextTrack.downloading) return;
+
+      nextTrack.downloading = true;
+      renderAIQueue();
+      try {
+        const resp = await fetch('/api/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: nextTrack.id || nextTrack.file_id,
+            title: nextTrack.title,
+            format: nextTrack.fmt || selectedFormat
+          })
+        });
+        if (resp.ok) {
+          const resData = await resp.json();
+          if (resData && resData.success) {
+            nextTrack.is_downloaded = true;
+            nextTrack.downloading = false;
+            if (resData.duration) nextTrack.duration = resData.duration;
+            if (resData.format) nextTrack.fmt = resData.format;
+          } else {
+            nextTrack.downloading = false;
+          }
+        } else {
+          nextTrack.downloading = false;
+        }
+      } catch (err) {
+        nextTrack.downloading = false;
+      }
+      renderAIQueue();
     }
 
     async function playTrackFromQueue(idx) {
@@ -5937,8 +5970,8 @@
         fetchAIRecommendations(track, Math.max(3, 8 - remainingAhead));
       }
 
-      // Resume background downloading of next tracks
-      downloadAllQueueTracks();
+      // Only preload the single next track in queue
+      preloadNextTrack();
     }
 
     function playNextTrack() {

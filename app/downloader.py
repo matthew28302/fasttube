@@ -321,80 +321,26 @@ def _pick_cookie_file(cookies_dir: Path) -> Optional[Path]:
     if os.getenv("FASTTUBE_IGNORE_COOKIES", "").strip() in ("1", "true", "yes"):
         return None
 
-    candidate_files: list[Path] = []
+    # 1. Primary cookie inside cookies_dir
+    p_primary = cookies_dir / "www.youtube.com_cookies.txt"
+    if p_primary.is_file() and p_primary.stat().st_size > 50:
+        return p_primary
 
-    # 1. Look inside configured cookies_dir
+    # 2. Backup cookie inside cookies_dir
+    p_backup = cookies_dir / "user_youtube_cookies_backup.txt"
+    if p_backup.is_file() and p_backup.stat().st_size > 50:
+        return p_backup
+
+    # 3. Any *.txt in cookies_dir
     if cookies_dir.exists():
-        p1 = cookies_dir / "www.youtube.com_cookies.txt"
-        p2 = cookies_dir / "cookies.txt"
-        p3 = cookies_dir / "user_youtube_cookies_backup.txt"
-        for cp in [p1, p2, p3]:
-            if cp.is_file() and cp not in candidate_files:
-                candidate_files.append(cp)
-        try:
-            for p in sorted(cookies_dir.iterdir()):
-                if p.is_file() and p.suffix.lower() == ".txt" and p not in candidate_files:
-                    candidate_files.append(p)
-        except Exception:
-            pass
-
-    # 2. Look in project root directory & cache directory
-    root_dir = cookies_dir.resolve().parent
-    for r_name in ["cookies.txt", "www.youtube.com_cookies.txt", "cache/saved_cookies.txt"]:
-        r_p = root_dir / r_name
-        if r_p.is_file() and r_p not in candidate_files:
-            candidate_files.append(r_p)
-
-    # 3. Look in parent cookies directory if exists
-    p_cookies = root_dir / "cookies"
-    if p_cookies.exists() and p_cookies != cookies_dir:
-        for c_name in ["www.youtube.com_cookies.txt", "cookies.txt", "user_youtube_cookies_backup.txt"]:
-            cp = p_cookies / c_name
-            if cp.is_file() and cp not in candidate_files:
-                candidate_files.append(cp)
-
-    # 4. Auto-discover from user's Downloads or Home folder if needed
-    try:
-        downloads_dir = Path.home() / "Downloads"
-        if downloads_dir.exists():
-            download_candidates: list[Path] = []
-            for pat in ["*youtube*cookie*.txt", "cookie*.txt", "*cookie*youtube*.txt"]:
-                for dp in downloads_dir.glob(pat):
-                    if dp.is_file() and dp.stat().st_size > 100:
-                        download_candidates.append(dp)
-            # Sort newest first by modification time
-            download_candidates.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-            for dp in download_candidates:
-                if dp not in candidate_files:
-                    candidate_files.append(dp)
-    except Exception:
-        pass
-
-    # Validate candidates: must contain actual Netscape cookie lines (tabs with domain / name)
-    for p in candidate_files:
-        try:
-            text = p.read_text(encoding="utf-8", errors="ignore")
-            lines = [l.strip() for l in text.splitlines()]
-            data_lines = [l for l in lines if l and not l.startswith("#")]
-            httponly_lines = [l for l in lines if l and l.startswith("#HttpOnly_")]
-            valid_entries = [
-                l for l in (data_lines + httponly_lines)
-                if "\t" in l or "youtube" in l.lower() or "google" in l.lower()
-            ]
-            if len(valid_entries) >= 1 or len(data_lines) >= 1:
-                # If discovered outside cookies_dir, auto-persist to cookies_dir so it stays permanently!
-                try:
-                    target = cookies_dir / "www.youtube.com_cookies.txt"
-                    if p != target and not (target.exists() and target.stat().st_size > 500):
-                        cookies_dir.mkdir(parents=True, exist_ok=True)
-                        target.write_text(text, encoding="utf-8")
-                        logger.info("Auto-persisted discovered YouTube cookie from %s to %s", p, target)
-                        return target
-                except Exception:
-                    pass
+        for p in sorted(cookies_dir.iterdir()):
+            if p.is_file() and p.suffix.lower() == ".txt" and p.stat().st_size > 50:
                 return p
-        except Exception:
-            pass
+
+    # 4. Root cookies.txt
+    root_p = cookies_dir.resolve().parent / "cookies.txt"
+    if root_p.is_file() and root_p.stat().st_size > 50:
+        return root_p
 
     return None
 
@@ -643,32 +589,32 @@ def download_from_youtube(
                 "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best",
             ]
         if m in ("wav", "flac"):
-            return [f"{base_any}/18/best", f"{m4a_first}/18/best"]
+            return [base_any, m4a_first]
         if m in ("mp3", "mp3_320", "mp3_128"):
-            return [f"{base_any}/18/best", f"{m4a_first}/18/best"]
+            return [base_any, m4a_first]
         if m == "m4a":
-            # Prefer m4a audio-only, but fall back to any audio-only or format 18 if unavailable
+            # Prefer m4a audio-only, but fall back to any audio-only if unavailable
             return [
-                f"{m4a_first}/18/best",
-                f"{base_small}/18/best",
-                f"{base_any}/18/best",
+                m4a_first,
+                base_small,
+                base_any,
             ]
         if m == "opus":
             if prefer_abr_128:
                 return [
-                    "249/250/bestaudio[acodec=opus][abr<=64]/bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio/18/best",
-                    f"{m4a_first}/18/best",
-                    f"{base_small}/18/best",
-                    f"{base_any}/18/best",
+                    "249/250/bestaudio[acodec=opus][abr<=64]/bestaudio[acodec=opus]/bestaudio[ext=m4a]/bestaudio",
+                    m4a_first,
+                    base_small,
+                    base_any,
                 ]
             else:
                 return [
-                    "251/bestaudio[acodec=opus]/250/249/bestaudio[ext=m4a]/bestaudio/18/best",
-                    f"{base_any}/18/best",
-                    f"{m4a_first}/18/best",
+                    "251/bestaudio[acodec=opus]/250/249/bestaudio[ext=m4a]/bestaudio",
+                    base_any,
+                    m4a_first,
                 ]
-        # mp3/auto mode: download audio-only then (optionally) transcode, with format 18 as bulletproof fallback
-        return [f"{m4a_first}/18/best", f"{base_small}/18/best", f"{base_any}/18/best"]
+        # mp3/auto mode: download audio-only then (optionally) transcode
+        return [m4a_first, base_small, base_any]
 
     def _video_fallback_formats() -> list[str]:
         # Last resort: download any available format (including HLS streams) and extract audio with ffmpeg.
@@ -688,16 +634,11 @@ def download_from_youtube(
     ) -> list[str]:
         cmd = [
             _get_ytdlp_bin(),
-            "-4",  # Force IPv4 to prevent datacenter IPv6 bot detection
-        ]
-        if _FFMPEG_PATH:
-            cmd += ["--ffmpeg-location", _FFMPEG_PATH]
-        cmd += [
-            "--force-overwrites",
-            "--no-continue",
             "--no-playlist",
             "--no-mtime",
         ]
+        if _FFMPEG_PATH:
+            cmd += ["--ffmpeg-location", _FFMPEG_PATH]
         mode_str = (audio_mode or "").strip().lower()
         is_video_mode = mode_str.startswith("mp4") or mode_str.startswith("video") or mode_str.endswith("p")
         if max_duration_s and max_duration_s > 0 and not is_video_mode and not _extract_id_from_url_or_id(source):
@@ -818,7 +759,6 @@ def download_from_youtube(
             player_clients: list[tuple[str | None, bool]] = [
                 ("tv_samsung", True),
                 (None, True),
-                ("android", False),
                 ("web", True),
             ]
         elif fast_mode:
