@@ -4462,6 +4462,19 @@
       color: #0f0f0f;
     }
 
+    .yt-sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 999;
+      pointer-events: none;
+    }
+    .yt-sidebar-backdrop.active {
+      display: block;
+      pointer-events: auto;
+    }
+
     /* Mobile Responsive Sidebar */
     @media (max-width: 900px) {
       .yt-sidebar {
@@ -4476,16 +4489,6 @@
       }
       .yt-sidebar.mobile-open {
         transform: translateX(0);
-      }
-      .yt-sidebar-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.6);
-        z-index: 999;
-        display: none;
-      }
-      .yt-sidebar-backdrop.active {
-        display: block;
       }
     }
   </style>
@@ -5896,9 +5899,6 @@
             </div>
           </div>
           `;
-        }).join('');
-      }
-        `;
         }).join('');
       }
     }
