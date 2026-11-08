@@ -4066,8 +4066,11 @@
 
       <!-- Mode Switcher -->
       <div style="display:flex; justify-content:center; gap:8px; margin-bottom:20px; flex-wrap:wrap;">
-        <button id="pl-mode-filter-btn" class="filter-chip active" onclick="switchPlaylistMode('filter')" style="padding:8px 18px; font-size:0.88rem;">
-          🎯 Bộ Lọc Đa Tiêu Chí (Đề xuất)
+        <button id="pl-mode-radio-btn" class="filter-chip active" onclick="switchPlaylistMode('radio')" style="padding:8px 18px; font-size:0.88rem;">
+          📻 YouTube Radio Mix (Thuật toán YouTube)
+        </button>
+        <button id="pl-mode-filter-btn" class="filter-chip" onclick="switchPlaylistMode('filter')" style="padding:8px 18px; font-size:0.88rem;">
+          🎯 Bộ Lọc Đa Tiêu Chí
         </button>
         <button id="pl-mode-custom-btn" class="filter-chip" onclick="switchPlaylistMode('custom')" style="padding:8px 18px; font-size:0.88rem;">
           ✍️ Tự Nhập Mô Tả (Custom Prompt)
@@ -4077,8 +4080,82 @@
         </button>
       </div>
 
-      <!-- Mode 1: Smart Filter Box (Mặc định) -->
-      <div id="pl-smart-filter-box" class="smart-filter-card">
+      <!-- Mode 0: YouTube Radio Mix (Thuật toán YouTube) -->
+      <div id="pl-youtube-radio-box" class="smart-filter-card" style="display: flex;">
+        <div class="smart-rule-banner" style="background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.12)); border-color: rgba(239,68,68,0.3);">
+          <div class="srb-header">
+            <div class="srb-title">
+              <span class="srb-icon">📻</span>
+              <span style="font-weight: 800; color: #ef4444;">YouTube Radio & Algorithmic Mix</span>
+            </div>
+            <span class="srb-badge-highlight" id="radio-summary-badge" style="background: #ef4444; color: #fff;">Chuẩn YouTube Mix (RD)</span>
+          </div>
+          <div class="srb-body" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+            Trích xuất trực tiếp trạm phát <b>YouTube Mix (Collaborative Filtering)</b> từ Google YouTube Innertube. Tự động liên kết các bài hát đồng gu, phân tách ca sĩ tránh trùng lặp, tốc độ phản hồi <b>&lt;0.3 giây</b>, 100% video ID thật không bao giờ bị lỗi link.
+          </div>
+        </div>
+
+        <!-- 1. Seed Nghệ Sĩ / Bài Hát Điểm Neo -->
+        <div>
+          <div class="filter-section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            <span>Ca Sĩ, Thể Loại Hoặc Bài Hát Điểm Neo (Seed Station)</span>
+          </div>
+          
+          <div class="filter-input-row" style="margin-bottom: 12px;">
+            <input type="text" id="radio-seed-input" class="filter-text-input" placeholder="Ví dụ: Vũ, Sơn Tùng M-TP, Lofi chill, Pop ballad... (Gõ nhiều ca sĩ cách nhau dấu phẩy để Blend trạm)" onkeydown="if(event.key==='Enter') generateRadioMix()">
+            <button type="button" class="search-btn" id="btn-gen-radio" onclick="generateRadioMix()" style="padding:10px 22px; font-size:0.9rem; white-space:nowrap; background: linear-gradient(135deg, #ef4444, #f59e0b);">
+              📻 Khởi Tạo Radio
+            </button>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Gợi ý trạm phát Radio được nghe nhiều nhất:</div>
+          <div class="filter-chip-group" id="radio-quick-chips">
+            <span class="filter-chip" onclick="quickRadioMix('Sơn Tùng M-TP')">🎤 Sơn Tùng M-TP</span>
+            <span class="filter-chip" onclick="quickRadioMix('Vũ.')">🎤 Vũ.</span>
+            <span class="filter-chip" onclick="quickRadioMix('Đen Vâu')">🎤 Đen Vâu</span>
+            <span class="filter-chip" onclick="quickRadioMix('HIEUTHUHAI')">🎤 HIEUTHUHAI</span>
+            <span class="filter-chip" onclick="quickRadioMix('Soobin')">🎤 Soobin</span>
+            <span class="filter-chip" onclick="quickRadioMix('Thanh Hưng')">🎤 Thanh Hưng</span>
+            <span class="filter-chip" onclick="quickRadioMix('Vũ., Đen Vâu')">🔀 Blend: Vũ & Đen Vâu</span>
+            <span class="filter-chip" onclick="quickRadioMix('Lofi Chill Việt Nam')">☕ Lofi Chill VN</span>
+            <span class="filter-chip" onclick="quickRadioMix('Top Hits US-UK')">🌍 Top US-UK</span>
+            <span class="filter-chip" onclick="quickRadioMix('Vinahouse Remix 2026')">⚡ Vinahouse 2026</span>
+          </div>
+        </div>
+
+        <!-- 2. Cấu hình số lượng & Định dạng -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; padding:12px 16px; background:rgba(255,255,255,0.03); border-radius:14px; border:1px solid var(--border-subtle);">
+          <div style="font-size:0.84rem; color:var(--text-secondary); display:flex; align-items:center; gap:6px;">
+            <span>💡</span>
+            <span>Thuật toán YouTube Mix tự động đề xuất 25 bài hát liên quan liên tục không ngắt quãng</span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Số lượng bài:</span>
+              <select id="radio-limit" class="prompt-select" style="padding:6px 10px; font-size:0.82rem;">
+                <option value="15">15 bài</option>
+                <option value="25" selected>25 bài (Chuẩn YouTube Mix)</option>
+                <option value="40">40 bài (Trạm dài)</option>
+              </select>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Định dạng:</span>
+              <select id="radio-format" class="prompt-select" style="padding:6px 10px; font-size:0.82rem;">
+                <option value="m4a" selected>⚡ M4A 128k (Tải siêu tốc 2s)</option>
+                <option value="mp3_320">🎵 MP3 320k (Nét căng)</option>
+                <option value="flac">🎼 FLAC Lossless</option>
+                <option value="mp4_720">🎬 MP4 720p HD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode 1: Smart Filter Box -->
+      <div id="pl-smart-filter-box" class="smart-filter-card" style="display: none;">
         <!-- Live Formula & Rule Recipe Banner -->
         <div class="smart-rule-banner" id="smart-rule-banner">
           <div class="srb-header">
@@ -4631,6 +4708,9 @@
                 <span class="ai-queue-sub" id="ai-queue-counter">Danh sách: 8 bài hát (Đang phát bài #1)</span>
               </div>
               <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(245,158,11,0.18); color:#f59e0b; border:1px solid rgba(245,158,11,0.35); display:inline-flex; align-items:center; gap:4px; font-weight:700;" onclick="triggerCurrentTrackRadio()" title="Khởi tạo YouTube Radio Mix 25 bài chuẩn thuật toán YouTube cho bài này">
+                  <span>📻 YouTube Mix</span>
+                </button>
                 <button class="np-btn-action" style="font-size:0.75rem; padding:4px 8px; border-radius:8px; background:rgba(234,179,8,0.15); color:#facc15; border:1px solid rgba(234,179,8,0.3); display:inline-flex; align-items:center; gap:4px; font-weight:700;" onclick="saveQueueToAIPlaylist()" title="Lưu danh sách bài này vào Tab AI Playlist">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                   <span>Lưu list</span>
@@ -4957,6 +5037,9 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                 <span>Phát</span>
               </button>
+              <button class="tr-btn" style="color:#f59e0b; padding:4px 8px; border:1px solid rgba(245,158,11,0.25); background:rgba(245,158,11,0.1); border-radius:8px;" onclick="actionPlayRadio('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', '${it.duration || ''}')" title="Phát YouTube Radio Mix dựa trên bài này">
+                <span style="font-size:0.78rem; font-weight:700;">📻 Radio</span>
+              </button>
               <button class="tr-btn tr-btn-dl" id="btn-dl-${it.id}" onclick="actionDownload('${it.id}', '${escapeQuotes(it.title)}')" title="Tải về máy">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
               </button>
@@ -5011,7 +5094,7 @@
                 </optgroup>
               </select>
 
-              <div class="card-actions">
+              <div class="card-actions" style="margin-bottom:6px;">
                 <button class="btn btn-play" id="btn-play-${it.id}" onclick="actionPlay('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', ${it.is_downloaded}, '${it.duration || ''}')">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                   <span>Xem / Nghe</span>
@@ -5021,6 +5104,9 @@
                   <span>Tải về</span>
                 </button>
               </div>
+              <button class="btn" style="width:100%; background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); padding:7px 10px; font-size:0.82rem; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; border-radius:10px; cursor:pointer;" onclick="actionPlayRadio('${it.id}', '${escapeQuotes(it.title)}', '${escapeQuotes(it.channel)}', '${it.thumbnail}', '${it.duration || ''}')" title="Khởi tạo YouTube Radio Mix 25 bài chuẩn gu bài này">
+                <span>📻 YouTube Radio Mix</span>
+              </button>
             </div>
           </div>
         `;
@@ -6203,16 +6289,174 @@
     };
 
     function switchPlaylistMode(mode) {
+      const isRadio = mode === 'radio';
       const isFilter = mode === 'filter';
+      const isCustom = mode === 'custom';
+
+      const radioBtn = document.getElementById('pl-mode-radio-btn');
       const filterBtn = document.getElementById('pl-mode-filter-btn');
       const customBtn = document.getElementById('pl-mode-custom-btn');
+      if (radioBtn) radioBtn.classList.toggle('active', isRadio);
       if (filterBtn) filterBtn.classList.toggle('active', isFilter);
-      if (customBtn) customBtn.classList.toggle('active', !isFilter);
+      if (customBtn) customBtn.classList.toggle('active', isCustom);
 
+      const radioBox = document.getElementById('pl-youtube-radio-box');
       const filterBox = document.getElementById('pl-smart-filter-box');
       const customBox = document.getElementById('pl-custom-prompt-box');
+      if (radioBox) radioBox.style.display = isRadio ? 'flex' : 'none';
       if (filterBox) filterBox.style.display = isFilter ? 'flex' : 'none';
-      if (customBox) customBox.style.display = isFilter ? 'none' : 'block';
+      if (customBox) customBox.style.display = isCustom ? 'block' : 'none';
+    }
+
+    function quickRadioMix(seed) {
+      const input = document.getElementById('radio-seed-input');
+      if (input) input.value = seed;
+      generateRadioMix(seed);
+    }
+
+    async function generateRadioMix(overrideSeed) {
+      const input = document.getElementById('radio-seed-input');
+      const seed = (overrideSeed !== undefined ? overrideSeed : (input ? input.value : '') || '').trim();
+      const limit = parseInt(document.getElementById('radio-limit')?.value || 25);
+      const fmt = document.getElementById('radio-format')?.value || 'm4a';
+      const btn = document.getElementById('btn-gen-radio');
+      const status = document.getElementById('playlist-status');
+      const grid = document.getElementById('playlist-grid');
+      const saveBtn = document.getElementById('btn-save-gen-playlist');
+      const appliedBanner = document.getElementById('playlist-rule-applied-banner');
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner" style="width:15px;height:15px;border-width:2px;margin-right:6px;"></div><span>Đang kết nối YouTube Mix...</span>`;
+      }
+      status.innerHTML = `<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> Thuật toán YouTube Mix đang khởi tạo trạm phát: "${seed || 'Hot Hits'}"...`;
+      grid.innerHTML = '';
+      document.getElementById('playlist-controls').style.display = 'none';
+      if (appliedBanner) appliedBanner.style.display = 'none';
+      if (saveBtn) saveBtn.style.display = 'none';
+
+      // Parse multi-artist if comma separated
+      let artists = [];
+      if (seed.includes(',')) {
+        artists = seed.split(',').map(s => s.trim()).filter(Boolean);
+      }
+
+      try {
+        const resp = await fetch('/api/playlist/radio', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            query: seed || undefined,
+            artists: artists.length > 0 ? artists : undefined,
+            limit: limit
+          })
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.detail || `HTTP ${resp.status}`);
+        }
+
+        const data = await resp.json();
+        const rawTracks = data.tracks || [];
+        if (!rawTracks.length) {
+          throw new Error('YouTube Mix không trả về bài hát nào phù hợp.');
+        }
+
+        playlistItems = rawTracks.map(t => ({
+          file_id: t.id,
+          title: t.title,
+          channel: t.channel || 'YouTube',
+          thumbnail: t.thumb || t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`,
+          duration: t.duration || '',
+          source_query: data.name || seed || 'YouTube Radio'
+        }));
+
+        const headingName = data.name || (seed ? `YouTube Radio: ${seed}` : 'YouTube Radio Mix');
+        document.getElementById('playlist-current-heading').textContent = headingName;
+        const b = document.getElementById('playlist-badge');
+        b.style.display = 'inline-block';
+        b.textContent = `${playlistItems.length} bài`;
+
+        if (appliedBanner) {
+          appliedBanner.style.display = 'flex';
+          appliedBanner.innerHTML = `
+            <div class="prab-title"><span style="font-size:1.1rem;">📻</span> <span>Thuật Toán YouTube Mix:</span></div>
+            <div>Trạm phát: <b>${headingName}</b> • Số lượng: <b>${playlistItems.length} bài hát</b> • Định dạng: <b>${fmt}</b> • Thuật toán Collaborative Filtering chính thức của YouTube</div>
+          `;
+        }
+
+        document.getElementById('playlist-controls').style.display = 'flex';
+        document.getElementById('btn-dl-all-playlist').style.display = 'none';
+        document.getElementById('playlist-play-controls').style.display = 'flex';
+        if (saveBtn) saveBtn.style.display = 'inline-flex';
+
+        renderPlaylist(playlistItems);
+        status.innerHTML = `<span style="color:#10b981; font-weight:700;">✨ Đã khởi tạo thành công trạm phát YouTube Radio (${playlistItems.length} bài hát)!</span>`;
+        showToast(`📻 Đã tạo YouTube Radio Mix: ${playlistItems.length} bài`);
+      } catch (err) {
+        status.innerHTML = `<span style="color:var(--accent-rose); font-weight:700;">❌ Lỗi khởi tạo Radio: ${err.message}</span>`;
+        showToast(`❌ ${err.message}`);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `📻 Khởi Tạo Radio`;
+        }
+      }
+    }
+
+    async function actionPlayRadio(fileId, title, channel, thumb, dur) {
+      if (!fileId) return;
+      showToast(`📻 Đang khởi tạo YouTube Radio Mix cho "${title}"...`);
+      // 1. Play this song immediately
+      actionPlay(fileId, title, channel, thumb, false, dur);
+
+      // 2. Fetch YouTube Mix for this videoId
+      try {
+        const resp = await fetch('/api/playlist/radio', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-access-password': getStoredPassword()
+          },
+          body: JSON.stringify({
+            video_id: fileId,
+            limit: 25
+          })
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          const rawTracks = data.tracks || [];
+          if (rawTracks.length > 0) {
+            aiTrackList = rawTracks.map(t => ({
+              id: t.id,
+              file_id: t.id,
+              title: t.title,
+              channel: t.channel || 'YouTube',
+              thumbnail: t.thumb || t.thumbnail || `https://i.ytimg.com/vi/${t.id}/hqdefault.jpg`,
+              duration: t.duration || '',
+              fmt: selectedFormat
+            }));
+            currentAIIndex = 0;
+            renderAIQueue();
+            showToast(`📻 YouTube Radio đã sẵn sàng (${aiTrackList.length} bài hát tiếp theo)!`);
+          }
+        }
+      } catch (e) {
+        console.warn('Radio mix fetch failed:', e);
+      }
+    }
+
+    function triggerCurrentTrackRadio() {
+      if (!currentTrack || !currentTrack.id) {
+        showToast('⚠️ Không có bài hát nào đang phát.');
+        return;
+      }
+      actionPlayRadio(currentTrack.id, currentTrack.title, currentTrack.channel, currentTrack.thumbnail, currentTrack.duration);
     }
 
     function toggleFilterKeyword(el, kw) {
